@@ -3,3 +3,8 @@ dist/
 .env
 *.local.xml
 .DS_Store
+
+# Temporary screenshots (root only — public/assets/ icons are versioned)
+/*.png
+/*.jpg
+/*.jpeg
