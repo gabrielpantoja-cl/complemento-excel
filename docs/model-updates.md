@@ -1,0 +1,194 @@
+# Model / dependency update playbook
+
+**Last verified:** 2026-06-09
+
+This repo hardcodes a small set of "featured" and "preferred" model IDs (for sorting + default selection). Those IDs come from Pi’s model registry (`@earendil-works/pi-ai`) and will drift as new models ship (e.g. `gpt-5.5`, `gpt-5.3-codex`, `claude-fable-5`, `claude-opus-4-8`, `gemini-3.1-pro-preview`).
+
+This doc describes how to update:
+- the **Pi dependency versions** we ship (`@earendil-works/pi-ai`, `@earendil-works/pi-web-ui`, `@earendil-works/pi-agent-core`)
+- the **model ordering/default-selection behavior** in the add-in (`src/models/model-ordering.ts`, `src/taskpane/default-model.ts`, `src/compat/model-selector-patch.ts`)
+
+## Source of truth
+
+- **Built-in model IDs:** `node_modules/@earendil-works/pi-ai/dist/models.generated.js`
+  - This file is auto-generated upstream and is what `getModel(provider, id)` resolves against.
+- Don’t rely on Pi’s `docs/models.md` for built-in IDs — that doc is about **custom models** via `~/.pi/agent/models.json`.
+
+## When to run this
+
+- If you want to add newly-released models and they’re missing from our add-in.
+- **If it’s been > 1 week since the last verification date above**, refresh deps + re-check model IDs.
+
+## What is now automated
+
+- Dependabot checks npm dependencies **daily**.
+- A dedicated Dependabot group (`pi-stack`) keeps these packages in one PR:
+  - `@earendil-works/pi-ai`
+  - `@earendil-works/pi-web-ui`
+  - `@earendil-works/pi-agent-core`
+- `.github/workflows/dependabot-pi-automerge.yml` auto-approves + enables auto-merge for that Dependabot group (merge still waits for green checks).
+- `npm run check` includes `scripts/check-pi-deps-lockstep.mjs`, which enforces the dependency policy below (`pi-ai` === `pi-agent-core`, exact pins, single shared `pi-ai` copy in the lockfile).
+
+## Step-by-step
+
+### 1) Check current installed versions
+
+```bash
+node -p "require('./node_modules/@earendil-works/pi-ai/package.json').version"
+node -p "require('./node_modules/@earendil-works/pi-web-ui/package.json').version"
+node -p "require('./node_modules/@earendil-works/pi-agent-core/package.json').version"
+```
+
+### 2) Check latest published versions
+
+```bash
+npm view @earendil-works/pi-ai version
+npm view @earendil-works/pi-web-ui version
+npm view @earendil-works/pi-agent-core version
+```
+
+Also inspect the version lists before choosing a target:
+
+```bash
+npm view @earendil-works/pi-ai versions --json
+npm view @earendil-works/pi-web-ui versions --json
+npm view @earendil-works/pi-agent-core versions --json
+```
+
+**Dependency policy (since 2026-06-09):** upstream stopped publishing `pi-web-ui` in lockstep after `0.75.3`, while `pi-ai` / `pi-agent-core` kept moving (and new models like `claude-fable-5` only exist in newer `pi-ai`). The rules are now:
+
+- `@earendil-works/pi-ai` and `@earendil-works/pi-agent-core` move **together** to the newest common version.
+- `@earendil-works/pi-web-ui` stays at the newest *published* version (currently `0.75.3`) and is allowed to lag.
+- All three must be **exact-pinned** in `package.json`.
+- The root `package.json` `overrides` entry for `@earendil-works/pi-ai` (`"$@earendil-works/pi-ai"`) forces `pi-web-ui`'s nested `^0.75.x` range onto the root version so the lockfile resolves **exactly one** copy of `pi-ai`. Two copies = two model registries = the ModelSelector and the app disagree about available models.
+- `scripts/check-pi-deps-lockstep.mjs` (run via `npm run check:pi-lockstep`) enforces all of this.
+- When bumping past `pi-web-ui`'s compiled-against version, re-verify the runtime APIs it imports from `pi-ai` still exist (`complete`, `streamSimple`, `getModel`, `getModels`, `getProviders`, `modelsAreEqual`, `StringEnum`) and check the pi changelog for breaking OAuth/streaming surface changes (e.g. 0.79.x made `onDeviceCode` / `onSelect` required in `OAuthLoginCallbacks`).
+
+### 3) Bump dependencies in `package.json`
+
+```bash
+npm install @earendil-works/pi-ai@<version> @earendil-works/pi-agent-core@<version> --save-exact
+```
+
+Only bump `@earendil-works/pi-web-ui` when upstream actually publishes a newer version:
+
+```bash
+npm install @earendil-works/pi-web-ui@<version> --save-exact
+```
+
+### 4) Verify the new model IDs exist in the registry
+
+Search the local registry:
+
+```bash
+rg -n "gpt-5\\.5"       node_modules/@earendil-works/pi-ai/dist/models.generated.js -S
+rg -n "gpt-5\\.3-codex" node_modules/@earendil-works/pi-ai/dist/models.generated.js -S
+rg -n "claude-fable-5"   node_modules/@earendil-works/pi-ai/dist/models.generated.js -S
+rg -n "claude-opus-4-8"  node_modules/@earendil-works/pi-ai/dist/models.generated.js -S
+rg -n "gemini-3\\.1-pro-preview" node_modules/@earendil-works/pi-ai/dist/models.generated.js -S
+npm run test:models
+```
+
+If an ID doesn’t appear there, **don’t** add it to the add-in yet—either:
+- bump `@earendil-works/pi-ai` further, or
+- use an older/fallback ID, or
+- define a custom model via `~/.pi/agent/models.json`.
+
+### 5) Update model ordering + default selection logic (avoid hardcoding exact IDs)
+
+Files:
+- `src/models/model-ordering.ts` (provider/family priority + version/recency scoring)
+- `src/taskpane/default-model.ts` (default-model selection rules)
+- `src/compat/model-selector-patch.ts` (ModelSelector ordering/featured-model behavior)
+- `tests/model-ordering.test.ts` (sanity tests; run `npm run test:models` — requires Node 22.19+)
+
+We intentionally avoid pinning exact versioned IDs now. Instead we:
+
+- In the model picker, show:
+  1) current model first
+  2) **featured models** (pattern-based “latest” picks)
+  3) then the rest sorted deterministically
+
+  Featured rules (current desired behavior):
+  - **Anthropic:** latest **Fable** first (post-4.x flagship family, e.g. `claude-fable-5`), then latest **Sonnet** *if* its version >= latest **Opus**, then latest **Opus**
+    - This is picker ordering only; default selection currently skips Fable because it is in the registry but unavailable for normal Anthropic use.
+    - Version compare uses `parseMajorMinor()` where `claude-opus-4-6` → `46`, `claude-opus-4-7` → `47`, `claude-fable-5` → `50`.
+    - Important: IDs like `claude-opus-4-20250514` are treated as **major only** (`40`) and the `YYYYMMDD` part is considered a separate date suffix by `modelRecencyScore()`.
+  - **OpenAI (`openai` + `openai-codex`):** latest general `gpt-5.x` *if* its version >= latest `gpt-5.x-codex`, then latest Codex
+    - `gpt-5.5` scores as `55`; `gpt-5.3-codex` scores as `53`.
+    - Major-only GPT-5 IDs are also handled (`gpt-5`, `gpt-5-pro`, `gpt-5-codex`).
+    - Plain `gpt-5.x` / `gpt-5` beats same-version suffixed variants (`gpt-5.5` before `gpt-5.5-pro`, `gpt-5` before `gpt-5-pro`).
+  - **Google (API key):** latest `gemini-*-pro*` (regex: `/^gemini-.*-pro/i`)
+  - **Google OAuth providers (`google-gemini-cli`, `google-antigravity`):** prefer stable Gemini before previews
+
+  The ordering logic is driven by:
+  - `providerPriority()` (Anthropic → OpenAI Codex → OpenAI → Google → …)
+  - `familyPriority()` / `openAiFamilyPriority()` (Opus/Sonnet/Haiku, GPT vs Codex, etc.)
+  - `parseMajorMinor()` + `modelRecencyScore()` (treats `4-6` / `4.6` as `46`, `5.5` as `55`, keeps embedded date suffixes such as `YYYYMMDD` separate, and ignores later date-like suffixes such as `gpt-4o-2024-11-20` or `gemini-2.5-pro-preview-06-05` when extracting the family version)
+  - `compareModels()` (provider + family + recency tie-breaks; deterministic sorting)
+
+  UI: the model picker is opened from the footer status bar (click the π model button).
+
+- Pick the default model via provider-aware rules:
+  - Anthropic is a small special-case: latest Opus by default while Fable is in the registry but unavailable; Sonnet and Fable remain fallbacks if Opus is absent.
+  - OpenAI (`openai` + `openai-codex`) prefers the newest general GPT-5 when it is at least as new as Codex, with Codex as fallback
+  - otherwise `DEFAULT_MODEL_RULES` + `pickLatestMatchingModel()` (uses `getModels(provider)` to find the newest available ID)
+
+When new models ship, this usually “just works” as long as naming stays consistent. You only need to update these rules if:
+- a provider changes their naming scheme, or
+- you want different provider/family preferences.
+
+Reminder: **`openai-codex` is NOT `openai`** (different base URL). See `src/auth/provider-map.ts`.
+
+### 6) Run it in Excel (dev vs build)
+
+**Important:** our `manifest.xml` currently points at the **dev server**:
+
+- `https://localhost:3000/src/taskpane.html`
+
+That means:
+- `npm run build` is a *sanity check* (TypeScript + bundling), but it does **not** change what Excel loads.
+- To test changes in Excel, you need a dev server running on **port 3000**.
+
+Recommended local loop:
+
+```bash
+# 1) Start dev server (must be :3000 because manifest hardcodes it)
+npm run dev
+
+# 2) (Re)register / launch Excel with the add-in
+npm run sideload
+```
+
+If `npm run dev` says “Port 3000 is in use, trying another one…”, **stop the old server**.
+Excel will keep loading whatever is on `https://localhost:3000/`.
+
+```bash
+lsof -nP -iTCP:3000 -sTCP:LISTEN
+# then kill the PID, or just stop the process in the terminal running it
+```
+
+#### Sideload troubleshooting
+
+If `npm run sideload` fails with `EEXIST: file already exists, link 'manifest.xml' -> ...`:
+
+```bash
+npx office-addin-debugging stop manifest.xml desktop
+npm run sideload
+```
+
+#### “I updated models but they don’t show up” checklist
+
+1) **Provider filter:** the model picker only shows models for **connected providers** (saved API key/OAuth). Make sure the provider is connected.
+2) **Excel caching:** quit Excel completely (Cmd+Q) and reopen.
+3) **Hot reload note:** taskpane JS/CSS is served from Vite; edits to model-selection files (`src/models/model-ordering.ts`, `src/taskpane/default-model.ts`, `src/compat/model-selector-patch.ts`) should apply via HMR without needing to re-sideload, as long as Excel is pointed at the same running dev server.
+4) **Vite optimized deps:** after dependency bumps, clear and restart:
+
+```bash
+rm -rf node_modules/.vite
+npm run dev
+```
+
+### 7) Update this doc’s date
+
+Bump `Last verified:` at the top to today’s date when you finish.
