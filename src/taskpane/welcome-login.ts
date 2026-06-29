@@ -85,7 +85,7 @@ export async function showWelcomeLogin(providerKeys: ProviderKeysStore): Promise
 
     const title = createElement("h2", "pi-welcome-title");
     title.id = titleId;
-    title.textContent = "Pi for Excel";
+    title.textContent = "Tasaciones by Loxos";
 
     const subtitle = createElement("p", "pi-welcome-subtitle");
     subtitle.id = subtitleId;

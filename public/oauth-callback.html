@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pi for Excel — Login</title>
+  <title>Tasaciones by Loxos — Login</title>
   <link rel="icon" href="/assets/icon-32.png" type="image/png" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -108,11 +108,11 @@
 </head>
 <body>
   <div class="card" id="card">
-    <div class="logo">π</div>
-    <h1 id="title">Login successful!</h1>
-    <p class="subtitle" id="subtitle">Copy the URL below and paste it back in Pi for Excel.</p>
+    <div class="logo">T</div>
+    <h1 id="title">¡Login exitoso!</h1>
+    <p class="subtitle" id="subtitle">Copia la URL y pégala de vuelta en Tasaciones by Loxos.</p>
     <div class="url-box" id="url-box">
-      <label>Your login URL</label>
+      <label>Tu URL de login</label>
       <div class="url-text" id="url-text"></div>
     </div>
     <button class="copy-btn" id="copy-btn" type="button">
@@ -120,9 +120,9 @@
       Copy URL
     </button>
     <div class="steps">
-      <p><strong>Step 1:</strong> Click the button above to copy the URL.</p>
-      <p><strong>Step 2:</strong> Switch back to Excel.</p>
-      <p><strong>Step 3:</strong> Paste the URL into the login prompt and click Continue.</p>
+      <p><strong>Paso 1:</strong> Haz clic en el botón para copiar la URL.</p>
+      <p><strong>Paso 2:</strong> Vuelve a Excel.</p>
+      <p><strong>Paso 3:</strong> Pega la URL en el mensaje de login y haz clic en Continuar.</p>
     </div>
   </div>
   <script>
@@ -137,8 +137,8 @@
       var subtitleEl = document.getElementById('subtitle');
 
       if (!hasCode) {
-        titleEl.textContent = 'Waiting for login…';
-        subtitleEl.textContent = 'If you see this page, your login redirect arrived but no authorization code was found. Try logging in again from Pi for Excel.';
+        titleEl.textContent = 'Esperando login…';
+        subtitleEl.textContent = 'Si ves esta página, tu redirección de login llegó pero no se encontró ningún código de autorización. Intenta iniciar sesión de nuevo desde Tasaciones by Loxos.';
         document.getElementById('url-box').style.display = 'none';
         copyBtn.style.display = 'none';
         return;
@@ -150,12 +150,12 @@
         navigator.clipboard.writeText(fullUrl).then(function () {
           copyBtn.innerHTML =
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
-            ' Copied!';
+            ' &#10003; Copiado!';
           copyBtn.classList.add('copied');
           setTimeout(function () {
             copyBtn.innerHTML =
               '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>' +
-              ' Copy URL';
+              ' Copiar URL';
             copyBtn.classList.remove('copied');
           }, 2000);
         });

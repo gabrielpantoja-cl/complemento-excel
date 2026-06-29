@@ -37,10 +37,10 @@
       .join('\n');
 
     navigator.clipboard.writeText(text).then(() => {
-      button.textContent = 'Copied!';
+      button.textContent = '¡Copiado!';
       button.classList.add('copied');
       setTimeout(() => {
-        button.textContent = 'Copy';
+        button.textContent = 'Copiar';
         button.classList.remove('copied');
       }, 2000);
     });

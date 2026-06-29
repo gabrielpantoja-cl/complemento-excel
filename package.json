@@ -1,7 +1,8 @@
 {
-  "name": "pi-for-excel",
-  "version": "0.9.5-pre",
-  "description": "Open-source, multi-model AI sidebar add-in for Excel. Powered by Pi.",
+  "name": "tasaciones",
+  "displayName": "Tasaciones",
+  "version": "0.1.0",
+  "description": "Complemento IA para tasaciones chilenas — fork de pi-for-excel (MIT).",
   "type": "module",
   "scripts": {
     "dev": "vite --port 3000",
@@ -54,8 +55,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tmustier/pi-for-excel.git"
+    "url": "https://github.com/gabrielpantoja-cl/tasaciones-for-excel.git"
   },
+  "contributors": [
+    "Thomas Mustier <thomas@mustier.dev> (https://github.com/tmustier)",
+    "Mario Zechner <mario@zechner.dev> (https://github.com/badlogic)"
+  ],
   "engines": {
     "node": "^22.19.0 || >=24"
   },
