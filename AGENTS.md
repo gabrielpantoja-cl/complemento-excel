@@ -92,6 +92,8 @@ Run `test:context` when touching prompt, context, tool disclosure, or session wi
 Run `test:security` when touching proxy, bridge, auth, or HTML safety paths.
 Manual Excel smoke test required when touching session persistence, tools, auth, or UI wiring.
 
+> **Dev environment:** Lenovo Legion 5, dual boot Windows 11 + Linux. All build/test commands work on both. Excel smoke tests require Windows boot — sideload `manifest.xml` (dev) or `manifest.prod.xml` (prod) via Insert → My Add-ins → Upload My Add-in.
+
 ### Visual UI verification (agent-browser)
 
 Use the **UI Gallery** (`src/ui-gallery.html`) to verify CSS and component changes
