@@ -5,7 +5,8 @@ dist/
 CLAUDE.local.md
 .DS_Store
 
-# Temporary screenshots (root only — public/assets/ icons are versioned)
+# Temporary screenshots and downloads (root only — public/assets/ icons are versioned)
 /*.png
 /*.jpg
 /*.jpeg
+/*.pdf
