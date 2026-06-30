@@ -2,6 +2,7 @@ node_modules/
 dist/
 .env
 *.local.xml
+CLAUDE.local.md
 .DS_Store
 
 # Temporary screenshots (root only — public/assets/ icons are versioned)
