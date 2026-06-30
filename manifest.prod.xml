@@ -14,7 +14,10 @@
   <Description DefaultValue="Complemento IA para tasaciones chilenas. Fork de pi-for-excel (MIT)." />
   <IconUrl DefaultValue="https://tasaciones-for-excel.vercel.app/assets/icon-32.png" />
   <HighResolutionIconUrl DefaultValue="https://tasaciones-for-excel.vercel.app/assets/icon-80.png" />
-  <SupportUrl DefaultValue="https://github.com/gabrielpantoja-cl/tasaciones-for-excel/issues" />
+  <SupportUrl DefaultValue="https://tasaciones-for-excel.vercel.app/support" />
+  <AppDomains>
+    <AppDomain>https://tasaciones-for-excel.vercel.app</AppDomain>
+  </AppDomains>
 
   <Hosts>
     <Host Name="Workbook" />
@@ -71,10 +74,10 @@
       <bt:Urls>
         <bt:Url id="TaskpaneUrl" DefaultValue="https://tasaciones-for-excel.vercel.app/src/taskpane.html" />
       </bt:Urls>
-      <bt:Strings>
+      <bt:ShortStrings>
         <bt:String id="GroupLabel" DefaultValue="Tasaciones" />
         <bt:String id="ButtonLabel" DefaultValue="Abrir Tasaciones" />
-      </bt:Strings>
+      </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="ButtonDesc" DefaultValue="Abre el asistente IA para tasaciones chilenas" />
       </bt:LongStrings>

@@ -1,5 +1,6 @@
 node_modules/
 dist/
+dist-appsource/
 .env
 *.local.xml
 CLAUDE.local.md
