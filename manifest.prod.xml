@@ -14,7 +14,7 @@
   <Description DefaultValue="Complemento IA para tasaciones chilenas. Fork de pi-for-excel (MIT)." />
   <IconUrl DefaultValue="https://tasaciones-for-excel.vercel.app/assets/icon-32.png" />
   <HighResolutionIconUrl DefaultValue="https://tasaciones-for-excel.vercel.app/assets/icon-80.png" />
-  <SupportUrl DefaultValue="https://tasaciones-for-excel.vercel.app/support" />
+  <SupportUrl DefaultValue="https://tasaciones-for-excel.vercel.app/" />
   <AppDomains>
     <AppDomain>https://tasaciones-for-excel.vercel.app</AppDomain>
   </AppDomains>
