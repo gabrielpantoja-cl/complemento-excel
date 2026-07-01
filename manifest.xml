@@ -7,7 +7,7 @@
   xsi:type="TaskPaneApp">
 
   <Id>c93fbbea-7c40-406f-bc5f-f6fa80476c97</Id>
-  <Version>0.1.0.0</Version>
+  <Version>1.0.0.0</Version>
   <ProviderName>Loxos</ProviderName>
   <DefaultLocale>es-CL</DefaultLocale>
   <DisplayName DefaultValue="Tasaciones" />
@@ -71,10 +71,10 @@
       <bt:Urls>
         <bt:Url id="TaskpaneUrl" DefaultValue="https://localhost:3000/src/taskpane.html" />
       </bt:Urls>
-      <bt:Strings>
+      <bt:ShortStrings>
         <bt:String id="GroupLabel" DefaultValue="Tasaciones" />
         <bt:String id="ButtonLabel" DefaultValue="Abrir Tasaciones" />
-      </bt:Strings>
+      </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="ButtonDesc" DefaultValue="Abre el asistente IA para tasaciones chilenas" />
       </bt:LongStrings>
