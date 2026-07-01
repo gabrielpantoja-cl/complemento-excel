@@ -34,6 +34,10 @@ jobs:
         run: npm audit --audit-level=high
 
       - name: Lint + typecheck
+        # eslint over the full Pi stack exceeds Node's default heap on the
+        # 7 GB GitHub-hosted runner; raise the old-space limit for this step.
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
         run: npm run check
 
       - name: Tests
