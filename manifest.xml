@@ -14,7 +14,7 @@
   <Description DefaultValue="Complemento IA para tasaciones chilenas. Fork de pi-for-excel (MIT)." />
   <IconUrl DefaultValue="https://localhost:3000/assets/icon-32.png" />
   <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-80.png" />
-  <SupportUrl DefaultValue="https://github.com/gabrielpantoja-cl/tasaciones-for-excel/issues" />
+  <SupportUrl DefaultValue="https://github.com/gabrielpantoja-cl/complemento-excel/issues" />
 
   <Hosts>
     <Host Name="Workbook" />

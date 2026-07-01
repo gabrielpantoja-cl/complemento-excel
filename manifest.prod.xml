@@ -12,11 +12,11 @@
   <DefaultLocale>es-CL</DefaultLocale>
   <DisplayName DefaultValue="Tasaciones" />
   <Description DefaultValue="Complemento IA para tasaciones chilenas. Fork de pi-for-excel (MIT)." />
-  <IconUrl DefaultValue="https://tasaciones-for-excel.vercel.app/assets/icon-32.png" />
-  <HighResolutionIconUrl DefaultValue="https://tasaciones-for-excel.vercel.app/assets/icon-80.png" />
-  <SupportUrl DefaultValue="https://tasaciones-for-excel.vercel.app/" />
+  <IconUrl DefaultValue="https://complemento-excel.vercel.app/assets/icon-32.png" />
+  <HighResolutionIconUrl DefaultValue="https://complemento-excel.vercel.app/assets/icon-80.png" />
+  <SupportUrl DefaultValue="https://complemento-excel.vercel.app/" />
   <AppDomains>
-    <AppDomain>https://tasaciones-for-excel.vercel.app</AppDomain>
+    <AppDomain>https://complemento-excel.vercel.app</AppDomain>
   </AppDomains>
 
   <Hosts>
@@ -24,7 +24,7 @@
   </Hosts>
 
   <DefaultSettings>
-    <SourceLocation DefaultValue="https://tasaciones-for-excel.vercel.app/src/taskpane.html" />
+    <SourceLocation DefaultValue="https://complemento-excel.vercel.app/src/taskpane.html" />
   </DefaultSettings>
 
   <Permissions>ReadWriteDocument</Permissions>
@@ -67,12 +67,12 @@
 
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon16" DefaultValue="https://tasaciones-for-excel.vercel.app/assets/icon-16.png" />
-        <bt:Image id="Icon32" DefaultValue="https://tasaciones-for-excel.vercel.app/assets/icon-32.png" />
-        <bt:Image id="Icon80" DefaultValue="https://tasaciones-for-excel.vercel.app/assets/icon-80.png" />
+        <bt:Image id="Icon16" DefaultValue="https://complemento-excel.vercel.app/assets/icon-16.png" />
+        <bt:Image id="Icon32" DefaultValue="https://complemento-excel.vercel.app/assets/icon-32.png" />
+        <bt:Image id="Icon80" DefaultValue="https://complemento-excel.vercel.app/assets/icon-80.png" />
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="TaskpaneUrl" DefaultValue="https://tasaciones-for-excel.vercel.app/src/taskpane.html" />
+        <bt:Url id="TaskpaneUrl" DefaultValue="https://complemento-excel.vercel.app/src/taskpane.html" />
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GroupLabel" DefaultValue="Tasaciones" />
