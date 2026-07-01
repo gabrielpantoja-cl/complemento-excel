@@ -6,11 +6,14 @@ const ROOT = process.cwd();
 const LANDING_FILE = path.join(ROOT, "public", "index.html");
 const INSTALL_DOC_FILE = path.join(ROOT, "docs", "install.md");
 
+// Tasaciones by Loxos uses a proxy-less connect flow (BYOK / OpenRouter),
+// so the landing intentionally drops the upstream Pi proxy snippets. These
+// anchors guard the rebranded connect copy against drift instead.
 const LANDING_REQUIRED_SNIPPETS = [
-  "npx pi-for-excel-proxy",
-  "curl -fsSL https://piforexcel.com/proxy | sh",
-  "Built-in multi-provider web search and page fetch",
-  "Extensions can call LLMs, fetch HTTP data, persist storage, and register tools through the built-in bridge.",
+  "Conectar un proveedor",
+  "OpenRouter (recomendado)",
+  "openrouter.ai/keys",
+  "API key directa",
 ];
 
 const LANDING_FORBIDDEN_SNIPPETS = [
