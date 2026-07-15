@@ -11,3 +11,14 @@ CLAUDE.local.md
 /*.jpg
 /*.jpeg
 /*.pdf
+
+# Local env variants (keep .env.example tracked via the negation below)
+.env.*
+!.env.example
+
+# IDE / build artefacts
+.vscode/
+.idea/
+*.tsbuildinfo
+*.log
+coverage/

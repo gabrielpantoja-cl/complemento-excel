@@ -154,3 +154,47 @@ If local changes do not show up:
    rm -rf ~/Library/Containers/com.microsoft.Excel/Data/Library/WebKit/
    rm -rf ~/Library/Containers/com.microsoft.Excel/Data/Library/Caches/WebKit/
    ```
+
+## Skills
+
+Bundled Agent Skills (loaded into the Excel add-in at build time by
+`src/skills/catalog.ts`; **not** auto-loaded by opencode's `skill` tool):
+
+| Skill | Trigger |
+|---|---|
+| `web-search` | Search the public web for up-to-date facts (Jina default). |
+| `mcp-gateway` | Discover and call tools from configured MCP servers. |
+| `tmux-bridge` | Local terminal access via the tmux bridge. |
+| `python-bridge` | Native Python execution via the Python bridge. |
+| `extending-pi` | Plan and build Pi for Excel extensions safely. |
+| `tasaciones` | Loxos-specific index of Chilean tasación sub-procedures. |
+
+The fork's `skills/` directory is consumed by the add-in's own runtime loader,
+not by opencode's `skill` discovery. Do **not** move `skills/` to
+`.opencode/skills/` without also updating `src/skills/catalog.ts`
+(`import.meta.glob`) — that path is wired into the Vite build bundle.
+
+## Agents
+
+No custom agents defined in this fork. The built-in agents (`build`, `plan`,
+`general`, `explore`, `scout`) cover current needs.
+
+If you add a custom agent, place it at `.opencode/agent/<name>.md` and update
+this section.
+
+## Commands
+
+No custom commands defined in this fork.
+
+If you add a custom command, place it at `.opencode/command/<name>.md` and
+update this section.
+
+## Models and data residency
+
+| Field | Value |
+|---|---|
+| Primary model | `minimax-coding-plan/MiniMax-M3` (single-model, no fallback) |
+| Provider docs | **Unknown** — no public docs surfaced in research; treat pricing / limits / deprecations as unverified |
+| Data residency | Low-sensitivity repo (public code). Provider egress is acceptable for code review. Workbook contents do not leave the user's machine via opencode directly. |
+| Cost discipline | No routing available (single model). Discipline lives in prompt-cache hygiene (see "Prompt caching gotchas" above). |
+| Provider allow-list | `enabled_providers: ["minimax-coding-plan"]` — only this provider is loadable by opencode. |
