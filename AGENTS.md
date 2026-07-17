@@ -92,7 +92,7 @@ Run `test:context` when touching prompt, context, tool disclosure, or session wi
 Run `test:security` when touching proxy, bridge, auth, or HTML safety paths.
 Manual Excel smoke test required when touching session persistence, tools, auth, or UI wiring.
 
-> **Dev environment:** Lenovo Legion 5, dual boot Windows 11 + Linux. All build/test commands work on both. Excel smoke tests require Windows boot — sideload `manifest.xml` (dev) or `manifest.prod.xml` (prod) via Insert → My Add-ins → Upload My Add-in.
+> **Dev environment:** Lenovo Legion 5, dual boot Windows 11 + Linux. All build/test commands work on both. Excel smoke tests require Windows boot — sideload via the Trusted Add-in Catalog using `scripts/sideload-windows.ps1` (see [`docs/windows-sideload.md`](docs/windows-sideload.md) for full procedure and troubleshooting).
 
 ### Visual UI verification (agent-browser)
 
@@ -189,40 +189,44 @@ Test-NetConnection complemento-excel.vercel.app -Port 443
 
 Sideload (Microsoft 365 / Excel 2016+ on Windows):
 
-1. Open Excel Desktop and pick or create a workbook.
-2. **Insert → My Add-ins → Manage My Add-ins → Upload My Add-in**
-   (older builds: **More add-ins → My Add-ins → Upload My Add-in**).
-3. Pick `manifest.prod.xml` from `Downloads`.
-4. Accept the "Add-in source is not trusted" warning — that is the
-   standard sideload prompt for non-store manifests during development.
-5. A **Tasaciones** tile appears under Home → Add-ins. Click to open
-   the sidebar.
+> **Important:** As of 2026, Excel Desktop no longer exposes an
+> "Upload My Add-in" UI button — that path exists only in Excel on
+> the web. On desktop, sideload via a Trusted Add-in Catalog.
+>
+> Full canonical procedure: **[`docs/windows-sideload.md`](docs/windows-sideload.md)**.
+> Quick version:
+> 1. `powershell -ExecutionPolicy Bypass -File .\scripts\sideload-windows.ps1`
+>    (copies `manifest.prod.xml` into `~\Documents\TasacionesManifest\`
+>    and registers it under `HKCU\Software\Microsoft\Office\16.0\WEF\TrustedCatalogs`).
+> 2. Close and reopen Excel.
+> 3. **Home → Add-ins → More Add-ins → SHARED FOLDER → Tasaciones → Add**.
+> 4. Click **Abrir Tasaciones** on the Home ribbon.
 
 Differences with the Excel web flow used during this session:
 
 | Surface                                  | Manifest storage                       | Sideload UX                                  |
 |------------------------------------------|----------------------------------------|-----------------------------------------------|
 | Excel web (`excel.office.com`, OneDrive) | iframe origin localStorage              | "More add-ins → My Add-ins → Upload My Add-in" — always available |
-| Excel Desktop, Microsoft 365 personal    | `%LOCALAPPDATA%\Microsoft\Office\…` hive | Insert → My Add-ins → Upload My Add-in — works out of the box |
+| Excel Desktop, Microsoft 365 personal    | `HKCU\...\WEF\TrustedCatalogs\{GUID}` hive | Trusted Catalog (`scripts/sideload-windows.ps1`) — no admin, works out of the box |
 | Excel Desktop, Microsoft 365 family       | same                                   | Same path; sometimes requires admin consent for first run only |
-| Excel Desktop, M365 business / enterprise | Centrally deployed by tenant admin    | "Upload My Add-in" may be disabled by org policy |
-| Excel LTSC / 2019 (volume license)        | Desktop hive                            | May need **Trust Center → Trusted Add-in Catalogs** enabled first |
+| Excel Desktop, M365 business / enterprise | Centrally deployed by tenant admin    | Per-user sideload may be disabled by org policy; see admin path below |
+| Excel LTSC / 2019 (volume license)        | Desktop hive                            | Same Trusted Catalog path; no `mkcert` needed for `manifest.prod.xml` |
 
 > **Eventuality on Microsoft 365:** corporate tenants frequently
 > disable user-level custom-add-in sideload (compliance / IT policy).
-> If **Upload My Add-in** is greyed out, or the upload is silently
-> rejected, the only way to validate the addin is to have the tenant
-> admin deploy it from:
+> If the per-user sideload path is greyed out / rejected, the
+> only way to validate the add-in for that tenant is to have the
+> tenant admin deploy it from:
 >
 > Microsoft 365 admin center → **Settings → Integrated apps →
 > Upload custom app → Provide link to manifest**, paste
 > `https://complemento-excel.vercel.app/manifest.prod.xml`.
 >
-> That path is available to admins on every tenant and sidesteps the
-> user-level block. Until the admin deploys it, the per-user button
-> stays disabled and the only workaround is to install a personal
-> Microsoft 365 account (e.g. a personal/family license) on the same
-> machine for smoke testing.
+> That path is available to admins on every tenant and sidesteps
+> the user-level block. Until the admin deploys it, the per-user
+> button stays disabled and the only workaround is to test on a
+> personal Microsoft 365 account (or use a personal/family license
+> on the same machine).
 
 If the sidebar opens but is blank or dies immediately:
 

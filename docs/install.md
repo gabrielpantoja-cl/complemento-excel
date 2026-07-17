@@ -47,18 +47,24 @@ For more detail, see [Microsoft's guide for Mac](https://learn.microsoft.com/en-
 
 ### Windows
 
-You can try to install and run this on Windows — it might work!
+Excel Desktop on Windows no longer exposes an **Upload My Add-in** UI button as of 2026 — that path is only available on **Excel on the web** (above). To install Tasaciones on Excel Desktop, register the manifest as a **Trusted Add-in Catalog**. The repo ships an automated script for this:
 
-1. Open Excel
-2. Go to **Insert → My Add-ins**
-3. Click **Upload My Add-in…**
-4. Select the `manifest.prod.xml` file you downloaded
-5. Click **Open Pi** in the ribbon
+```powershell
+# 1) Clone the repo
+git clone https://github.com/gabrielpantoja-cl/complemento-excel.git
+cd complemento-excel
 
-> ⚠️ Use **Upload My Add-in…** for `manifest.prod.xml`.
-> Do **not** import it via **Manage → XML Expansion Packs** — that is a legacy Excel path and can surface misleading certificate errors for Office add-in manifests.
+# 2) Run the sideload script (uses manifest.prod.xml → bundle from Vercel)
+powershell -ExecutionPolicy Bypass -File .\scripts\sideload-windows.ps1
 
-For more detail, see [Microsoft's guide for Windows](https://learn.microsoft.com/en-us/office/dev/add-ins/testing/sideload-office-add-ins-for-testing).
+# 3) Close Excel fully and reopen it.
+# 4) Home → Add-ins → More Add-ins → SHARED FOLDER → Tasaciones → Add
+# 5) Click "Abrir Tasaciones" on the Home ribbon.
+```
+
+Full procedure, manual UI alternative, troubleshooting, and the path for Microsoft 365 business tenants (admin deploy via **Integrated apps**): see [`windows-sideload.md`](./windows-sideload.md).
+
+> Do **not** import the manifest via **Manage → XML Expansion Packs** — that is a legacy Excel path and can surface misleading certificate errors for Office add-in manifests.
 
 ### Excel on the Web (Office Online)
 
@@ -200,9 +206,9 @@ If you installed with `manifest.prod.xml`, Pi for Excel loads from a hosted URL 
 - Ensure you uploaded `manifest.prod.xml` (not the localhost dev manifest)
 
 ### Windows says the manifest certificate is invalid / mentions XML Expansion Packs
-- Use **Insert → My Add-ins → Upload My Add-in…** instead of **Manage → XML Expansion Packs**
-- `manifest.prod.xml` is an Office add-in manifest, not a legacy Excel XML Expansion Pack
-- If you already tried the XML Expansion Packs path, close Excel and repeat the upload flow above
+- Use the Trusted Add-in Catalog script (`scripts/sideload-windows.ps1`) described in [`windows-sideload.md`](./windows-sideload.md), **not** the legacy **Manage → XML Expansion Packs** path.
+- `manifest.prod.xml` is an Office add-in manifest, not a legacy Excel XML Expansion Pack.
+- If you already tried the XML Expansion Packs path, close Excel and re-run the Trusted Catalog script.
 
 ### Taskpane opens but is blank
 - Your network may block `https://pi-for-excel.vercel.app`

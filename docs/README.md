@@ -7,6 +7,7 @@ This folder contains **current** docs that should match shipped behavior.
 
 ## Guides
 - [Install Tasaciones by Loxos](./install.md)
+- [Sideload en Excel Desktop (Windows)](./windows-sideload.md) — Trusted Add-in Catalog + script `scripts/sideload-windows.ps1`
 - [Deploy hosted build on Vercel](./deploy-vercel.md)
 - [Release notes (`v0.9.5-pre`)](./release-notes/v0.9.5-pre.md)
 - [Release smoke test checklist](./release-smoke-test-checklist.md)

@@ -101,9 +101,16 @@ cp manifest.xml ~/Library/Containers/com.microsoft.Excel/Data/Documents/wef/
 ```
 Then open Excel → **Insert** → **My Add-ins** → **Pi for Excel**.
 
-**Windows** ([Microsoft docs](https://learn.microsoft.com/en-us/office/dev/add-ins/testing/sideload-office-add-ins-for-testing)):
+**Windows** ([Microsoft docs](https://learn.microsoft.com/en-us/office/dev/add-ins/testing/create-a-network-shared-folder-catalog-for-task-pane-and-content-add-ins)):
 
-Open Excel → **Insert** → **My Add-ins** → **Upload My Add-in** → select `manifest.xml`.
+Excel Desktop no longer exposes an "Upload My Add-in" UI as of 2026. Use a Trusted Add-in Catalog via the script in this repo:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\sideload-windows.ps1 -ManifestPath .\manifest.xml
+# Make sure `npm run dev` is running in another terminal
+```
+
+Then close/reopen Excel and **Home → Add-ins → More Add-ins → SHARED FOLDER → Tasaciones → Add**. Full procedure and troubleshooting in [`docs/windows-sideload.md`](docs/windows-sideload.md).
 
 The dev manifest points to `https://localhost:3000`. The production manifest (`manifest.prod.xml`) points to the hosted Vercel deployment.
 
