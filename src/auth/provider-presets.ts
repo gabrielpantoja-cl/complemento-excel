@@ -1,10 +1,9 @@
 /**
  * Preset provider registry.
  *
- * A preset provider is a managed custom OpenAI-compatible gateway whose
- * endpoint, default model, and display name are baked into the add-in.
- * End users only need to pick the row and paste their API key — no manual
- * endpoint URL typing required.
+ * A preset provider is a managed custom gateway whose endpoint, default
+ * model, and display name are baked into the add-in. End users only need
+ * to pick the row and paste their API key — no manual endpoint URL typing.
  *
  * This mirrors the opencode pattern: each preset is a small object with
  * the metadata needed to render the login row, persist the credential,
@@ -17,8 +16,8 @@
 
 import type { CustomProvider } from "@earendil-works/pi-web-ui/dist/storage/stores/custom-providers-store.js";
 
-/** Gateway API surface supported by the add-in (only OpenAI-completions today). */
-export type PresetGatewayKind = "openai-completions";
+/** Gateway protocols the preset framework knows how to wire. */
+export type PresetGatewayKind = "openai-completions" | "anthropic-messages";
 
 export interface PresetProviderConfig {
   /** Stable identifier used to (a) match the login row, (b) key the storage record. */
@@ -29,7 +28,7 @@ export interface PresetProviderConfig {
   desc?: string;
   /** Optional keychain hint; defaults to "Enter API key". */
   apiKeyHint?: string;
-  /** OpenAI-compatible API base URL without a trailing slash. */
+  /** API base URL without a trailing slash. */
   baseUrl: string;
   /** Display name surfaced in the provider picker and `/settings` gateway list. */
   displayName: string;
@@ -43,7 +42,7 @@ export interface PresetProviderConfig {
   maxTokens: number;
   /** Optional list of supported model ids shown in `/model`. */
   supportedModelIds?: readonly string[];
-  /** Gateway protocol this preset uses. The add-in only supports OpenAI-completions today. */
+  /** Gateway protocol this preset uses. */
   kind: PresetGatewayKind;
 }
 
@@ -53,7 +52,11 @@ export const PRESET_PROVIDERS: ReadonlyArray<PresetProviderConfig> = Object.free
     label: "MiniMax (Token Plan Plus)",
     desc: "MiniMax-M3 (1M context, multimodal) - plan Plus 20 USD/mes",
     apiKeyHint: "Subscription Key de MiniMax (eyJ...)",
-    baseUrl: "https://api.minimaxi.com/v1",
+    // Token Plan Subscriptions authenticate via the Anthropic Messages API; the
+    // OpenAI-compatible /v1/chat/completions endpoint rejects them with
+    // (2049 invalid api key). The Anthropic SDK sends the apiKey as the
+    // `x-api-key` header, which is exactly what api.minimaxi.com expects.
+    baseUrl: "https://api.minimaxi.com/anthropic/v1",
     displayName: "MiniMax",
     providerName: "MiniMax",
     modelId: "MiniMax-M3",
@@ -66,7 +69,7 @@ export const PRESET_PROVIDERS: ReadonlyArray<PresetProviderConfig> = Object.free
       "MiniMax-M2.5",
       "MiniMax-M2.5-highspeed",
     ]),
-    kind: "openai-completions",
+    kind: "anthropic-messages",
   }),
 ]);
 
@@ -87,12 +90,38 @@ export function getPresetProviderConfig(presetId: string): PresetProviderConfig 
  * Build a `CustomProvider` record (the storage shape) for the given preset.
  *
  * The runtime model is registered with `provider: preset.providerName` and
- * `baseUrl: preset.baseUrl`, matching the OpenAI-completions adapter.
+ * `baseUrl: preset.baseUrl`. The `kind` decides the gateway protocol and the
+ * `api` field on the embedded model — dispatch happens via `model.api` in
+ * `pi-ai`'s api-registry.
  */
 export function buildPresetProviderRecord(
   preset: PresetProviderConfig,
   apiKey: string,
 ): CustomProvider {
+  if (preset.kind === "anthropic-messages") {
+    return {
+      id: presetProviderStorageId(preset.id),
+      name: preset.displayName,
+      type: "anthropic-messages",
+      baseUrl: preset.baseUrl,
+      apiKey,
+      models: [
+        {
+          id: preset.modelId,
+          name: preset.modelId,
+          provider: preset.providerName,
+          api: "anthropic-messages",
+          baseUrl: preset.baseUrl,
+          contextWindow: preset.contextWindow,
+          maxTokens: Math.min(preset.maxTokens, preset.contextWindow),
+          input: ["text"],
+          reasoning: false,
+          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+        },
+      ],
+    };
+  }
+
   return {
     id: presetProviderStorageId(preset.id),
     name: preset.displayName,

@@ -197,7 +197,10 @@ export interface ProviderDef {
 }
 
 export const ALL_PROVIDERS: ProviderDef[] = [
-  // OAuth providers first (subscription / account-based flows)
+  // Preset providers at the top - one-click rows for high-frequency token-plan vendors.
+  { id: "minimax", label: "MiniMax (Token Plan Plus)", preset: "minimax", desc: "MiniMax-M3 - 1M context, multimodal" },
+
+  // OAuth providers next (subscription / account-based flows).
   // Only list flows that are supported in-browser (PKCE/manual paste, no local callback server).
   { id: "anthropic",          label: "Anthropic",                oauth: "anthropic",          desc: "Claude Pro/Max" },
   { id: "openai-codex",       label: "OpenAI (ChatGPT)",         oauth: "openai-codex",       desc: "Plus/Pro subscription" },
@@ -213,9 +216,6 @@ export const ALL_PROVIDERS: ProviderDef[] = [
   { id: "mistral",            label: "Mistral" },
   { id: "groq",               label: "Groq" },
   { id: "xai",                label: "xAI / Grok" },
-
-  // Preset providers (managed custom OpenAI-compatible gateways)
-  { id: "minimax", label: "MiniMax (Token Plan Plus)", preset: "minimax", desc: "MiniMax-M3 - 1M context, multimodal" },
 ];
 
 export interface ProviderRowCallbacks {
