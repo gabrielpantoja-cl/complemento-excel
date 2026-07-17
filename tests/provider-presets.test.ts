@@ -43,30 +43,30 @@ void test("getPresetProviderConfig returns null for unknown ids", () => {
 void test("getPresetProviderConfig returns the registered MiniMax preset", () => {
   const minimax = getPresetProviderConfig("minimax");
   assert.ok(minimax, "MiniMax preset must be registered");
-  assert.equal(minimax?.baseUrl, "https://api.minimaxi.com/anthropic/v1");
+  assert.equal(minimax?.baseUrl, "https://api.minimax.io/v1");
   assert.equal(minimax?.modelId, "MiniMax-M3");
   assert.equal(minimax?.contextWindow, 1_000_000);
-  assert.equal(minimax?.kind, "anthropic-messages");
+  assert.equal(minimax?.kind, "openai-completions");
 });
 
-void test("buildPresetProviderRecord builds an anthropic-messages record for MiniMax", () => {
+void test("buildPresetProviderRecord builds an openai-completions record for MiniMax", () => {
   const preset = getPresetProviderConfig("minimax");
   assert.ok(preset);
 
-  const record = buildPresetProviderRecord(preset, "eyJhbGciOi...");
+  const record = buildPresetProviderRecord(preset, "sk-cp-test-eyJ-fake");
 
   assert.equal(record.id, presetProviderStorageId(preset.id));
   assert.equal(record.name, preset.displayName);
-  assert.equal(record.type, "anthropic-messages");
+  assert.equal(record.type, "openai-completions");
   assert.equal(record.baseUrl, preset.baseUrl);
-  assert.equal(record.apiKey, "eyJhbGciOi...");
+  assert.equal(record.apiKey, "sk-cp-test-eyJ-fake");
 
   const model = record.models?.[0];
   assert.ok(model, "record must declare at least one model");
   assert.equal(model?.id, preset.modelId);
   assert.equal(model?.provider, preset.providerName);
   assert.equal(model?.baseUrl, preset.baseUrl);
-  assert.equal(model?.api, "anthropic-messages");
+  assert.equal(model?.api, "openai-completions");
   assert.equal(model?.contextWindow, preset.contextWindow);
   assert.ok((model?.maxTokens ?? 0) <= preset.contextWindow, "maxTokens must respect contextWindow");
 });

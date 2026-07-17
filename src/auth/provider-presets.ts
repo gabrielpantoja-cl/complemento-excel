@@ -74,11 +74,13 @@ export const PRESET_PROVIDERS: ReadonlyArray<PresetProviderConfig> = Object.free
     label: "MiniMax (Token Plan Plus)",
     desc: "MiniMax-M3 (1M context, multimodal) - plan Plus 20 USD/mes",
     apiKeyHint: "Subscription Key de MiniMax (eyJ...)",
-    // Token Plan Subscriptions authenticate via the Anthropic Messages API; the
-    // OpenAI-compatible /v1/chat/completions endpoint rejects them with
-    // (2049 invalid api key). The Anthropic SDK sends the apiKey as the
-    // `x-api-key` header, which is exactly what api.minimaxi.com expects.
-    baseUrl: "https://api.minimaxi.com/anthropic/v1",
+    // Token Plan Subscriptions authenticate against the OpenAI-compatible
+    // Chat Completions endpoint at api.minimax.io. Avoid the Anthropic
+    // Messages route here: its CORS allow-list does NOT include `x-api-key`
+    // (the header the Anthropic SDK sends by default), which would make the
+    // browser's preflight fail and produce a "Connection error" in the
+    // taskpane UI.
+    baseUrl: "https://api.minimax.io/v1",
     displayName: "MiniMax",
     providerName: "MiniMax",
     modelId: "MiniMax-M3",
@@ -91,7 +93,7 @@ export const PRESET_PROVIDERS: ReadonlyArray<PresetProviderConfig> = Object.free
       "MiniMax-M2.5",
       "MiniMax-M2.5-highspeed",
     ]),
-    kind: "anthropic-messages",
+    kind: "openai-completions",
   }),
 ]);
 
