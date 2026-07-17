@@ -20,6 +20,7 @@ This checklist maps directly to issue [#179](https://github.com/tmustier/pi-for-
 - Latest preflight run: `docs/release-smoke-runs/2026-02-14-macos-preflight.md`.
 - Latest CLI validation run: `docs/release-smoke-runs/2026-02-14-cli-validation.md`.
 - Latest H-1 hostless error-path run: `docs/release-smoke-runs/2026-02-13-macos-h1-hostless-error-path.md`.
+- Latest Windows sideload run (I-2 only): `docs/release-smoke-runs/2026-07-16-windows-sideload.md`.
 
 ## Prerequisites
 

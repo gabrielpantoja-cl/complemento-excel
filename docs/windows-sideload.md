@@ -2,8 +2,30 @@
 
 > **Estado:** probado en Microsoft 365 / Excel Desktop sobre Windows 11, julio 2026.
 > **Doc oficial Microsoft Learn:** [create-a-network-shared-folder-catalog-for-task-pane-and-content-add-ins](https://learn.microsoft.com/en-us/office/dev/add-ins/testing/create-a-network-shared-folder-catalog-for-task-pane-and-content-add-ins) (última revisión 2026-06-09).
+> **Última verificación del flujo:** `docs/release-smoke-runs/2026-07-16-windows-sideload.md` (I-2 Pass sobre commit `50ec40f`).
 
 Guía para contributors y evaluadores del fork **Tasaciones by Loxos** que necesitan probar el add-in en **Excel Desktop para Windows**. Si solo necesitas probarlo en Excel en la web, esa vía sigue funcionando igual que en el upstream (no requiere esta guía).
+
+---
+
+## Verificado
+
+**Fecha:** 2026-07-16 · **Commit:** `50ec40f` · **Equipo:** Lenovo Legion 5, Windows 11, Microsoft 365 Excel 16.0.x
+
+El flujo **Método A — Carpeta confiable** (`scripts/sideload-windows.ps1`) se ejecutó de punta a punta:
+
+1. Script escribe la entrada en `HKCU\Software\Microsoft\Office\16.0\WEF\TrustedCatalogs\{<GUID>}` con `Flags=1`.
+2. Cierre y reapertura de Excel.
+3. **Inicio → Complementos → Más complementos → CARPETA COMPARTIDA → Tasaciones → Agregar** — la pestaña **CARPETA COMPARTIDA** aparece y la tile **Tasaciones** está listada.
+4. Botón **Abrir Tasaciones** aparece en la cinta Inicio. Al hacer clic, el panel lateral carga `https://complemento-excel.vercel.app/src/taskpane.html`.
+
+Evidencia: screenshot `/{E2C563C4-CC5B-42FF-B53B-3955BDD26778}.png` (en la raíz del repo, gitignored). Run log completo: `docs/release-smoke-runs/2026-07-16-windows-sideload.md`.
+
+**Observaciones importantes para próximos runs:**
+
+- **Cerrar Excel del todo es obligatorio.** Tener Excel abierto al ejecutar el script hace que la pestaña **CARPETA COMPARTIDA** no aparezca. Task Manager → finalizar `EXCEL.EXE` por las dudas.
+- **La ruta UNC `\\localhost\C$\...` es la que Excel reconoce.** Una ruta literal `C:\Users\...\TasacionesManifest` no apareció en la pestaña **CARPETA COMPARTIDA** en este build de Excel — el script ya la convierte automáticamente, no requiere acción manual.
+- **El script es idempotente.** Re-ejecuciones reusan el GUID (vía `.sideload.json`) y no crean entradas duplicadas.
 
 ---
 

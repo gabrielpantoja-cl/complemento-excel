@@ -201,6 +201,8 @@ Sideload (Microsoft 365 / Excel 2016+ on Windows):
 > 2. Close and reopen Excel.
 > 3. **Home → Add-ins → More Add-ins → SHARED FOLDER → Tasaciones → Add**.
 > 4. Click **Abrir Tasaciones** on the Home ribbon.
+>
+> **Last verified:** 2026-07-16, commit `50ec40f` — see [`docs/release-smoke-runs/2026-07-16-windows-sideload.md`](docs/release-smoke-runs/2026-07-16-windows-sideload.md) (I-2 Pass; I-3/I-4 still `Blocked`).
 
 Differences with the Excel web flow used during this session:
 
