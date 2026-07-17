@@ -2077,6 +2077,31 @@ export async function initTaskpane(opts: {
       return;
     }
 
+    // Export session transcript (Markdown, paste-ready for the
+    // Continuous Improvement Mega Prompt). Adds F2 / B2 from roadmap.md.
+    if (el.closest(".pi-status-export")) {
+      const activeRuntime = getActiveRuntime();
+      if (!activeRuntime) {
+        showToast("No active session");
+        return;
+      }
+      const busy = activeRuntime.agent.state.isStreaming || activeRuntime.actionQueue.isBusy();
+      const result = executeSlashCommand({
+        name: "export",
+        args: "markdown",
+        busy,
+        enqueueCommand: (commandName: string, commandArgs: string) => {
+          activeRuntime.actionQueue.enqueueCommand(commandName, commandArgs);
+        },
+      });
+      if (result === "not-found") {
+        showToast("Export command unavailable");
+      } else if (result === "busy-blocked") {
+        showToast("Can't export while Pi is busy");
+      }
+      return;
+    }
+
     // Context quick actions
     if (el.closest(".pi-status-ctx--trigger")) {
       openContextPopoverFrom(el);

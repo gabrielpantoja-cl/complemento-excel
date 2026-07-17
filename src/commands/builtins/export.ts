@@ -123,6 +123,181 @@ async function exportWorkbookAuditLog(rawArgs: string): Promise<void> {
 }
 
 // =============================================================================
+// Markdown transcript (paste-ready for the Continuous Improvement Mega Prompt)
+// =============================================================================
+//
+// Output format is designed to drop into the prompt at
+// `docs/planning/roadmap.md` §"Continuous Improvement Mega Prompt" verbatim.
+// Sections are separated by horizontal rules so the LLM sees clear boundaries.
+
+export type MarkdownLimits = SerializeLimits;
+
+export function serializeConversationAsMarkdown(
+  messages: AgentMessage[],
+  limits: MarkdownLimits,
+  modelLabel: string,
+): string {
+  const parts: string[] = [];
+
+  for (const msg of messages) {
+    if (msg.role === "artifact") continue;
+
+    if (msg.role === "user" || msg.role === "user-with-attachments") {
+      const raw = typeof msg.content === "string" ? msg.content : extractTextBlocks(msg.content);
+      const text = truncateMiddle(raw, limits.maxUserChars);
+      if (text.trim().length > 0) {
+        parts.push(`**User:**\n\n${text}`);
+      }
+      continue;
+    }
+
+    if (msg.role === "assistant") {
+      const textParts: string[] = [];
+      const thinkingParts: string[] = [];
+      const toolCalls: string[] = [];
+
+      for (const block of msg.content) {
+        if (block.type === "text") {
+          textParts.push(block.text);
+        } else if (block.type === "thinking") {
+          thinkingParts.push(block.thinking);
+        } else if (block.type === "toolCall") {
+          let args = "";
+          try {
+            args = JSON.stringify(block.arguments);
+          } catch {
+            args = "{}";
+          }
+          toolCalls.push(`  - \`${block.name}\` — \`${args}\``);
+        }
+      }
+
+      const sections: string[] = [`**Assistant (${modelLabel}):**`];
+      if (thinkingParts.length > 0) {
+        sections.push(`*Thinking:*\n\n${truncateMiddle(thinkingParts.join("\n"), limits.maxAssistantChars)}`);
+      }
+      if (textParts.length > 0) {
+        sections.push(truncateMiddle(textParts.join("\n"), limits.maxAssistantChars));
+      }
+      if (toolCalls.length > 0) {
+        sections.push(`*Tool calls:*\n\n${toolCalls.join("\n")}`);
+      }
+      parts.push(sections.join("\n\n"));
+      continue;
+    }
+
+    if (msg.role === "toolResult") {
+      const raw = extractTextBlocks(msg.content);
+      const text = truncateMiddle(raw, limits.maxToolResultChars);
+      const errorSuffix = msg.isError ? " (error)" : "";
+      if (text.trim().length > 0) {
+        parts.push(`*Tool result for \`${msg.toolName}\`${errorSuffix}:*\n\n${text}`);
+      }
+      continue;
+    }
+
+    if (msg.role === "compactionSummary") {
+      const text = truncateMiddle(msg.summary, limits.maxAssistantChars);
+      if (text.trim().length > 0) {
+        parts.push(`*Compaction summary:*\n\n${text}`);
+      }
+      continue;
+    }
+
+    if (msg.role === "archivedMessages") {
+      parts.push(`*[archived history: ${msg.archivedChatMessageCount} chat messages]*`);
+      continue;
+    }
+  }
+
+  return parts.join("\n\n---\n\n");
+}
+
+const DEFAULT_MARKDOWN_LIMITS: MarkdownLimits = {
+  maxUserChars: 8_000,
+  maxAssistantChars: 16_000,
+  maxToolResultChars: 8_000,
+};
+
+function triggerMarkdownDownload(fileName: string, content: string): void {
+  const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+
+  const opened = window.open(url, "_blank");
+  if (!opened) {
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.rel = "noopener";
+    anchor.hidden = true;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+  }
+
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+async function exportTranscriptMarkdown(
+  rawArgs: string,
+  getActiveAgent: ActiveAgentProvider,
+): Promise<void> {
+  const agent = getActiveAgent();
+  if (!agent) {
+    showToast("No active session");
+    return;
+  }
+
+  const msgs = agent.state.messages;
+  if (msgs.length === 0) {
+    showToast("No messages to export");
+    return;
+  }
+
+  const model = agent.state.model;
+  const modelLabel = model ? (model.name || model.id) : "assistant";
+  const today = new Date().toISOString().slice(0, 10);
+
+  const conversation = serializeConversationAsMarkdown(
+    msgs,
+    DEFAULT_MARKDOWN_LIMITS,
+    modelLabel,
+  );
+
+  const markdown = [
+    `# Session transcript — ${today}`,
+    "",
+    `- Exported: ${new Date().toISOString()}`,
+    `- Model: \`${modelLabel}\``,
+    `- Thinking level: \`${agent.state.thinkingLevel}\``,
+    `- Messages: ${msgs.length}`,
+    `- Paste-ready for: Continuous Improvement Mega Prompt (\`docs/planning/roadmap.md\` §5)`,
+    "",
+    "---",
+    "",
+    conversation,
+    "",
+  ].join("\n");
+
+  const destination = parseExportDestination(rawArgs, "clipboard");
+
+  if (destination === "clipboard") {
+    try {
+      await navigator.clipboard.writeText(markdown);
+      showToast(
+        `Markdown transcript copied (${msgs.length} messages, ${(markdown.length / 1024).toFixed(0)}KB)`,
+      );
+    } catch (error: unknown) {
+      showToast(`Copy failed: ${getErrorMessage(error)}`);
+    }
+    return;
+  }
+
+  triggerMarkdownDownload(`pi-session-${today}.md`, markdown);
+  showToast(`Downloaded transcript (${msgs.length} messages)`);
+}
+
+// =============================================================================
 // Compaction helpers
 // =============================================================================
 
@@ -417,6 +592,15 @@ export function createExportCommands(getActiveAgent: ActiveAgentProvider): Slash
             await exportWorkbookAuditLog(parts.slice(1).join(" "));
           } catch (error: unknown) {
             showToast(`Audit export failed: ${getErrorMessage(error)}`);
+          }
+          return;
+        }
+
+        if (mode === "markdown" || mode === "md") {
+          try {
+            await exportTranscriptMarkdown(parts.slice(1).join(" "), getActiveAgent);
+          } catch (error: unknown) {
+            showToast(`Markdown export failed: ${getErrorMessage(error)}`);
           }
           return;
         }

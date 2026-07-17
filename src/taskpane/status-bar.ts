@@ -19,6 +19,9 @@ import {
 } from "./status-context.js";
 import type { RuntimeLockState } from "./session-runtime-manager.js";
 
+const EXPORT_BUTTON_TOOLTIP =
+  "Copy this session to the clipboard in Markdown, paste-ready for the Continuous Improvement Mega Prompt (see docs/planning/roadmap.md).";
+
 export type ActiveAgentProvider = () => Agent | null;
 export type ActiveLockStateProvider = () => RuntimeLockState;
 export type ActiveExecutionModeProvider = () => ExecutionMode;
@@ -131,6 +134,9 @@ function renderStatusBar(
     : "Confirm: Pi asks before each workbook change. Click to switch to Auto.";
   const modeBadge = `<button type="button" class="pi-status-mode pi-status-clickable pi-status-tooltip--right${modeBadgeClass}" data-tooltip="${modeTooltip}"><span>${modeLabel}</span><span class="pi-status-affordance" aria-hidden="true">${affordanceChevronSvg}</span></button>`;
 
+  const exportTooltip = escapeAttr(EXPORT_BUTTON_TOOLTIP);
+  const exportButton = `<button type="button" class="pi-status-export pi-status-clickable pi-status-tooltip--right" data-tooltip="${exportTooltip}" aria-label="Export session transcript as Markdown">⎘ Export</button>`;
+
   const thinkingTooltip = escapeAttr(
     "How deeply Pi reasons before answering — higher is slower but more thorough. Click to choose, or ⇧Tab to cycle.",
   );
@@ -152,6 +158,7 @@ function renderStatusBar(
     </div>
     <div class="pi-status-side">
       ${modeBadge}
+      ${exportButton}
     </div>
   `;
 

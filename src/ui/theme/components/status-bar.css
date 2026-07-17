@@ -227,6 +227,38 @@
   border-color: oklch(0.65 0.17 40 / 0.48);
 }
 
+/* Export session transcript button — paste-ready Markdown for the
+   Continuous Improvement Mega Prompt (docs/guides/windows-sideload.md and
+   docs/planning/roadmap.md). */
+.pi-status-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: var(--radius-xs);
+  padding: 2px 6px;
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
+  line-height: 1.4;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted-foreground);
+  transition: background var(--duration-fast), border-color var(--duration-fast), color var(--duration-fast);
+}
+
+.pi-status-export:hover {
+  background: var(--alpha-2);
+  color: var(--foreground);
+  border-color: var(--alpha-6);
+}
+
+.pi-status-export:focus-visible {
+  outline: 2px solid var(--green-alpha-25);
+  outline-offset: 1px;
+}
+
 /* Context debug pill — collapsible block matching thinking-block style. */
 .pi-context-pill {
   border-radius: var(--pill-radius);
