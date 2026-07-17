@@ -2,6 +2,9 @@
 
 This folder contains **current** docs that should match shipped behavior.
 
+## Roadmap
+- [Roadmap — what we're building next](./roadmap.md) (tracks A-G + issue log)
+
 ## Guides
 - [Install Tasaciones by Loxos](./install.md)
 - [Deploy hosted build on Vercel](./deploy-vercel.md)
