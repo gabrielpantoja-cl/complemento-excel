@@ -116,6 +116,75 @@ function stripAnthropicBrowserHeader(init?: RequestInit): RequestInit | undefine
 }
 
 /**
+ * HTTP request-header prefixes that the OpenAI SDK (Stainless-generated
+ * client) injects as telemetry. Many upstreams (MiniMax, Z.AI's
+ * Anthropic-compat, etc.) do NOT whitelist these in `Access-Control-Allow-
+ * Headers`, so the browser blocks the preflighted POST. Stripping them
+ * makes the request look like a plain browser fetch.
+ *
+ * Exported for unit tests; not part of the public API.
+ */
+export const STRIPPED_REQUEST_HEADER_PREFIXES: readonly string[] = [
+  "x-stainless-", // OpenAI SDK (Stainless) telemetry
+];
+
+function isStrippedHeader(name: string): boolean {
+  const lower = name.toLowerCase();
+  return STRIPPED_REQUEST_HEADER_PREFIXES.some((prefix) => lower.startsWith(prefix));
+}
+
+/**
+ * Remove browser-CORS-blocking telemetry headers from a `RequestInit`.
+ *
+ * Handles every shape `fetch()` accepts:
+ *  - `Headers` instance (mutated in place)
+ *  - `Record<string, string>` (replaced with a filtered clone)
+ *  - `[string, string][]` header tuples (replaced with a filtered copy)
+ *  - `undefined` (returned as-is)
+ *
+ * Returns the (possibly mutated) original `RequestInit` to keep the
+ * call site a one-liner; do not treat the return value as a fresh
+ * RequestInit when no filtering happened.
+ */
+export function stripTelemetryHeaders(init?: RequestInit): RequestInit | undefined {
+  if (!init?.headers) return init;
+
+  if (init.headers instanceof Headers) {
+    let mutated = false;
+    for (const key of [...init.headers.keys()]) {
+      if (isStrippedHeader(key)) {
+        init.headers.delete(key);
+        mutated = true;
+      }
+    }
+    // Headers are mutated in place; return the same RequestInit reference.
+    if (mutated) return init;
+    return init;
+  }
+
+  if (Array.isArray(init.headers)) {
+    const filtered = init.headers.filter(([name]) => !isStrippedHeader(name));
+    if (filtered.length !== init.headers.length) {
+      init = { ...init, headers: filtered };
+    }
+    return init;
+  }
+
+  // Plain object form.
+  let mutated = false;
+  const filtered: Record<string, string> = {};
+  for (const [name, value] of Object.entries(init.headers)) {
+    if (isStrippedHeader(name)) {
+      mutated = true;
+      continue;
+    }
+    filtered[name] = value;
+  }
+  if (mutated) init = { ...init, headers: filtered };
+  return init;
+}
+
+/**
  * Install the fetch interceptor. Call once at boot.
  */
 export function installFetchInterceptor(): void {
@@ -133,12 +202,21 @@ export function installFetchInterceptor(): void {
       return originalFetch(input, init);
     }
 
+    // Strip SDK telemetry headers BEFORE any other branch. The OpenAI
+    // SDK (Stainless) injects `x-stainless-*` headers into every request,
+    // and many upstreams (e.g. api.minimax.io) do not whitelist them in
+    // `Access-Control-Allow-Headers`, so Chromium blocks the preflighted
+    // POST with "Request header field x-stainless-os is not allowed...".
+    // The interceptor handles this once, so neither the OpenAI SDK nor
+    // any future adapter needs to know about it.
+    const cleanedInit = stripTelemetryHeaders(init);
+
     // Dev: Vite reverse proxies
     if (import.meta.env.DEV) {
       const rewritten = rewriteDevProxyUrl(url);
-      if (!rewritten) return originalFetch(input, init);
+      if (!rewritten) return originalFetch(input, cleanedInit);
 
-      const newInit = stripAnthropicBrowserHeader(init);
+      const newInit = stripAnthropicBrowserHeader(cleanedInit);
 
       if (typeof input !== "string" && !(input instanceof URL) && input instanceof Request) {
         const newHeaders = new Headers(input.headers);
@@ -156,10 +234,10 @@ export function installFetchInterceptor(): void {
       const proxyUrl = await getEnabledProxyUrl();
       if (proxyUrl) {
         const proxied = `${proxyUrl}/?url=${encodeURIComponent(url)}`;
-        return originalFetch(proxied, stripAnthropicBrowserHeader(init));
+        return originalFetch(proxied, stripAnthropicBrowserHeader(cleanedInit));
       }
     }
 
-    return originalFetch(input, init);
+    return originalFetch(input, cleanedInit);
   };
 }
