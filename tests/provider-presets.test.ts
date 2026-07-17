@@ -144,6 +144,57 @@ void test("buildPresetProviderRecord overwrites in place (stable id)", () => {
   assert.equal(store.get(presetProviderStorageId(preset.id))?.apiKey, "new-key");
 });
 
+void test("save flow busts stale MiniMax config from prior bundle versions", () => {
+  // Regression guard: if a user had pi-preset:minimax stored under an
+  // older bundle (e.g. api.minimaxi.com/anthropic/v1, kind: anthropic-
+  // messages), the next Save must fully replace the record. Otherwise the
+  // host/protocol drift would cause a "Connection error" loop that only
+  // Disconnect+Save fixes. The stable id `pi-preset:minimax` plus
+  // CustomProvidersStore.set()'s id-keyed write gives us the guarantee;
+  // this test pins it.
+  const preset = getPresetProviderConfig("minimax");
+  assert.ok(preset);
+
+  const storageId = presetProviderStorageId(preset.id);
+
+  // Mimic the IndexedDB-backed store: keyed by record.id, last write wins.
+  const store = new Map<string, ReturnType<typeof buildPresetProviderRecord>>();
+
+  // 1. Old bundle wrote this when the preset was anthropic-messages.
+  const oldConfig: import("../src/auth/provider-presets.ts").PresetProviderConfig = {
+    id: preset.id,
+    label: preset.label,
+    baseUrl: "https://api.minimaxi.com/anthropic/v1",
+    displayName: preset.displayName,
+    providerName: preset.providerName,
+    modelId: preset.modelId,
+    contextWindow: preset.contextWindow,
+    maxTokens: preset.maxTokens,
+    kind: "anthropic-messages",
+    anthropicVersion: "2023-06-01",
+  };
+  store.set(storageId, buildPresetProviderRecord(oldConfig, "old-sk-cp-key"));
+
+  // 2. New bundle writes the current (openai-completions + .io) shape.
+  const newRecord = buildPresetProviderRecord(preset, "new-sk-cp-key");
+  store.set(storageId, newRecord);
+
+  // 3. The stored record must reflect the new bundle exactly.
+  assert.equal(store.size, 1, "stable id should keep store at one entry");
+  const stored = store.get(storageId);
+  assert.equal(stored?.id, storageId);
+  assert.equal(stored?.type, "openai-completions", "kind must be overwritten");
+  assert.equal(stored?.baseUrl, "https://api.minimax.io/v1", "baseUrl must be overwritten");
+  assert.equal(stored?.apiKey, "new-sk-cp-key", "api key must be overwritten");
+  assert.equal(stored?.models?.[0]?.baseUrl, "https://api.minimax.io/v1");
+  assert.equal(stored?.models?.[0]?.api, "openai-completions");
+  assert.equal(
+    stored?.models?.[0]?.headers,
+    undefined,
+    "openai-compat record should not carry anthropic-version headers",
+  );
+});
+
 void test("findPresetIdForCustomProvider matches preset records only", () => {
   const preset = getPresetProviderConfig("minimax");
   assert.ok(preset);
