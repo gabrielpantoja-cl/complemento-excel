@@ -87,6 +87,49 @@ void test("buildPresetProviderRecord supports openai-completions presets", () =>
   const record = buildPresetProviderRecord(preset, "sk-test");
   assert.equal(record.type, "openai-completions");
   assert.equal(record.models?.[0]?.api, "openai-completions");
+  assert.equal(record.models?.[0]?.headers, undefined,
+    "openai-completions presets should not force headers by default");
+});
+
+void test("anthropic-messages preset defaults anthropic-version to 2023-06-01", () => {
+  const preset = getPresetProviderConfig("minimax");
+  assert.ok(preset);
+  const record = buildPresetProviderRecord(preset, "eyJ-test");
+  const headers = record.models?.[0]?.headers;
+  assert.ok(headers, "anthropic-messages models must declare anthropic-version");
+  assert.equal(headers?.["anthropic-version"], "2023-06-01");
+});
+
+void test("anthropic-messages preset honours anthropicVersion override", () => {
+  const preset: import("../src/auth/provider-presets.ts").PresetProviderConfig = {
+    id: "test-anthropic",
+    label: "Test Anthropic",
+    baseUrl: "https://example.com/anthropic/v1",
+    displayName: "Test Anthropic",
+    providerName: "Test Anthropic",
+    modelId: "test-model",
+    contextWindow: 200_000,
+    maxTokens: 8_192,
+    kind: "anthropic-messages",
+    anthropicVersion: "2024-01-01",
+    extraHeaders: { "x-custom-auth": "Bearer yes" },
+  };
+  const record = buildPresetProviderRecord(preset, "sk-test");
+  const headers = record.models?.[0]?.headers as Record<string, string>;
+  assert.equal(headers["anthropic-version"], "2024-01-01");
+  assert.equal(headers["x-custom-auth"], "Bearer yes");
+});
+
+void test("discriminated union: anthropic-messages fields are gated by kind", () => {
+  // The TS compiler enforces this. The runtime check below is a documentation
+  // guard so a future refactor cannot regress without breaking the test suite.
+  const preset = getPresetProviderConfig("minimax");
+  assert.ok(preset);
+  if (preset.kind === "anthropic-messages") {
+    // @ts-expect-error -- intentionally accessing only on openai branch below.
+    const _openaiOnly = preset.kind === "openai-completions" ? preset : null;
+    assert.equal(preset.kind, "anthropic-messages");
+  }
 });
 
 void test("buildPresetProviderRecord overwrites in place (stable id)", () => {

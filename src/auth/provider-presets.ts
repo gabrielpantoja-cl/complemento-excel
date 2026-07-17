@@ -19,7 +19,8 @@ import type { CustomProvider } from "@earendil-works/pi-web-ui/dist/storage/stor
 /** Gateway protocols the preset framework knows how to wire. */
 export type PresetGatewayKind = "openai-completions" | "anthropic-messages";
 
-export interface PresetProviderConfig {
+/** Fields shared by every preset, regardless of gateway protocol. */
+interface PresetCommonFields {
   /** Stable identifier used to (a) match the login row, (b) key the storage record. */
   id: string;
   /** UI label shown in the welcome/login row. */
@@ -42,9 +43,30 @@ export interface PresetProviderConfig {
   maxTokens: number;
   /** Optional list of supported model ids shown in `/model`. */
   supportedModelIds?: readonly string[];
-  /** Gateway protocol this preset uses. */
-  kind: PresetGatewayKind;
 }
+
+/** Anthropic-Messages-specific knobs. */
+interface AnthropicMessagesPresetFields {
+  /**
+   * `anthropic-version` header. Defaults to "2023-06-01" if unset.
+   * Required by the Anthropic Messages API and most compatible clones.
+   */
+  anthropicVersion?: string;
+  /**
+   * Extra HTTP headers to inject into every request. Useful for clones that
+   * reject the default headers or require a custom auth scheme (e.g.
+   * `Authorization: Bearer <key>` instead of `x-api-key`).
+   */
+  extraHeaders?: Readonly<Record<string, string>>;
+}
+
+/**
+ * Discriminated union: TypeScript narrows the extra fields based on `kind`,
+ * so future providers cannot silently omit protocol-specific knobs at compile time.
+ */
+export type PresetProviderConfig =
+  | (PresetCommonFields & { kind: "openai-completions" })
+  | (PresetCommonFields & AnthropicMessagesPresetFields & { kind: "anthropic-messages" });
 
 export const PRESET_PROVIDERS: ReadonlyArray<PresetProviderConfig> = Object.freeze([
   Object.freeze({
@@ -117,6 +139,10 @@ export function buildPresetProviderRecord(
           input: ["text"],
           reasoning: false,
           cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+          headers: {
+            "anthropic-version": preset.anthropicVersion ?? "2023-06-01",
+            ...preset.extraHeaders,
+          },
         },
       ],
     };
