@@ -1,14 +1,14 @@
-# Smoke Run — Windows host (template)
+﻿# Smoke Run â€” Windows host (template)
 
 - Date: YYYY-MM-DD
 - Commit: `git rev-parse --short HEAD`
 - Environment: Windows version + Excel version/build + provider used
-- Checklist source: `docs/release-smoke-test-checklist.md`
+- Checklist source: `docs/guides/release-smoke-test-checklist.md`
 
 ## Setup notes
 
 - Manifest used: `manifest.prod.xml` or `manifest.xml`
-- Install path followed: `docs/install.md` Windows flow
+- Install path followed: `docs/guides/install.md` Windows flow
 - Proxy mode: enabled/disabled (+ URL if enabled)
 
 ## Checklist coverage

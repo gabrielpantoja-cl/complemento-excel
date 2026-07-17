@@ -1,4 +1,4 @@
-# Release Smoke Test Checklist
+﻿# Release Smoke Test Checklist
 
 Reproducible smoke pass for pre-release builds.
 
@@ -49,11 +49,11 @@ Record run date and commit SHA in the evidence table below.
 Run this add-on check when the release includes changes to model context composition (system prompt, tool disclosure, toolset refresh, compaction, or context injection).
 
 References:
-- baseline matrix: `docs/cache-observability-baselines.md`
+- baseline matrix: `docs/architecture/cache-observability-baselines.md`
 - run template: `docs/release-smoke-runs/templates/context-cache-telemetry-template.md`
 
 1. Enable debug mode.
-2. Run a deterministic mini-session (≥5 calls, including at least one tool loop).
+2. Run a deterministic mini-session (â‰¥5 calls, including at least one tool loop).
 3. Record prefix churn counters (`prefixChanges`, `prefixModelChanges`, `prefixSystemPromptChanges`, `prefixToolChanges`).
 4. Compare observed `prefixChangeReasons` to baseline expectations for each trigger.
 5. Confirm each non-zero reason has an intentional trigger in the scenario.
@@ -203,7 +203,7 @@ Expected:
 
 ### I-1. macOS install from scratch
 
-Follow `docs/install.md` exactly on clean state.
+Follow `docs/guides/install.md` exactly on clean state.
 
 Expected:
 
@@ -212,7 +212,7 @@ Expected:
 
 ### I-2. Windows install from scratch
 
-Follow Windows section in `docs/install.md` on clean machine/profile.
+Follow Windows section in `docs/guides/install.md` on clean machine/profile.
 
 Expected:
 

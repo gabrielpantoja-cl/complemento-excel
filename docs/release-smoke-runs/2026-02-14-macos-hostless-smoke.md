@@ -1,9 +1,9 @@
-# Smoke Run — macOS hostless (taskpane browser harness)
+﻿# Smoke Run â€” macOS hostless (taskpane browser harness)
 
 - Date: 2026-02-14
 - Commit: `12144be7ccc3121705de5f9c3cbd77fcf1b2fd6d`
 - Environment: macOS CLI + Playwright (`agent-browser`) against `http://localhost:3100/src/taskpane.html`
-- Checklist source: `docs/release-smoke-test-checklist.md`
+- Checklist source: `docs/guides/release-smoke-test-checklist.md`
 - Scope note: this is **not** a full desktop-Excel host run. Excel-host-dependent checks remain blocked.
 
 ## Preflight commands
@@ -59,7 +59,7 @@ Validated in headless browser session (`agent-browser`):
 
 ## Notable findings
 
-1. Menu label still reads **"Files workspace (Beta)…"** in UI snapshot, despite broader "Files" rename elsewhere.
+1. Menu label still reads **"Files workspace (Beta)â€¦"** in UI snapshot, despite broader "Files" rename elsewhere.
 2. Browser harness reports expected hostless warnings (`Office.js loaded outside Office client`, `Excel is not defined`) but no uncaught runtime errors.
 3. Prompt execution works in hostless mode with existing OAuth credentials (assistant response captured in HTML artifact).
 

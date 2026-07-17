@@ -4,7 +4,7 @@ import path from "node:path";
 const ROOT = process.cwd();
 
 const LANDING_FILE = path.join(ROOT, "public", "index.html");
-const INSTALL_DOC_FILE = path.join(ROOT, "docs", "install.md");
+const INSTALL_DOC_FILE = path.join(ROOT, "docs", "guides", "install.md");
 
 // Tasaciones by Loxos uses a proxy-less connect flow (BYOK / OpenRouter),
 // so the landing intentionally drops the upstream Pi proxy snippets. These

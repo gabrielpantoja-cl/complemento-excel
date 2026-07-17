@@ -1,8 +1,8 @@
-# Cache observability baselines
+﻿# Cache observability baselines
 
 Baseline expectations for prefix-churn telemetry in Pi for Excel.
 
-This is the operational companion to `docs/context-management-policy.md` (area #424, item 6).
+This is the operational companion to `docs/architecture/context-management-policy.md` (area #424, item 6).
 
 ## Signals used
 
@@ -44,7 +44,7 @@ Use this as the default expectation map when reviewing context-shape changes.
 
 If observed reasons differ from the matrix:
 
-1. Confirm the trigger actually happened (or didn’t).
+1. Confirm the trigger actually happened (or didnâ€™t).
 2. Check whether multiple triggers were combined in one step (e.g. integration + rules change).
 3. Treat unexplained churn as a regression candidate and document root cause before merge.
 

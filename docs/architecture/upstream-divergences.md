@@ -1,4 +1,4 @@
-# Upstream divergences from pi-mono
+﻿# Upstream divergences from pi-mono
 
 **Last reviewed:** 2026-02-22
 
@@ -7,7 +7,7 @@ This document records every place Pi for Excel intentionally diverges from
 behavior, with rationale and status for each.
 
 **Philosophy:** pi-mono is our upstream and the default is to stay aligned.
-Mario is thoughtful and experienced — if upstream does something a certain way,
+Mario is thoughtful and experienced â€” if upstream does something a certain way,
 we assume there's a good reason. We only diverge when our Excel-specific
 architecture genuinely demands it, and we document every case here so divergences
 don't accumulate silently.
@@ -45,7 +45,7 @@ pi-mono parity (in-place), and kept fork as an advanced opt-in setting.
 |---|---|---|
 | When tools change | Direct `setTools()` on explicit user action | Event-driven capability refreshes; apply `setTools()` only when tool fingerprint or extension tool revision changes |
 
-**Rationale:** This is not a disagreement with upstream — it's compensating for
+**Rationale:** This is not a disagreement with upstream â€” it's compensating for
 a different lifecycle. Pi-mono's tool set only changes when the user explicitly
 does something (e.g. `/tools`). In Excel, capability refresh passes run on many
 events (focus/visibility return, integrations/connections/skills/rules/execution-mode/experimental updates, extension activation).
@@ -78,8 +78,8 @@ tracking. Divergence remains architecture-driven.
 **Rationale:** Extensions can make their own LLM calls independently of the main
 conversation (e.g. an extension that summarises a cell selection on button
 click). If these "side requests" shared the main session ID, the provider would
-see an unexpected request appear mid-conversation — different system prompt,
-different messages, no tools — and could invalidate the main conversation's
+see an unexpected request appear mid-conversation â€” different system prompt,
+different messages, no tools â€” and could invalidate the main conversation's
 cache.
 
 With namespacing, an extension's call is tagged as
@@ -100,12 +100,12 @@ host-side `llm.complete` surface), not a disagreement with upstream.
 | | pi-mono | Pi for Excel |
 |---|---|---|
 | Hard trigger | `contextWindow - reserveTokens` | `min(contextWindow - reserveTokens, qualityCap)` |
-| Quality cap | None | 88% for ≥128k windows, 85% for ≥200k windows |
-| Soft warning | None | 70% of hard trigger (floor), or hard − 5% of window |
+| Quality cap | None | 88% for â‰¥128k windows, 85% for â‰¥200k windows |
+| Soft warning | None | 70% of hard trigger (floor), or hard âˆ’ 5% of window |
 
 **Rationale:** Response quality tends to degrade before you literally exhaust the
-context window — the model starts losing track of earlier instructions and
-context. By compacting slightly earlier (at 85–88% instead of ~92%), we trade a
+context window â€” the model starts losing track of earlier instructions and
+context. By compacting slightly earlier (at 85â€“88% instead of ~92%), we trade a
 small amount of raw context capacity for more consistent quality in long
 sessions.
 
@@ -113,8 +113,8 @@ The base reserve/keep-recent defaults still mirror pi-mono (16,384 / 20,000
 tokens). We only adjust *when* compaction fires, not the summarisation call
 shape.
 
-**Status:** Shipped. Documented in `docs/context-management-policy.md` (Slice 5)
-and `docs/compaction.md`. The call shape (isolated summarizer request) still
+**Status:** Shipped. Documented in `docs/architecture/context-management-policy.md` (Slice 5)
+and `docs/features/compaction.md`. The call shape (isolated summarizer request) still
 matches upstream.
 
 **Files:** `src/compaction/defaults.ts` (`getCompactionThresholds`,
@@ -136,9 +136,9 @@ history + turn-prefix summaries).
 | | pi-mono | Pi for Excel |
 |---|---|---|
 | Tool output cap | fixed 50KB / 2000 lines | scaled linearly below 128k windows (floors 8KB / 200 lines) |
-| Verbatim recent tool results | n/a (no model-facing shaping layer) | 6 at ≥128k, scaled down to a floor of 2 |
+| Verbatim recent tool results | n/a (no model-facing shaping layer) | 6 at â‰¥128k, scaled down to a floor of 2 |
 
-**Rationale:** Pi for Excel supports custom gateways with 32k–65k windows where
+**Rationale:** Pi for Excel supports custom gateways with 32kâ€“65k windows where
 a single fixed-cap tool result can consume ~20% of the window. Scaling keeps
 worst-case tool-loop context proportional to the model's actual capacity (#566).
 
@@ -154,7 +154,7 @@ worst-case tool-loop context proportional to the model's actual capacity (#566).
 Both pi-mono and Pi for Excel use the same pattern: serialize conversation to
 text, send an isolated summarization request, inject the structured summary as a
 user message. We considered a "cache-safe fork compaction" approach (reusing the
-main runtime prefix) but **deferred** it — see
+main runtime prefix) but **deferred** it â€” see
 `docs/archive/issue-424-compaction-call-shape.md`.
 
 ### Session ID stability

@@ -1,4 +1,4 @@
-# Integrations + External Tools
+﻿# Integrations + External Tools
 
 Issue: [#24](https://github.com/tmustier/pi-for-excel/issues/24)
 
@@ -7,7 +7,7 @@ Issue: [#24](https://github.com/tmustier/pi-for-excel/issues/24)
 
 ## What shipped
 
-- **Tools & MCP manager UI** (`/tools`, or `/extensions` → Connections)
+- **Tools & MCP manager UI** (`/tools`, or `/extensions` â†’ Connections)
   - enable/disable integration bundles per **session** and/or **workbook**
   - clear warnings for network/tool access
   - active integrations shown in the status bar
@@ -33,7 +33,7 @@ Integrations are resolved as:
 1. session-scoped enabled integrations
 2. workbook-scoped enabled integrations
 3. union of (1) and (2), ordered by catalog
-4. if `external.tools.enabled` is false → active external integrations become empty
+4. if `external.tools.enabled` is false â†’ active external integrations become empty
 
 Active integrations contribute both:
 

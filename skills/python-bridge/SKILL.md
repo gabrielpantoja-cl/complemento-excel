@@ -4,7 +4,7 @@ description: Native Python execution via the local Python bridge. Use when the u
 compatibility: Python tools always work via in-browser Pyodide. The native bridge is optional and requires a local bridge process running on the user's machine.
 metadata:
   tool-name: python_run
-  docs: docs/python-bridge-contract.md
+  docs: docs/bridges/python-bridge-contract.md
 ---
 
 # Python Bridge

@@ -1,9 +1,9 @@
-# Smoke Run — macOS preflight
+﻿# Smoke Run â€” macOS preflight
 
 - Date: 2026-02-14
 - Commit: `48336f158c64d967f51b4ad7123182092566c5f9`
 - Environment: local repo checkout on macOS (CLI validation)
-- Checklist source: `docs/release-smoke-test-checklist.md`
+- Checklist source: `docs/guides/release-smoke-test-checklist.md`
 
 ## Commands executed
 

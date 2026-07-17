@@ -1,9 +1,9 @@
-# Smoke Run — macOS host (template)
+﻿# Smoke Run â€” macOS host (template)
 
 - Date: YYYY-MM-DD
 - Commit: `git rev-parse --short HEAD`
 - Environment: macOS version + Excel version/build + provider used
-- Checklist source: `docs/release-smoke-test-checklist.md`
+- Checklist source: `docs/guides/release-smoke-test-checklist.md`
 
 ## Setup notes
 

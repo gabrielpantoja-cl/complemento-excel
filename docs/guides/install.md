@@ -1,6 +1,6 @@
-# Install Pi for Excel
+﻿# Install Pi for Excel
 
-No coding or dev tools required — just download one file and add it to Excel.
+No coding or dev tools required â€” just download one file and add it to Excel.
 
 ---
 
@@ -8,7 +8,7 @@ No coding or dev tools required — just download one file and add it to Excel.
 
 Download this file and save it somewhere you can find it (e.g. your Desktop):
 
-👉 **[manifest.prod.xml](https://pi-for-excel.vercel.app/manifest.prod.xml)**
+ðŸ‘‰ **[manifest.prod.xml](https://pi-for-excel.vercel.app/manifest.prod.xml)**
 
 <details>
 <summary>Alternate download links (if the above is unavailable)</summary>
@@ -31,13 +31,13 @@ Download this file and save it somewhere you can find it (e.g. your Desktop):
    ```
 3. Copy `manifest.prod.xml` into that folder
 4. Quit Excel completely (Cmd + Q) and reopen it
-5. Go to **Insert → My Add-ins** — you should see **Pi for Excel** listed. Click it to register the add-in.
+5. Go to **Insert â†’ My Add-ins** â€” you should see **Pi for Excel** listed. Click it to register the add-in.
 6. Now look for the **Add-ins** button on the far right of the **Home** ribbon tab (it looks like four orange squares). Click it, then click **Pi for Excel** to open the sidebar.
 
    <img src="../public/assets/add-ins-button.png" width="200" alt="Add-ins button in the Home ribbon tab" />
    <img src="../public/assets/add-ins-dropdown.png" width="200" alt="Pi for Excel in the Add-ins dropdown" />
 
-> **Folder doesn't exist?** Create it first — open Terminal and run:
+> **Folder doesn't exist?** Create it first â€” open Terminal and run:
 > ```bash
 > mkdir -p ~/Library/Containers/com.microsoft.Excel/Data/Documents/wef
 > ```
@@ -47,28 +47,28 @@ For more detail, see [Microsoft's guide for Mac](https://learn.microsoft.com/en-
 
 ### Windows
 
-Excel Desktop on Windows no longer exposes an **Upload My Add-in** UI button as of 2026 — that path is only available on **Excel on the web** (above). To install Tasaciones on Excel Desktop, register the manifest as a **Trusted Add-in Catalog**. The repo ships an automated script for this:
+Excel Desktop on Windows no longer exposes an **Upload My Add-in** UI button as of 2026 â€” that path is only available on **Excel on the web** (above). To install Tasaciones on Excel Desktop, register the manifest as a **Trusted Add-in Catalog**. The repo ships an automated script for this:
 
 ```powershell
 # 1) Clone the repo
 git clone https://github.com/gabrielpantoja-cl/complemento-excel.git
 cd complemento-excel
 
-# 2) Run the sideload script (uses manifest.prod.xml → bundle from Vercel)
+# 2) Run the sideload script (uses manifest.prod.xml â†’ bundle from Vercel)
 powershell -ExecutionPolicy Bypass -File .\scripts\sideload-windows.ps1
 
 # 3) Close Excel fully and reopen it.
-# 4) Home → Add-ins → More Add-ins → SHARED FOLDER → Tasaciones → Add
+# 4) Home â†’ Add-ins â†’ More Add-ins â†’ SHARED FOLDER â†’ Tasaciones â†’ Add
 # 5) Click "Abrir Tasaciones" on the Home ribbon.
 ```
 
 Full procedure, manual UI alternative, troubleshooting, and the path for Microsoft 365 business tenants (admin deploy via **Integrated apps**): see [`windows-sideload.md`](./windows-sideload.md).
 
-> Do **not** import the manifest via **Manage → XML Expansion Packs** — that is a legacy Excel path and can surface misleading certificate errors for Office add-in manifests.
+> Do **not** import the manifest via **Manage â†’ XML Expansion Packs** â€” that is a legacy Excel path and can surface misleading certificate errors for Office add-in manifests.
 
 ### Excel on the Web (Office Online)
 
-> **Community-contributed — not officially tested.** These steps were provided by a contributor and may not match every Office 365 tenant. If something looks different, see [Microsoft's sideloading guide for Office on the web](https://learn.microsoft.com/en-us/office/dev/add-ins/testing/sideload-office-add-ins-for-testing#manually-sideload-an-add-in-to-office-on-the-web).
+> **Community-contributed â€” not officially tested.** These steps were provided by a contributor and may not match every Office 365 tenant. If something looks different, see [Microsoft's sideloading guide for Office on the web](https://learn.microsoft.com/en-us/office/dev/add-ins/testing/sideload-office-add-ins-for-testing#manually-sideload-an-add-in-to-office-on-the-web).
 
 1. Open **[Excel (Web)](https://www.office.com/launch/excel)** in your browser  
 2. Select an existing workbook or create a new Excel file  
@@ -79,7 +79,7 @@ Full procedure, manual UI alternative, troubleshooting, and the path for Microso
 7. Click **Upload My Add-in**  
 8. Upload the `manifest.prod.xml` file  
 
-> ⚠️ On Excel Web, the add-in can disappear after several days. If that happens, repeat the upload steps above.
+> âš ï¸ On Excel Web, the add-in can disappear after several days. If that happens, repeat the upload steps above.
 
 ---
 
@@ -123,10 +123,10 @@ Notes:
 
 ### OAuth / account login (Anthropic, OpenAI ChatGPT, Google Code Assist/Antigravity, GitHub Copilot)
 
-1. In `/login`, click **Login with …**
+1. In `/login`, click **Login with â€¦**
 2. Complete login in the browser window that opens
 3. Return to Excel and complete any prompt shown
-   - For OpenAI + Google OAuth flows, your browser will land on a page that says **"can't be reached"** — that's normal! Copy the full URL from the browser address bar and paste it when prompted in Pi for Excel
+   - For OpenAI + Google OAuth flows, your browser will land on a page that says **"can't be reached"** â€” that's normal! Copy the full URL from the browser address bar and paste it when prompted in Pi for Excel
    - Some Google workspace tiers may also ask for a Google Cloud project ID during setup
 
 If login fails with a CORS/network error, follow the next section.
@@ -146,7 +146,7 @@ Typical symptoms:
 
 1. Run a local HTTPS proxy on the same machine as Excel (defaults to `https://localhost:3003`):
 
-> ⚠️ **You may be asked for your Mac password** during this step. The proxy creates a local security certificate so Excel can talk to it securely. This is a one-time setup. If you are not an admin on this machine, ask your IT team to run this step for you.
+> âš ï¸ **You may be asked for your Mac password** during this step. The proxy creates a local security certificate so Excel can talk to it securely. This is a one-time setup. If you are not an admin on this machine, ask your IT team to run this step for you.
 
 If you already have Node.js:
 
@@ -160,7 +160,7 @@ If you do not have Node.js (or are unsure):
 curl -fsSL https://piforexcel.com/proxy | sh
 ```
 
-2. In Pi, open `/settings` → **Proxy**:
+2. In Pi, open `/settings` â†’ **Proxy**:
    - enable **Proxy**
    - set URL to `https://localhost:3003`
 
@@ -206,7 +206,7 @@ If you installed with `manifest.prod.xml`, Pi for Excel loads from a hosted URL 
 - Ensure you uploaded `manifest.prod.xml` (not the localhost dev manifest)
 
 ### Windows says the manifest certificate is invalid / mentions XML Expansion Packs
-- Use the Trusted Add-in Catalog script (`scripts/sideload-windows.ps1`) described in [`windows-sideload.md`](./windows-sideload.md), **not** the legacy **Manage → XML Expansion Packs** path.
+- Use the Trusted Add-in Catalog script (`scripts/sideload-windows.ps1`) described in [`windows-sideload.md`](./windows-sideload.md), **not** the legacy **Manage â†’ XML Expansion Packs** path.
 - `manifest.prod.xml` is an Office add-in manifest, not a legacy Excel XML Expansion Pack.
 - If you already tried the XML Expansion Packs path, close Excel and re-run the Trusted Catalog script.
 
@@ -218,7 +218,7 @@ If you installed with `manifest.prod.xml`, Pi for Excel loads from a hosted URL 
 - Close and reopen Excel to clear cached taskpane state
 
 ### Do I need to install a separate Office.js bridge?
-- No — Office.js support comes from Excel itself when you install Pi with `manifest.prod.xml`
+- No â€” Office.js support comes from Excel itself when you install Pi with `manifest.prod.xml`
 - You do **not** need `generator-office`, Yeoman, or any extra Office.js package to use the hosted add-in
 - The optional local helper services are only for OAuth proxying, native Python / LibreOffice, and tmux
 

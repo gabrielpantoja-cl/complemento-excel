@@ -1,9 +1,9 @@
-# Smoke Run — macOS hostless H-1 error-path focus (taskpane browser harness)
+﻿# Smoke Run â€” macOS hostless H-1 error-path focus (taskpane browser harness)
 
 - Date: 2026-02-13
 - Commit: `62bff943701068e85b042e2268c721fd3d4ebe31`
 - Environment: macOS CLI + Playwright (`agent-browser`) against `https://localhost:3000/src/taskpane.html`
-- Checklist source: `docs/release-smoke-test-checklist.md`
+- Checklist source: `docs/guides/release-smoke-test-checklist.md`
 - Scope note: **hostless** browser harness only (not desktop Excel host). This validates error rendering/UX behavior in the taskpane UI, not workbook-host integration semantics.
 
 ## Setup used

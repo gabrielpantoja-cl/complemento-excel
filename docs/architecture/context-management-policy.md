@@ -1,4 +1,4 @@
-# Context Management Policy (cache-safe)
+﻿# Context Management Policy (cache-safe)
 
 **Status:** Active policy (2026-02-11)  
 **Scope:** How Pi for Excel builds model context across normal turns, tool loops, and long sessions **without regressing prompt caching**.
@@ -83,7 +83,7 @@ Implications:
 
 ## Implementation plan (next slices)
 
-### Slice 1 — Payload snapshots (observability first)
+### Slice 1 â€” Payload snapshots (observability first)
 
 **Goal:** make optimization decisions with real payload evidence.
 
@@ -103,7 +103,7 @@ Implications:
 
 ---
 
-### Slice 2 — Cache-safe tool disclosure
+### Slice 2 â€” Cache-safe tool disclosure
 
 **Goal:** maximize cache reuse and avoid intent-based cache key partitioning.
 
@@ -118,7 +118,7 @@ Implications:
 
 ---
 
-### Slice 3 — Tool-result history shaping
+### Slice 3 â€” Tool-result history shaping
 
 **Goal:** cut transcript noise from large tool outputs.
 
@@ -126,7 +126,7 @@ Implications:
 - Keep full raw output in UI/tool cards (no loss of user-visible detail).
 - Keep recency window for exact details (latest N tool results untouched).
 - **Current rollout (v2):**
-  - **execution-time guardrail (primary):** global tool-output truncation wrapper on all registered tools with Pi-aligned limits (**50KB UTF-8 bytes** or **2000 lines**, whichever first). For context windows **below 128k**, caps scale linearly with the window (floors: 8KB / 200 lines) — see `src/context/window-budgets.ts` (#566).
+  - **execution-time guardrail (primary):** global tool-output truncation wrapper on all registered tools with Pi-aligned limits (**50KB UTF-8 bytes** or **2000 lines**, whichever first). For context windows **below 128k**, caps scale linearly with the window (floors: 8KB / 200 lines) â€” see `src/context/window-budgets.ts` (#566).
   - **history shaping (secondary):** keep latest **6** tool results untouched (scaled down for <128k windows, e.g. **3** at 65k, floor 2); compact older tool results when payload exceeds **1,200 chars** or contains images; include a deterministic **500-char preview** in compacted form.
   - truncated outputs include stable machine metadata (`details.outputTruncation`) and best-effort full-output persistence under Files workspace `.tool-output/...`.
 
@@ -134,7 +134,7 @@ Implications:
 
 ---
 
-### Slice 4 — Workbook context invalidation policy
+### Slice 4 â€” Workbook context invalidation policy
 
 **Goal:** refresh structural workbook context only when necessary.
 
@@ -148,20 +148,20 @@ Implications:
 
 ---
 
-### Slice 5 — Compaction tuning + hygiene UX
+### Slice 5 â€” Compaction tuning + hygiene UX
 
 **Goal:** protect quality earlier in long threads.
 
 - Tune soft/hard compaction thresholds for earlier quality protection.
 - Keep compaction summary compact and action-oriented.
-- Add easier “summarize + start fresh” flow for noisy sessions.
+- Add easier â€œsummarize + start freshâ€ flow for noisy sessions.
 - **Current rollout (v2):**
   - hard trigger = `min(contextWindow - reserveTokens, qualityCap)`
-  - `qualityCap` = **88%** of context window for ≥128k models, **85%** for ≥200k models
-  - soft warning = max(70% of hard trigger, hard trigger − 5% of context window, min margin 2,048 tokens)
+  - `qualityCap` = **88%** of context window for â‰¥128k models, **85%** for â‰¥200k models
+  - soft warning = max(70% of hard trigger, hard trigger âˆ’ 5% of context window, min margin 2,048 tokens)
   - auto-compaction uses the hard trigger both **before queued prompts** and **mid-turn between tool-loop continuations** (`Agent.prepareNextTurn`); status-bar warnings remain on the existing 40%/60% UX thresholds
   - runs that still end in a provider **context-overflow error** get one compact-and-retry recovery pass (see `src/compaction/overflow-recovery.ts`, #566)
-  - summarized slices are persisted in a UI-only `archivedMessages` bucket with a “Show earlier messages” card (excluded from model context)
+  - summarized slices are persisted in a UI-only `archivedMessages` bucket with a â€œShow earlier messagesâ€ card (excluded from model context)
 
 **Success:** fewer degraded late-thread responses.
 
@@ -193,18 +193,18 @@ Implications:
 
 | Area | Decision | Status | Notes |
 |---|---|---|---|
-| 1) Compaction call-shape | **Defer** behavior change | ✅ documented | Keep isolated summarizer request for now. Memo: `docs/archive/issue-424-compaction-call-shape.md`. |
-| 2) Mid-session model switching | **Implement** cache-safe behavior | ✅ shipped (#428, #442) | Default now matches pi-mono (in-place); optional fork-to-new-tab behavior is available as an advanced setting for non-empty sessions. See `docs/upstream-divergences.md` §1. |
-| 3) Mid-session toolset churn | **Implement** targeted stabilization | ✅ shipped (#436), refined (#444) | Runtime skips no-op `setTools(...)` updates via fingerprinting and uses extension tool revision tracking for schema-stable hot-reload updates (without blanket eager refreshes). See `docs/upstream-divergences.md` §2. |
-| 4) Mid-session system-prompt churn | **Keep + defer deeper refactor** | ✅ decision recorded | Keep dynamic safety-critical sections (rules, execution mode, connection/integration/skills state) in system prompt for now. Defer stable-base + volatile-message layering until telemetry justifies complexity. |
-| 5) Side LLM operations (`llm.complete`) | **Keep intentionally independent** | ✅ guidance + session-key isolation implemented | Treat extension side-completions as separate from main runtime context; extension calls now use extension-scoped side session keys so observability/prefix churn is isolated from the primary runtime. See `docs/upstream-divergences.md` §3. |
-| 6) Cache observability policy | **Implement v1 workflow policy** | ✅ policy + baseline matrix documented | Use prefix-churn counters + payload snapshots as release/PR smoke signals for context changes. Baselines: `docs/cache-observability-baselines.md`. |
+| 1) Compaction call-shape | **Defer** behavior change | âœ… documented | Keep isolated summarizer request for now. Memo: `docs/archive/issue-424-compaction-call-shape.md`. |
+| 2) Mid-session model switching | **Implement** cache-safe behavior | âœ… shipped (#428, #442) | Default now matches pi-mono (in-place); optional fork-to-new-tab behavior is available as an advanced setting for non-empty sessions. See `docs/architecture/upstream-divergences.md` Â§1. |
+| 3) Mid-session toolset churn | **Implement** targeted stabilization | âœ… shipped (#436), refined (#444) | Runtime skips no-op `setTools(...)` updates via fingerprinting and uses extension tool revision tracking for schema-stable hot-reload updates (without blanket eager refreshes). See `docs/architecture/upstream-divergences.md` Â§2. |
+| 4) Mid-session system-prompt churn | **Keep + defer deeper refactor** | âœ… decision recorded | Keep dynamic safety-critical sections (rules, execution mode, connection/integration/skills state) in system prompt for now. Defer stable-base + volatile-message layering until telemetry justifies complexity. |
+| 5) Side LLM operations (`llm.complete`) | **Keep intentionally independent** | âœ… guidance + session-key isolation implemented | Treat extension side-completions as separate from main runtime context; extension calls now use extension-scoped side session keys so observability/prefix churn is isolated from the primary runtime. See `docs/architecture/upstream-divergences.md` Â§3. |
+| 6) Cache observability policy | **Implement v1 workflow policy** | âœ… policy + baseline matrix documented | Use prefix-churn counters + payload snapshots as release/PR smoke signals for context changes. Baselines: `docs/architecture/cache-observability-baselines.md`. |
 
 ### Cache observability policy (v1)
 
 For context/tool/prompt changes, treat the following as a required investigation checklist (not hard-fail CI gates yet):
 
-- Baseline expectations by scenario: `docs/cache-observability-baselines.md`
+- Baseline expectations by scenario: `docs/architecture/cache-observability-baselines.md`
 - Run-log template: `docs/release-smoke-runs/templates/context-cache-telemetry-template.md`
 
 1. Enable debug mode and capture a short deterministic session (at least 5 calls including one tool loop).

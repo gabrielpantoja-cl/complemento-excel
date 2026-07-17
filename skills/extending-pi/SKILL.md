@@ -3,8 +3,8 @@ name: extending-pi
 description: Plan and build Pi for Excel extensions safely: choose skill vs extension plugin vs connection, create flat SKILL.md skills, and handle API keys without asking users to paste secrets in chat.
 compatibility: Pi for Excel runtime. Plugin = runtime extension module. Assumes access to extensions_manager and skills tools.
 metadata:
-  docs: docs/extensions.md
-  related: docs/agent-skills-interop.md
+  docs: docs/features/extensions.md
+  related: docs/features/agent-skills-interop.md
 ---
 
 # Extending Pi (Pi for Excel)
@@ -177,7 +177,7 @@ Guardrails:
 
 ## 5) Standard reusable “secure connection bundle”
 
-When generating API-backed extension code, use `docs/extensions-secure-connection-bundle.md` as the default scaffold.
+When generating API-backed extension code, use `docs/features/extensions-secure-connection-bundle.md` as the default scaffold.
 
 Default scaffold requirements:
 - connection definition + `httpAuth`
@@ -188,7 +188,7 @@ Default scaffold requirements:
 
 ## References
 
-- `docs/extensions.md`
-- `docs/extensions-secure-connection-bundle.md`
-- `docs/agent-skills-interop.md`
+- `docs/features/extensions.md`
+- `docs/features/extensions-secure-connection-bundle.md`
+- `docs/features/agent-skills-interop.md`
 - skill: `skill-creator`

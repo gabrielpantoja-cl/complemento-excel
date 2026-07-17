@@ -1,9 +1,9 @@
-# Smoke Run — CLI validation pass
+﻿# Smoke Run â€” CLI validation pass
 
 - Date: 2026-02-14
 - Commit: `12144be7ccc3121705de5f9c3cbd77fcf1b2fd6d`
 - Environment: macOS CLI (no live Excel host attached)
-- Checklist source: `docs/release-smoke-test-checklist.md`
+- Checklist source: `docs/guides/release-smoke-test-checklist.md`
 
 ## Commands executed
 
@@ -17,7 +17,7 @@ Preflight suite:
 
 Additional release-flow checks:
 
-6. `npm view pi-for-excel-proxy version` → `0.1.0`
+6. `npm view pi-for-excel-proxy version` â†’ `0.1.0`
 7. `npx -y pi-for-excel-proxy --http` (startup verified)
 
 ## Evidence table snapshot

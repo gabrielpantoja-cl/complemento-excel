@@ -5,7 +5,7 @@ compatibility: Requires Pi for Excel integration "web_search" to be enabled. Wor
 metadata:
   integration-id: web_search
   tool-name: web_search
-  docs: docs/agent-skills-interop.md
+  docs: docs/features/agent-skills-interop.md
 ---
 
 # Web Search

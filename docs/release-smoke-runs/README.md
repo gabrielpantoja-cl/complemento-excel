@@ -1,4 +1,4 @@
-# Release Smoke Runs
+﻿# Release Smoke Runs
 
 This folder stores timestamped smoke-run evidence for release prep (#179).
 
@@ -14,7 +14,7 @@ Examples:
 
 - commit SHA tested
 - environment/platform details
-- checklist IDs covered (from `docs/release-smoke-test-checklist.md`)
+- checklist IDs covered (from `docs/guides/release-smoke-test-checklist.md`)
 - pass/fail/blocked with short rationale and evidence pointers
 
 Keep each run append-only; create a new file for each run instead of rewriting older runs.

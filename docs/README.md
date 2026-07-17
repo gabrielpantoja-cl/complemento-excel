@@ -1,37 +1,43 @@
 # Docs
 
-This folder contains **current** docs that should match shipped behavior.
+This folder contains **current** docs that should match shipped behavior. Top-level docs are organized into subfolders by purpose; each entry below points at the doc's new home.
 
 ## Roadmap
-- [Roadmap — what we're building next](./roadmap.md) (tracks A-G + issue log)
+- [Roadmap — what we're building next](./planning/roadmap.md) (tracks A-G + issue log)
 
 ## Guides
-- [Install Tasaciones by Loxos](./install.md)
-- [Sideload en Excel Desktop (Windows)](./windows-sideload.md) — Trusted Add-in Catalog + script `scripts/sideload-windows.ps1`
-- [Deploy hosted build on Vercel](./deploy-vercel.md)
+- [Install Tasaciones by Loxos](./guides/install.md)
+- [Sideload en Excel Desktop (Windows)](./guides/windows-sideload.md) — Trusted Add-in Catalog + script `scripts/sideload-windows.ps1`
+- [Deploy hosted build on Vercel](./guides/deploy-vercel.md)
 - [Release notes (`v0.9.5-pre`)](./release-notes/v0.9.5-pre.md)
-- [Release smoke test checklist](./release-smoke-test-checklist.md)
+- [Release smoke test checklist](./guides/release-smoke-test-checklist.md)
 - [Release smoke run logs](./release-smoke-runs/README.md)
 
 ## Runtime features
-- [Extensions (MVP authoring guide)](./extensions.md)
-- [Integrations + External Tools](./integrations-external-tools.md)
-- [Agent Skills interop (skills vs integrations)](./agent-skills-interop.md)
-- [Compaction (`/compact`)](./compaction.md)
-- [Manual full-workbook backups (`/backup`)](./manual-full-backups.md)
+- [Extensions (MVP authoring guide)](./features/extensions.md)
+- [Extensions — Secure Connection Bundle](./features/extensions-secure-connection-bundle.md)
+- [Integrations + External Tools](./features/integrations-external-tools.md)
+- [Agent Skills interop (skills vs integrations)](./features/agent-skills-interop.md)
+- [Compaction (`/compact`)](./features/compaction.md)
+- [Manual full-workbook backups (`/backup`)](./features/manual-full-backups.md)
+- [Files workspace](./features/files-workspace.md)
 
 ## Architecture & policy
-- [Upstream divergences from pi-mono](./upstream-divergences.md)
-- [Context management policy (cache-safe)](./context-management-policy.md)
-- [Cache observability baselines](./cache-observability-baselines.md)
-- [Security threat model](./security-threat-model.md)
-- [Model / dependency update playbook](./model-updates.md)
+- [Upstream divergences from pi-mono](./architecture/upstream-divergences.md)
+- [Context management policy (cache-safe)](./architecture/context-management-policy.md)
+- [Cache observability baselines](./architecture/cache-observability-baselines.md)
+- [Security threat model](./architecture/security-threat-model.md)
+- [Model / dependency update playbook](./architecture/model-updates.md)
 - [UI architecture](../src/ui/README.md)
 - [Tool behavior decisions](../src/tools/DECISIONS.md)
 
 ## Local bridge contracts
-- [Tmux bridge contract (v1)](./tmux-bridge-contract.md)
-- [Python / LibreOffice bridge contract (v1)](./python-bridge-contract.md)
+- [Tmux bridge contract (v1)](./bridges/tmux-bridge-contract.md)
+- [Python / LibreOffice bridge contract (v1)](./bridges/python-bridge-contract.md)
+
+## Strategy & planning
+- [AI strategy (opencode tooling)](./ai-strategy/plan-2026-07-14.md) — current opencode config bootstrap plan
+- [AI strategy research (2026-07-14)](./ai-strategy/research-2026-07-14.md)
 
 ## Archive
 Historical planning/design docs were moved to [./archive](./archive/README.md) to keep top-level docs focused and current.

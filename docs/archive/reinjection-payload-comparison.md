@@ -1,20 +1,20 @@
-# LLM Request Static Payload Comparison
+﻿# LLM Request Static Payload Comparison
 
 The static content included in each LLM request. Two channels:
-1. **System prompt** — text string (Anthropic: `system` blocks, OpenAI: `developer` message)
-2. **Tool schemas** — JSON objects defining tool name, description, parameter schema
+1. **System prompt** â€” text string (Anthropic: `system` blocks, OpenAI: `developer` message)
+2. **Tool schemas** â€” JSON objects defining tool name, description, parameter schema
 
 ## How LLM requests work
 
 LLM APIs are stateless. Each request includes the full system prompt, conversation history,
-and tool schemas. Nothing is resent *during* streaming — streaming is output-only after
+and tool schemas. Nothing is resent *during* streaming â€” streaming is output-only after
 the initial request.
 
 A single user message can trigger **multiple LLM requests** via the tool-use loop:
 
-1. **LLM call #1** (system prompt + messages + tools) → model returns tool calls
+1. **LLM call #1** (system prompt + messages + tools) â†’ model returns tool calls
 2. Pi executes tools, appends results to message history
-3. **LLM call #2** (system prompt + messages + results + tools) → model returns more tool calls or text
+3. **LLM call #2** (system prompt + messages + results + tools) â†’ model returns more tool calls or text
 4. Repeat until the model responds with text
 
 Each call in the loop includes the full system prompt + tool schemas (stateless API).
@@ -61,7 +61,7 @@ Pi documentation (read only when the user asks about pi itself, its SDK, extensi
 - Main documentation: /opt/homebrew/lib/node_modules/@earendil-works/pi-coding-agent/README.md
 - Additional docs: /opt/homebrew/lib/node_modules/@earendil-works/pi-coding-agent/docs
 - Examples: /opt/homebrew/lib/node_modules/@earendil-works/pi-coding-agent/examples (extensions, custom tools, SDK)
-- When asked about: extensions (docs/extensions.md, examples/extensions/), themes (docs/themes.md), skills (docs/skills.md), prompt templates (docs/prompt-templates.md), TUI components (docs/tui.md), keybindings (docs/keybindings.md), SDK integrations (docs/sdk.md), custom providers (docs/custom-provider.md), adding models (docs/models.md), pi packages (docs/packages.md)
+- When asked about: extensions (docs/features/extensions.md, examples/extensions/), themes (docs/themes.md), skills (docs/skills.md), prompt templates (docs/prompt-templates.md), TUI components (docs/tui.md), keybindings (docs/keybindings.md), SDK integrations (docs/sdk.md), custom providers (docs/custom-provider.md), adding models (docs/models.md), pi packages (docs/packages.md)
 - When working on pi topics, read the docs and examples, and follow .md cross-references before implementing
 - Always read pi .md files completely and follow links to related docs (e.g., tui.md for TUI API details)
 
@@ -81,8 +81,8 @@ Always prefer strict typing.
 - For TypeScript projects, setup a tsconfig (strict:true) + Rush + ESLint, and 
   - No // @ts-ignore or @ts-expect-error
   - No any
-  - No as casts — use proper type narrowing
-  - No ! non-null assertions — use guards
+  - No as casts â€” use proper type narrowing
+  - No ! non-null assertions â€” use guards
 
 ## Development Workflow
 - After significant changes, offer to show diffs and explain logic
@@ -116,9 +116,9 @@ Keep answers concise by default, but when asked to "talk through" or "explain":
 - Include file paths and line numbers
 
 ## Background Processes in Bash
-Pi's bash executor pipes stdout/stderr and waits for the `close` event, which only fires when ALL holders of those pipes exit — including background children that inherit them. A simple `cmd &` will freeze pi indefinitely.
+Pi's bash executor pipes stdout/stderr and waits for the `close` event, which only fires when ALL holders of those pipes exit â€” including background children that inherit them. A simple `cmd &` will freeze pi indefinitely.
 
-**Workaround — use a launcher script with `exec`:**
+**Workaround â€” use a launcher script with `exec`:**
 ```bash
 # 1. Write a launcher script (exec replaces shell, no extra pipe holder)
 cat > /tmp/start-myserver.sh << 'EOF'
@@ -151,22 +151,22 @@ The key ingredients: **subshell `(...)`** isolates the background process, **`ex
 Notes for agents working in this repo:
 
 - **Tool behavior decisions live in `src/tools/DECISIONS.md`.** Read it before changing tool behavior (column widths, borders, overwrite protection, etc.).
-- **UI architecture lives in `src/ui/README.md`.** Read it before touching CSS or components — especially the Tailwind v4 `@layer` gotcha (unlayered resets clobber all utilities).
+- **UI architecture lives in `src/ui/README.md`.** Read it before touching CSS or components â€” especially the Tailwind v4 `@layer` gotcha (unlayered resets clobber all utilities).
 - **Docs index:** `docs/README.md` (mirrors Pi's docs layout).
-- **Model registry freshness:** check `docs/model-updates.md` → if **Last verified** is > 1 week ago, update Pi deps + re-verify pinned model IDs before changing model selection UX.
+- **Model registry freshness:** check `docs/architecture/model-updates.md` â†’ if **Last verified** is > 1 week ago, update Pi deps + re-verify pinned model IDs before changing model selection UX.
 
 ## High-leverage repo conventions (keep consistent)
 
 ### Tool registry is the single source of truth
 - Core tool names + construction live in `src/tools/registry.ts` (`CORE_TOOL_NAMES`, `CoreToolName`, `createCoreTools()`).
-- **Do not** create new tool-name lists in UI/prompt/docs — import `CORE_TOOL_NAMES`.
+- **Do not** create new tool-name lists in UI/prompt/docs â€” import `CORE_TOOL_NAMES`.
 - When adding/removing a core tool, update in the same PR:
   - `src/tools/registry.ts`
   - `src/ui/tool-renderers.ts` (renderer registration)
   - `src/ui/humanize-params.ts` (input humanizers)
   - `src/prompt/system-prompt.ts` (documented tool list), if applicable
 
-### Structured tool results (`ToolResultMessage.details`) — additive metadata
+### Structured tool results (`ToolResultMessage.details`) â€” additive metadata
 - Tools should keep human-readable markdown in `result.content`.
 - Put stable, machine-readable metadata in `result.details` (range addresses, blocked state, error counts, etc.).
 - **Compatibility rule:** prefer `details` in the UI, but keep a fallback for older persisted sessions that have no `details`.
@@ -175,21 +175,21 @@ Notes for agents working in this repo:
 ### Workbook identity + per-workbook session restore
 - Workbook identity is **local-only** and must never persist raw `Office.context.document.url`.
   - Use `getWorkbookContext()` from `src/workbook/context.ts` (returns hashed IDs like `url_sha256:<hex>`).
-- Session↔workbook mapping is stored in `SettingsStore` (not session metadata).
+- Sessionâ†”workbook mapping is stored in `SettingsStore` (not session metadata).
   - Use helpers in `src/workbook/session-association.ts` (versioned keys `*.v1.*`).
 
 ### Security / HTML sinks
 - Avoid `innerHTML` for any user/tool/session data.
   - Prefer DOM APIs, or escape with `src/utils/html.ts` (`escapeHtml`, `escapeAttr`).
 - Markdown safety is enforced by `installMarkedSafetyPatch()` (`src/compat/marked-safety.ts`).
-  - Don’t re-enable unsafe link protocols or inline images without a security review.
-- The local CORS proxy (`scripts/cors-proxy-server.mjs`) has an **origin allowlist**. Don’t loosen it to `*`.
+  - Donâ€™t re-enable unsafe link protocols or inline images without a security review.
+- The local CORS proxy (`scripts/cors-proxy-server.mjs`) has an **origin allowlist**. Donâ€™t loosen it to `*`.
 
 ### Bundle hygiene (Office WebView)
 - Avoid Node-only imports and side-effect barrel imports that defeat tree-shaking.
 - When changing imports/deps, run `npm run build` and sanity-check:
   - output chunk sizes (and any newly emitted large assets)
-  - Vite “externalized for browser compatibility” warnings
+  - Vite â€œexternalized for browser compatibilityâ€ warnings
 
 ## TypeScript typing policy (python-typing spirit)
 
@@ -199,7 +199,7 @@ Notes for agents working in this repo:
   - specific types when known
   - unions for multiple shapes
   - `unknown` when you must accept anything (then narrow)
-  - generics / `Record<string, …>` / discriminated unions
+  - generics / `Record<string, â€¦>` / discriminated unions
 - Avoid non-null assertions (`thing!`) when practical (lint warns). Prefer runtime checks + early throws.
 
 Verification helpers:
@@ -221,7 +221,7 @@ Excel Mac loads the add-in from a **sideloaded manifest** stored at:
 
 This file is **separate from** the repo's `manifest.xml`. If local CSS/JS changes aren't appearing in the sidebar despite the Vite dev server running correctly:
 
-1. **Check the sideloaded manifest first.** It may point to a production URL (e.g. `https://pi-for-excel.vercel.app/…`) instead of `https://localhost:3000/…`.
+1. **Check the sideloaded manifest first.** It may point to a production URL (e.g. `https://pi-for-excel.vercel.app/â€¦`) instead of `https://localhost:3000/â€¦`.
 2. Fix it by copying the repo manifest over: `cp manifest.xml ~/Library/Containers/com.microsoft.Excel/Data/Documents/wef/a1b2c3d4-e5f6-7890-abcd-ef1234567890.manifest.xml`
 3. Quit Excel fully and reopen.
 
@@ -448,7 +448,7 @@ Descriptions transcribed from extension source code (`registerTool` calls).
 ```json
 {
   "name": "subagent",
-  "description": "Delegate to subagents or manage agent definitions.\n\nEXECUTION (use exactly ONE mode):\n• SINGLE: { agent, task } - one task\n• CHAIN: { chain: [{agent:\"scout\"}, {agent:\"planner\"}] } - sequential pipeline\n• PARALLEL: { tasks: [{agent,task}, ...] } - concurrent execution\n\nCHAIN TEMPLATE VARIABLES (use in task strings):\n• {task} - The original task/request from the user\n• {previous} - Text response from the previous step (empty for first step)\n• {chain_dir} - Shared directory for chain files (e.g., /tmp/pi-chain-runs/abc123/)\n\nCHAIN DATA FLOW:\n1. Each step's text response automatically becomes {previous} for the next step\n2. Steps can also write files to {chain_dir} (via agent's \"output\" config)\n3. Later steps can read those files (via agent's \"reads\" config)\n\nExample: { chain: [{agent:\"scout\", task:\"Analyze {task}\"}, {agent:\"planner\", task:\"Plan based on {previous}\"}] }\n\nMANAGEMENT (use action field — omit agent/task/chain/tasks):\n• { action: \"list\" } - discover available agents and chains\n• { action: \"get\", agent: \"name\" } - full agent detail with system prompt\n• { action: \"create\", config: { name, description, systemPrompt, ... } } - create agent/chain\n• { action: \"update\", agent: \"name\", config: { ... } } - modify fields (merge)\n• { action: \"delete\", agent: \"name\" } - remove definition\n• Use chainName instead of agent for chain operations",
+  "description": "Delegate to subagents or manage agent definitions.\n\nEXECUTION (use exactly ONE mode):\nâ€¢ SINGLE: { agent, task } - one task\nâ€¢ CHAIN: { chain: [{agent:\"scout\"}, {agent:\"planner\"}] } - sequential pipeline\nâ€¢ PARALLEL: { tasks: [{agent,task}, ...] } - concurrent execution\n\nCHAIN TEMPLATE VARIABLES (use in task strings):\nâ€¢ {task} - The original task/request from the user\nâ€¢ {previous} - Text response from the previous step (empty for first step)\nâ€¢ {chain_dir} - Shared directory for chain files (e.g., /tmp/pi-chain-runs/abc123/)\n\nCHAIN DATA FLOW:\n1. Each step's text response automatically becomes {previous} for the next step\n2. Steps can also write files to {chain_dir} (via agent's \"output\" config)\n3. Later steps can read those files (via agent's \"reads\" config)\n\nExample: { chain: [{agent:\"scout\", task:\"Analyze {task}\"}, {agent:\"planner\", task:\"Plan based on {previous}\"}] }\n\nMANAGEMENT (use action field â€” omit agent/task/chain/tasks):\nâ€¢ { action: \"list\" } - discover available agents and chains\nâ€¢ { action: \"get\", agent: \"name\" } - full agent detail with system prompt\nâ€¢ { action: \"create\", config: { name, description, systemPrompt, ... } } - create agent/chain\nâ€¢ { action: \"update\", agent: \"name\", config: { ... } } - modify fields (merge)\nâ€¢ { action: \"delete\", agent: \"name\" } - remove definition\nâ€¢ Use chainName instead of agent for chain operations",
   "parameters": {
     "type": "object",
     "properties": {
@@ -596,7 +596,7 @@ Descriptions transcribed from extension source code (`registerTool` calls).
 ```json
 {
   "name": "mcp",
-  "description": "MCP gateway - connect to MCP servers and call their tools.\n\nUsage:\n  mcp({ })                              → Show server status\n  mcp({ server: \"name\" })               → List tools from server\n  mcp({ search: \"query\" })              → Search for tools (MCP + pi, space-separated words OR'd)\n  mcp({ describe: \"tool_name\" })        → Show tool details and parameters\n  mcp({ connect: \"server-name\" })       → Connect to a server and refresh metadata\n  mcp({ tool: \"name\", args: '{\"key\": \"value\"}' })    → Call a tool (args is JSON string)\n\nMode: tool (call) > connect > describe > search > server (list) > nothing (status)",
+  "description": "MCP gateway - connect to MCP servers and call their tools.\n\nUsage:\n  mcp({ })                              â†’ Show server status\n  mcp({ server: \"name\" })               â†’ List tools from server\n  mcp({ search: \"query\" })              â†’ Search for tools (MCP + pi, space-separated words OR'd)\n  mcp({ describe: \"tool_name\" })        â†’ Show tool details and parameters\n  mcp({ connect: \"server-name\" })       â†’ Connect to a server and refresh metadata\n  mcp({ tool: \"name\", args: '{\"key\": \"value\"}' })    â†’ Call a tool (args is JSON string)\n\nMode: tool (call) > connect > describe > search > server (list) > nothing (status)",
   "parameters": {
     "type": "object",
     "properties": {
@@ -847,17 +847,17 @@ You are Pi, an AI assistant embedded in Microsoft Excel as a sidebar add-in. You
 ## Tools
 
 You have 11 tools:
-- **get_workbook_overview** — structural blueprint (sheets, headers, named ranges, tables); optional sheet-level detail for charts, pivots, shapes
-- **read_range** — read cell values/formulas in three formats: compact (markdown), csv (values-only), or detailed (with formatting + comments)
-- **write_cells** — write values/formulas with overwrite protection and auto-verification
-- **fill_formula** — fill a single formula across a range (AutoFill with relative refs)
-- **search_workbook** — find text, values, or formula references across all sheets; context_rows for surrounding data
-- **modify_structure** — insert/delete rows/columns, add/rename/delete sheets
-- **format_cells** — apply formatting (bold, colors, number format, borders, etc.)
-- **conditional_format** — add or clear conditional formatting rules (formula or cell-value)
-- **comments** — read, add, update, reply, delete, resolve/reopen cell comments
-- **trace_dependencies** — show the formula dependency tree for a cell
-- **view_settings** — control gridlines, headings, freeze panes, and tab color
+- **get_workbook_overview** â€” structural blueprint (sheets, headers, named ranges, tables); optional sheet-level detail for charts, pivots, shapes
+- **read_range** â€” read cell values/formulas in three formats: compact (markdown), csv (values-only), or detailed (with formatting + comments)
+- **write_cells** â€” write values/formulas with overwrite protection and auto-verification
+- **fill_formula** â€” fill a single formula across a range (AutoFill with relative refs)
+- **search_workbook** â€” find text, values, or formula references across all sheets; context_rows for surrounding data
+- **modify_structure** â€” insert/delete rows/columns, add/rename/delete sheets
+- **format_cells** â€” apply formatting (bold, colors, number format, borders, etc.)
+- **conditional_format** â€” add or clear conditional formatting rules (formula or cell-value)
+- **comments** â€” read, add, update, reply, delete, resolve/reopen cell comments
+- **trace_dependencies** â€” show the formula dependency tree for a cell
+- **view_settings** â€” control gridlines, headings, freeze panes, and tab color
 
 ## Workflow
 
@@ -889,7 +889,7 @@ Apply named styles in format_cells using the \
 ```json
 {
   "name": "get_workbook_overview",
-  "description": "Return a structural overview of the workbook — sheet names, header rows, named ranges, tables, and defined names. Use detail_level per sheet to also retrieve charts, pivot tables, shapes, and conditional-format summaries.",
+  "description": "Return a structural overview of the workbook â€” sheet names, header rows, named ranges, tables, and defined names. Use detail_level per sheet to also retrieve charts, pivot tables, shapes, and conditional-format summaries.",
   "parameters": {
     "type": "object",
     "properties": {
@@ -1010,7 +1010,7 @@ Apply named styles in format_cells using the \
         }
       },
       "allow_overwrite": {
-        "description": "Allow overwriting non-empty cells. Default false — tool will error if target has data.",
+        "description": "Allow overwriting non-empty cells. Default false â€” tool will error if target has data.",
         "type": "boolean"
       }
     }
@@ -1634,5 +1634,5 @@ per user message, regardless of how many tool rounds occur. The system prompt (~
 still included on every call.
 
 Provider prompt caching (Anthropic `cache_control`, OpenAI `prompt_cache_key`) further
-reduces the effective token cost — cached system prompt and tool schemas are billed at
+reduces the effective token cost â€” cached system prompt and tool schemas are billed at
 reduced rates on subsequent calls within the cache TTL.

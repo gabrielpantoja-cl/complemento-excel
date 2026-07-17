@@ -4,7 +4,7 @@ description: Local terminal access via the tmux bridge. Use when the user asks a
 compatibility: Requires a local tmux bridge process running on the user's machine.
 metadata:
   tool-name: tmux
-  docs: docs/tmux-bridge-contract.md
+  docs: docs/bridges/tmux-bridge-contract.md
 ---
 
 # Tmux Bridge

@@ -1,11 +1,11 @@
-# Smoke Run — macOS Excel host H-1 operator checklist (template)
+﻿# Smoke Run â€” macOS Excel host H-1 operator checklist (template)
 
 Use this focused runbook to close **#179 / H-1** in a real Excel Desktop host.
 
 - Date: YYYY-MM-DD
 - Commit: `git rev-parse --short HEAD`
 - Environment: macOS version + Excel version/build + model/provider
-- Checklist source: `docs/release-smoke-test-checklist.md`
+- Checklist source: `docs/guides/release-smoke-test-checklist.md`
 
 ## Goal
 
@@ -37,9 +37,9 @@ Validate all H-1 failure paths produce clear, recoverable UX:
 
 ---
 
-## H1-A — Wrong API key
+## H1-A â€” Wrong API key
 
-1. `/tools` (or `/integrations`) → Web Search provider = Serper (or your configured provider).
+1. `/tools` (or `/integrations`) â†’ Web Search provider = Serper (or your configured provider).
 2. Set key to an intentionally invalid value (e.g. `bad-key-h1`).
 3. Prompt: `Use web_search for 'EUR USD exchange rate' and show raw result.`
 
@@ -53,7 +53,7 @@ Capture:
 
 ---
 
-## H1-B — Expired OAuth token
+## H1-B â€” Expired OAuth token
 
 Preferred (deterministic, localhost/dev manifest) approach:
 
@@ -78,9 +78,9 @@ Notes:
 
 ---
 
-## H1-C — Proxy enabled but down
+## H1-C â€” Proxy enabled but down
 
-1. `/settings` → Proxy: enable `Use CORS Proxy`.
+1. `/settings` â†’ Proxy: enable `Use CORS Proxy`.
 2. Set proxy URL to a non-running endpoint (e.g. `https://localhost:3999`).
 3. Prompt: `Use fetch_page on https://example.com and summarize in one line.`
 
@@ -94,7 +94,7 @@ Capture:
 
 ---
 
-## H1-D — Rate limit during streaming
+## H1-D â€” Rate limit during streaming
 
 Recommended method:
 
@@ -115,7 +115,7 @@ If true mid-stream 429 is not reproducible, mark `Blocked` and document attempte
 
 ---
 
-## H1-E — Network disconnect mid-stream
+## H1-E â€” Network disconnect mid-stream
 
 1. Start a long-running prompt (same as H1-D is fine).
 2. While response is actively streaming, disable network (Wi-Fi off / disconnect adapter).
@@ -137,4 +137,4 @@ Capture:
 
 - [ ] H1-A..H1-E are all `Pass`, or explicitly `Blocked` with concrete blocker + owner
 - [ ] Evidence links are present for each scenario
-- [ ] Top-level checklist row `H-1` updated in `docs/release-smoke-test-checklist.md` evidence table/run log
+- [ ] Top-level checklist row `H-1` updated in `docs/guides/release-smoke-test-checklist.md` evidence table/run log

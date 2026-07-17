@@ -1,4 +1,4 @@
-# AGENTS.md
+﻿# AGENTS.md
 
 **Last reviewed:** 2026-07-16
 
@@ -6,7 +6,7 @@ Notes for agents working in this repo. Read this file before making any change.
 
 ## Project identity
 
-**Tasaciones by Loxos** — an AI sidebar add-in for Microsoft Excel tailored for Chilean real estate appraisals (*tasaciones*). This repo is a branded fork of [pi-for-excel](https://github.com/tmustier/pi-for-excel) (MIT). Divergences from upstream are tracked in `docs/upstream-divergences.md`; read that file before adding new divergences.
+**Tasaciones by Loxos** â€” an AI sidebar add-in for Microsoft Excel tailored for Chilean real estate appraisals (*tasaciones*). This repo is a branded fork of [pi-for-excel](https://github.com/tmustier/pi-for-excel) (MIT). Divergences from upstream are tracked in `docs/architecture/upstream-divergences.md`; read that file before adding new divergences.
 
 Stack: **Vite + Lit + TypeScript**, deployed to **Vercel**. The taskpane runs inside an Office.js WebView (`src/taskpane.html`). The add-in manifest is `manifest.xml` (dev) / `manifest.prod.xml` (prod).
 
@@ -16,9 +16,9 @@ Brand colours, display name (`Tasaciones`), and add-in metadata live in `manifes
 
 - Tool behavior decisions: `src/tools/DECISIONS.md`
 - UI/CSS architecture: `src/ui/README.md` (Tailwind v4 `@layer` gotcha)
-- Upstream divergences: `docs/upstream-divergences.md`
+- Upstream divergences: `docs/architecture/upstream-divergences.md`
 - Docs index: `docs/README.md`
-- Model registry freshness: `docs/model-updates.md` (if **Last verified** > 1 week, refresh Pi deps + re-verify model IDs before model UX changes)
+- Model registry freshness: `docs/architecture/model-updates.md` (if **Last verified** > 1 week, refresh Pi deps + re-verify model IDs before model UX changes)
 
 ## High-leverage conventions
 
@@ -69,7 +69,7 @@ Brand colours, display name (`Tasaciones`), and add-in metadata live in `manifes
 - Prefer message-tail updates for volatile state (auto-context/system reminders) instead of mutating base prompt text every turn.
 - Keep tool ordering deterministic; do not rebuild tool lists with unstable ordering.
 - Do not reintroduce blanket eager `setTools(...)` on refresh passes when extension tools exist; use fingerprint + extension tool revision semantics.
-- When changing context/tool/model wiring, validate against `docs/cache-observability-baselines.md` and record expected vs observed `prefixChangeReasons`.
+- When changing context/tool/model wiring, validate against `docs/architecture/cache-observability-baselines.md` and record expected vs observed `prefixChangeReasons`.
 
 ## TypeScript policy
 
@@ -82,7 +82,7 @@ Brand colours, display name (`Tasaciones`), and add-in metadata live in `manifes
 
 ```bash
 npm run check          # lint + typecheck + all CSS/theme/lockstep checks
-npm run build          # production bundle — check chunk sizes
+npm run build          # production bundle â€” check chunk sizes
 npm run test:models    # model ordering unit tests
 npm run test:context   # prompt/context/tool disclosure/session wiring tests
 npm run test:security  # proxy/bridge/auth/HTML safety tests
@@ -92,7 +92,7 @@ Run `test:context` when touching prompt, context, tool disclosure, or session wi
 Run `test:security` when touching proxy, bridge, auth, or HTML safety paths.
 Manual Excel smoke test required when touching session persistence, tools, auth, or UI wiring.
 
-> **Dev environment:** Lenovo Legion 5, dual boot Windows 11 + Linux. All build/test commands work on both. Excel smoke tests require Windows boot — sideload via the Trusted Add-in Catalog using `scripts/sideload-windows.ps1` (see [`docs/windows-sideload.md`](docs/windows-sideload.md) for full procedure and troubleshooting).
+> **Dev environment:** Lenovo Legion 5, dual boot Windows 11 + Linux. All build/test commands work on both. Excel smoke tests require Windows boot â€” sideload via the Trusted Add-in Catalog using `scripts/sideload-windows.ps1` (see [`docs/guides/windows-sideload.md`](docs/guides/windows-sideload.md) for full procedure and troubleshooting).
 
 ### Visual UI verification (agent-browser)
 
@@ -129,8 +129,8 @@ npx agent-browser errors --json
 ```
 
 When to add new gallery sections:
-- Adding a new component type → add a mock render in `src/ui-gallery.ts`
-- Changing CSS for an existing component → verify via `./scripts/ui-verify.sh <section>`
+- Adding a new component type â†’ add a mock render in `src/ui-gallery.ts`
+- Changing CSS for an existing component â†’ verify via `./scripts/ui-verify.sh <section>`
 
 ## Pre-commit
 
@@ -173,7 +173,7 @@ Production manifest:
   `https://complemento-excel.vercel.app/src/taskpane.html`, so the JS
   bundle is hot-loaded from Vercel at sideload time. Local certificates,
   `mkcert`, and the local CORS proxy are NOT needed for the production
-  manifest — only for the dev `manifest.xml`.
+  manifest â€” only for the dev `manifest.xml`.
 
 Pull a fresh manifest before sideloading (avoids stale local copies):
 
@@ -190,26 +190,26 @@ Test-NetConnection complemento-excel.vercel.app -Port 443
 Sideload (Microsoft 365 / Excel 2016+ on Windows):
 
 > **Important:** As of 2026, Excel Desktop no longer exposes an
-> "Upload My Add-in" UI button — that path exists only in Excel on
+> "Upload My Add-in" UI button â€” that path exists only in Excel on
 > the web. On desktop, sideload via a Trusted Add-in Catalog.
 >
-> Full canonical procedure: **[`docs/windows-sideload.md`](docs/windows-sideload.md)**.
+> Full canonical procedure: **[`docs/guides/windows-sideload.md`](docs/guides/windows-sideload.md)**.
 > Quick version:
 > 1. `powershell -ExecutionPolicy Bypass -File .\scripts\sideload-windows.ps1`
 >    (copies `manifest.prod.xml` into `~\Documents\TasacionesManifest\`
 >    and registers it under `HKCU\Software\Microsoft\Office\16.0\WEF\TrustedCatalogs`).
 > 2. Close and reopen Excel.
-> 3. **Home → Add-ins → More Add-ins → SHARED FOLDER → Tasaciones → Add**.
+> 3. **Home â†’ Add-ins â†’ More Add-ins â†’ SHARED FOLDER â†’ Tasaciones â†’ Add**.
 > 4. Click **Abrir Tasaciones** on the Home ribbon.
 >
-> **Last verified:** 2026-07-16, commit `50ec40f` — see [`docs/release-smoke-runs/2026-07-16-windows-sideload.md`](docs/release-smoke-runs/2026-07-16-windows-sideload.md) (I-2 Pass; I-3/I-4 still `Blocked`).
+> **Last verified:** 2026-07-16, commit `50ec40f` â€” see [`docs/release-smoke-runs/2026-07-16-windows-sideload.md`](docs/release-smoke-runs/2026-07-16-windows-sideload.md) (I-2 Pass; I-3/I-4 still `Blocked`).
 
 Differences with the Excel web flow used during this session:
 
 | Surface                                  | Manifest storage                       | Sideload UX                                  |
 |------------------------------------------|----------------------------------------|-----------------------------------------------|
-| Excel web (`excel.office.com`, OneDrive) | iframe origin localStorage              | "More add-ins → My Add-ins → Upload My Add-in" — always available |
-| Excel Desktop, Microsoft 365 personal    | `HKCU\...\WEF\TrustedCatalogs\{GUID}` hive | Trusted Catalog (`scripts/sideload-windows.ps1`) — no admin, works out of the box |
+| Excel web (`excel.office.com`, OneDrive) | iframe origin localStorage              | "More add-ins â†’ My Add-ins â†’ Upload My Add-in" â€” always available |
+| Excel Desktop, Microsoft 365 personal    | `HKCU\...\WEF\TrustedCatalogs\{GUID}` hive | Trusted Catalog (`scripts/sideload-windows.ps1`) â€” no admin, works out of the box |
 | Excel Desktop, Microsoft 365 family       | same                                   | Same path; sometimes requires admin consent for first run only |
 | Excel Desktop, M365 business / enterprise | Centrally deployed by tenant admin    | Per-user sideload may be disabled by org policy; see admin path below |
 | Excel LTSC / 2019 (volume license)        | Desktop hive                            | Same Trusted Catalog path; no `mkcert` needed for `manifest.prod.xml` |
@@ -220,8 +220,8 @@ Differences with the Excel web flow used during this session:
 > only way to validate the add-in for that tenant is to have the
 > tenant admin deploy it from:
 >
-> Microsoft 365 admin center → **Settings → Integrated apps →
-> Upload custom app → Provide link to manifest**, paste
+> Microsoft 365 admin center â†’ **Settings â†’ Integrated apps â†’
+> Upload custom app â†’ Provide link to manifest**, paste
 > `https://complemento-excel.vercel.app/manifest.prod.xml`.
 >
 > That path is available to admins on every tenant and sidesteps
@@ -232,17 +232,17 @@ Differences with the Excel web flow used during this session:
 
 If the sidebar opens but is blank or dies immediately:
 
-1. Right-click in the sidebar → **Reload** (or close and reopen the
+1. Right-click in the sidebar â†’ **Reload** (or close and reopen the
    workbook).
-2. Open **F12 → Network → Fetch/XHR**; the first request should be
-   `GET /src/taskpane.html`. If it 404s, Vercel is mid-deploy — wait
+2. Open **F12 â†’ Network â†’ Fetch/XHR**; the first request should be
+   `GET /src/taskpane.html`. If it 404s, Vercel is mid-deploy â€” wait
    30 s and retry.
 3. If the bundle hash in the JS request is older than the latest
    `main` SHA, hard-refresh once more (Ctrl+F5 inside the sidebar).
 4. Confirm the bundle is reaching Vercel, not a stale local cache, by
-   checking the request's `Response → Cache-Control` header. The
+   checking the request's `Response â†’ Cache-Control` header. The
    live deployment serves `Cache-Control: no-store` for the taskpane
-   HTML (see `vercel.json` §).
+   HTML (see `vercel.json` Â§).
 
 ## Skills
 
@@ -256,12 +256,12 @@ Bundled Agent Skills (loaded into the Excel add-in at build time by
 | `tmux-bridge` | Local terminal access via the tmux bridge. |
 | `python-bridge` | Native Python execution via the Python bridge. |
 | `extending-pi` | Plan and build Pi for Excel extensions safely. |
-| `tasaciones` | Loxos-specific index of Chilean tasación sub-procedures. |
+| `tasaciones` | Loxos-specific index of Chilean tasaciÃ³n sub-procedures. |
 
 The fork's `skills/` directory is consumed by the add-in's own runtime loader,
 not by opencode's `skill` discovery. Do **not** move `skills/` to
 `.opencode/skills/` without also updating `src/skills/catalog.ts`
-(`import.meta.glob`) — that path is wired into the Vite build bundle.
+(`import.meta.glob`) â€” that path is wired into the Vite build bundle.
 
 ## Agents
 
@@ -283,7 +283,7 @@ update this section.
 | Field | Value |
 |---|---|
 | Primary model | `minimax-coding-plan/MiniMax-M3` (single-model, no fallback) |
-| Provider docs | **Unknown** — no public docs surfaced in research; treat pricing / limits / deprecations as unverified |
+| Provider docs | **Unknown** â€” no public docs surfaced in research; treat pricing / limits / deprecations as unverified |
 | Data residency | Low-sensitivity repo (public code). Provider egress is acceptable for code review. Workbook contents do not leave the user's machine via opencode directly. |
 | Cost discipline | No routing available (single model). Discipline lives in prompt-cache hygiene (see "Prompt caching gotchas" above). |
-| Provider allow-list | `enabled_providers: ["minimax-coding-plan"]` — only this provider is loadable by opencode. |
+| Provider allow-list | `enabled_providers: ["minimax-coding-plan"]` â€” only this provider is loadable by opencode. |

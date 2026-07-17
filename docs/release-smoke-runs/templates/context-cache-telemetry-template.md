@@ -1,9 +1,9 @@
-# Context Cache Telemetry Run (template)
+﻿# Context Cache Telemetry Run (template)
 
 - Date: YYYY-MM-DD
 - Commit: `git rev-parse --short HEAD`
 - Environment: macOS/Windows + Excel build + provider/model
-- Baseline source: `docs/cache-observability-baselines.md`
+- Baseline source: `docs/architecture/cache-observability-baselines.md`
 
 ## Preconditions
 

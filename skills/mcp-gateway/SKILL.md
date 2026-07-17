@@ -5,7 +5,7 @@ compatibility: Requires Pi for Excel integration "mcp_tools" to be enabled and a
 metadata:
   integration-id: mcp_tools
   tool-name: mcp
-  docs: docs/agent-skills-interop.md
+  docs: docs/features/agent-skills-interop.md
 ---
 
 # MCP Gateway

@@ -1,10 +1,10 @@
-# Codebase Simplification Plan (Pi for Excel)
+﻿# Codebase Simplification Plan (Pi for Excel)
 
-Goal: make the repo **simple, easy to understand, easy to navigate, and easy to build on** — while keeping behavior stable.
+Goal: make the repo **simple, easy to understand, easy to navigate, and easy to build on** â€” while keeping behavior stable.
 
-This plan focuses on a small set of “big levers” that remove ongoing maintenance tax (drift, duplication, brittle parsing) rather than lots of local micro-refactors.
+This plan focuses on a small set of â€œbig leversâ€ that remove ongoing maintenance tax (drift, duplication, brittle parsing) rather than lots of local micro-refactors.
 
-> Context strategy and caching guardrails now live in: [`docs/context-management-policy.md`](../context-management-policy.md).
+> Context strategy and caching guardrails now live in: [`docs/architecture/context-management-policy.md`](../architecture/context-management-policy.md).
 > Keep simplification work aligned with that policy (especially deterministic tool metadata, context shaping, and debug observability).
 >
 > Phase 1 recovery/mutation execution tracker (historical; completed on 2026-02-13): [`docs/archive/refactor-execution-plan-2026-02-13.md`](./refactor-execution-plan-2026-02-13.md).
@@ -20,9 +20,9 @@ This plan focuses on a small set of “big levers” that remove ongoing mainten
 ## 0) Current snapshot (what we observed)
 
 ### Strengths
-- ✅ `npm run check` (eslint + tsc) is clean.
-- ✅ The project is already modularized (no giant `taskpane.ts` god-file anymore).
-- ✅ Most modules have clear ownership (`src/tools`, `src/ui`, `src/taskpane`, `src/context`, `src/auth`).
+- âœ… `npm run check` (eslint + tsc) is clean.
+- âœ… The project is already modularized (no giant `taskpane.ts` god-file anymore).
+- âœ… Most modules have clear ownership (`src/tools`, `src/ui`, `src/taskpane`, `src/context`, `src/auth`).
 
 ### Hotspots / bloat concentrations (not everywhere)
 - `src/ui/humanize-params.ts` (~650 LOC)
@@ -33,9 +33,9 @@ This plan focuses on a small set of “big levers” that remove ongoing mainten
 
 ### Drift already present (high-signal maintainability smell)
 There are multiple tool lists that are already out of sync:
-- `src/tools/index.ts` creates **11 tools** (but comment says “10”).
+- `src/tools/index.ts` creates **11 tools** (but comment says â€œ10â€).
 - `src/prompt/system-prompt.ts` documents **11 tools** (includes `comments`).
-- `src/ui/tool-renderers.ts`’s `EXCEL_TOOL_NAMES` list omits `comments`.
+- `src/ui/tool-renderers.ts`â€™s `EXCEL_TOOL_NAMES` list omits `comments`.
 - `src/ui/humanize-params.ts` registry omits `comments`.
 - `src/ui/tool-renderers.ts` still mentions a removed tool (`get_recent_changes`) in `describeToolCall()`.
 
@@ -44,25 +44,25 @@ There are multiple tool lists that are already out of sync:
 - A very large JS chunk and chunk-size warnings.
 - Node/browser boundary warnings (e.g. `http` externalized for browser compatibility).
 
-This likely means we’re bundling more of `@earendil-works/pi-web-ui` / `@earendil-works/pi-ai` than the Excel taskpane truly needs.
+This likely means weâ€™re bundling more of `@earendil-works/pi-web-ui` / `@earendil-works/pi-ai` than the Excel taskpane truly needs.
 
 ---
 
 ## Roadmap constraints (from open issues)
 
-These constraints should shape cleanup work so we don’t refactor into a dead end:
+These constraints should shape cleanup work so we donâ€™t refactor into a dead end:
 
 - **Workbook scoping is coming** (#31, #23, #30). Introduce a `workbookContext` abstraction early, and ensure persistence can be keyed by workbook identity without rewriting stores later.
 - **Artifacts/workspace are coming** (#32). File/attachment support pulls in heavy dependencies (PDF/Office parsing) and may require browser filesystem APIs (OPFS / File System Access). Cleanup should favor **lazy-loading** and avoid side-effect imports that defeat tree-shaking.
 - **Extensibility is a core product feature** (#13, #24). The registry should be designed for hosted builds:
-  - **V1:** paste-code extensions → Blob URL + dynamic `import()` (no `eval`).
+  - **V1:** paste-code extensions â†’ Blob URL + dynamic `import()` (no `eval`).
   - **V2:** install from URL (GitHub raw / releases) and potentially package sources (npm).
 
 Practical implication: treat the registry work as a *platform registry* refactor, not just a list-of-tools cleanup.
 
 ---
 
-## 1) Lever: single source of truth for “Excel tools”
+## 1) Lever: single source of truth for â€œExcel toolsâ€
 
 ### Problem
 Tool names + UI hooks + prompt docs live in multiple places and drift.
@@ -118,7 +118,7 @@ Each tool returns a small, stable metadata payload in `details` (and keeps the h
 UI then:
 - builds the tool card header from `details` (no regex)
 - renders badges (`blocked`, `errorCount`) from structured fields
-- keeps markdown rendering for the “Result” body text
+- keeps markdown rendering for the â€œResultâ€ body text
 
 ### Benefits
 - Simplifies `tool-renderers.ts` dramatically.
@@ -155,7 +155,7 @@ A likely major culprit:
 
 ### Definition of done
 - `vite build` output JS size decreases meaningfully (or is split into cacheable chunks).
-- Fewer “externalized for browser compatibility” warnings.
+- Fewer â€œexternalized for browser compatibilityâ€ warnings.
 - No runtime regressions in the taskpane.
 
 ---
@@ -165,7 +165,7 @@ A likely major culprit:
 ### Problem
 Several tools repeat Office.js ceremony and tricky patterns:
 - range address normalization / sheet prefixing
-- “load + sync + read back” scaffolding
+- â€œload + sync + read backâ€ scaffolding
 - cell-in-range logic (duplicated between tools)
 - multi-range handling + RangeAreas edge cases
 
@@ -174,7 +174,7 @@ Create a small internal layer:
 - `src/excel/ops/*` (or a couple of focused files) that provides:
   - `stripSheet(address)`, `isCellInRange(cell, range)`
   - multi-range iteration helpers
-  - common “load, sync, return { sheetName, address }” patterns
+  - common â€œload, sync, return { sheetName, address }â€ patterns
   - formatting primitives (borders, numberFormat matrices, etc.)
 
 Then tools become:
@@ -196,7 +196,7 @@ Overlays are built via `innerHTML` with inline styles across:
 - `src/taskpane/welcome-login.ts`
 - `src/commands/builtins/overlays.ts`
 
-It works, but it’s harder to refactor and easy to duplicate styling/behavior.
+It works, but itâ€™s harder to refactor and easy to duplicate styling/behavior.
 
 ### Proposal
 - Introduce a tiny overlay helper (shell + lifecycle):
@@ -215,34 +215,34 @@ It works, but it’s harder to refactor and easy to duplicate styling/behavior.
 
 ## Suggested execution order (small, low-risk commits)
 
-### Phase 0 — eliminate drift (1–2 commits)
+### Phase 0 â€” eliminate drift (1â€“2 commits)
 - Unify tool count comments.
 - Add `comments` to Excel tool renderer/humanizers.
 - Remove leftover references to removed tools.
 
-### Phase 1 — capability registry unification (extension-ready)
+### Phase 1 â€” capability registry unification (extension-ready)
 - Introduce a canonical registry (start with `src/tools/registry.ts`, but design it to accept **extension contributions** later).
 - Make UI registration derive from the same registry (renderers + input humanizers).
 - Keep room for future tiering/progressive disclosure (#18) without duplicating lists.
 
-### Phase 1.5 — workbook context primitive (foundation for per-workbook sessions)
+### Phase 1.5 â€” workbook context primitive (foundation for per-workbook sessions)
 - Introduce `src/workbook/context.ts` (or similar) that provides a best-effort `{ workbookId, workbookName, workbookUrl? }`.
 - Thread this into session metadata in a backwards-compatible way (even if the UI still shows a global list initially).
-- Ensure the design supports “local-only” identity by default, with an opt-in workbook-attached ID later if desired.
+- Ensure the design supports â€œlocal-onlyâ€ identity by default, with an opt-in workbook-attached ID later if desired.
 
-### Phase 2 — structured tool result metadata
+### Phase 2 â€” structured tool result metadata
 - Add `details` payloads to a few high-value tools first (`write_cells`, `fill_formula`, `format_cells`).
 - Update `tool-renderers.ts` to rely on `details` instead of parsing.
 
-### Phase 3 — bundle size + Node leakage
+### Phase 3 â€” bundle size + Node leakage
 - Replace side-effect imports where possible.
 - Add targeted stubs/aliases for browser build stability.
 
-### Phase 4 — excel/ops extraction
+### Phase 4 â€” excel/ops extraction
 - Extract shared range/worksheet helpers.
 - Move repeated logic out of tools.
 
-### Phase 5 — overlay UI standardization
+### Phase 5 â€” overlay UI standardization
 - Overlay helper + CSS class consolidation.
 
 ---
@@ -251,9 +251,9 @@ It works, but it’s harder to refactor and easy to duplicate styling/behavior.
 
 This section translates the phases above into PR-sized work items with clear boundaries.
 
-### PR 1 — Phase 0 + Phase 1: eliminate drift + introduce a capability registry (extension-ready)
+### PR 1 â€” Phase 0 + Phase 1: eliminate drift + introduce a capability registry (extension-ready)
 
-**Goal:** fix existing drift bugs and make “what tools exist” a single source of truth.
+**Goal:** fix existing drift bugs and make â€œwhat tools existâ€ a single source of truth.
 
 **Scope (expected files):**
 - `src/tools/registry.ts` *(new)*
@@ -262,25 +262,25 @@ This section translates the phases above into PR-sized work items with clear bou
   - exports `createCoreTools()` (canonical core tool creation)
 - `src/tools/index.ts`
   - becomes a thin adapter around `createCoreTools()`
-  - fixes the “10 tools” comment
+  - fixes the â€œ10 toolsâ€ comment
 - `src/ui/tool-renderers.ts`
   - imports `CORE_TOOL_NAMES` (removes local `EXCEL_TOOL_NAMES`)
   - includes `comments` automatically
   - removes stale `get_recent_changes` reference in `describeToolCall()`
 - `src/ui/humanize-params.ts`
   - adds a `comments` input humanizer
-  - types the humanizer registry as `Record<CoreToolName, …>` so missing tools fail fast at compile time
+  - types the humanizer registry as `Record<CoreToolName, â€¦>` so missing tools fail fast at compile time
 
 **Design constraint:** keep the registry **UI-free** (no Lit/renderer types in `src/tools/*`). UI imports the canonical names/type.
 
 **DoD:**
 - `comments` tool is rendered + humanized in the UI.
-- No remaining “removed tool” references.
+- No remaining â€œremoved toolâ€ references.
 - Only one canonical list of core tool names.
 
-### PR 2 — Phase 2: structured tool results via `ToolResultMessage.details` (additive, no text changes)
+### PR 2 â€” Phase 2: structured tool results via `ToolResultMessage.details` (additive, no text changes)
 
-**Agreement:** Phase 2 should be **additive metadata only** — do not change the human-readable markdown output, only add stable `details` fields.
+**Agreement:** Phase 2 should be **additive metadata only** â€” do not change the human-readable markdown output, only add stable `details` fields.
 
 **Scope:**
 - Add minimal `details` payloads to:
@@ -295,9 +295,9 @@ This section translates the phases above into PR-sized work items with clear bou
 
 **DoD:** renderer no longer needs regex parsing for those fields when `details` is present.
 
-### PR 3 — Phase 1.5: workbook context primitive + session/workbook association (foundation)
+### PR 3 â€” Phase 1.5: workbook context primitive + session/workbook association (foundation)
 
-**Goal:** create a single place to answer “which workbook is this?” and support workbook-scoped UX later.
+**Goal:** create a single place to answer â€œwhich workbook is this?â€ and support workbook-scoped UX later.
 
 **Scope (draft):**
 - Add `src/workbook/context.ts` (or similar) returning a best-effort:
@@ -305,9 +305,9 @@ This section translates the phases above into PR-sized work items with clear bou
 - **Workbook identity (default):** local-only by default.
   - Use `Office.context.document.url` when present, but store a **hash** (never persist raw paths/URLs).
   - If URL is absent, identity is ephemeral.
-- **Manual linking (FYI, future):** support a mechanism where the assistant can *suggest* a link, and the user can manually link/unlink sessions ↔ workbook.
-  - “Save As” should carry the link by default, but it can be manually overwritten.
-- Storage note: `SessionsStore` metadata schema is fixed (from `pi-web-ui`), so session↔workbook mapping likely lives alongside sessions (e.g. `SettingsStore` key prefix `session.workbook.<sessionId>`), not inside metadata.
+- **Manual linking (FYI, future):** support a mechanism where the assistant can *suggest* a link, and the user can manually link/unlink sessions â†” workbook.
+  - â€œSave Asâ€ should carry the link by default, but it can be manually overwritten.
+- Storage note: `SessionsStore` metadata schema is fixed (from `pi-web-ui`), so sessionâ†”workbook mapping likely lives alongside sessions (e.g. `SettingsStore` key prefix `session.workbook.<sessionId>`), not inside metadata.
 
 ---
 
@@ -330,5 +330,5 @@ This section translates the phases above into PR-sized work items with clear bou
 - Workbook identity: local-only by default vs writing a non-sensitive ID into the workbook (opt-in). If we write, where (custom property vs hidden sheet vs named item)?
 - Artifacts/files: default scoping (global workspace + per-workbook tags), file size limits, and whether binary write is allowed or text-only for v1.
 - Extensibility: permission/sandbox model for user-supplied code in hosted builds (full access vs scoped API). **V1** can ship with paste-code only; **V2** should add install-from-URL (GitHub) and possibly package sources (npm).
-- Bundling: do we prefer a purely local solution, or are we willing to propose a small upstream `pi-web-ui` change for “minimal registration” entrypoints?
+- Bundling: do we prefer a purely local solution, or are we willing to propose a small upstream `pi-web-ui` change for â€œminimal registrationâ€ entrypoints?
 - Do we want `system-prompt.ts` tool list to be generated from the registry, or keep it hand-curated for readability?
