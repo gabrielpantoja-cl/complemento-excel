@@ -1,6 +1,6 @@
 # AGENTS.md
 
-**Last reviewed:** 2026-06-30
+**Last reviewed:** 2026-07-16
 
 Notes for agents working in this repo. Read this file before making any change.
 
@@ -154,6 +154,89 @@ If local changes do not show up:
    rm -rf ~/Library/Containers/com.microsoft.Excel/Data/Library/WebKit/
    rm -rf ~/Library/Containers/com.microsoft.Excel/Data/Library/Caches/WebKit/
    ```
+
+## Excel Desktop smoke (Windows / Microsoft 365)
+
+The Linux work session uses Excel web (`excel.office.com` / OneDrive live)
+because Linux can't run Excel Desktop. The full production smoke loop
+requires Windows; use the steps below when booted into Windows on the
+Legion.
+
+Production manifest:
+
+- Hosted at `https://complemento-excel.vercel.app/manifest.prod.xml`.
+  `manifest.prod.xml` and `public/manifest.prod.xml` are regenerated
+  only when `npm run manifest:prod` runs (manual step, not part of
+  `npm run build`). The version on Vercel tracks the last commit that
+  touched either file.
+- `SourceLocation` already points to
+  `https://complemento-excel.vercel.app/src/taskpane.html`, so the JS
+  bundle is hot-loaded from Vercel at sideload time. Local certificates,
+  `mkcert`, and the local CORS proxy are NOT needed for the production
+  manifest — only for the dev `manifest.xml`.
+
+Pull a fresh manifest before sideloading (avoids stale local copies):
+
+```powershell
+Invoke-WebRequest `
+  "https://complemento-excel.vercel.app/manifest.prod.xml" `
+  -OutFile "$env:USERPROFILE\Downloads\manifest.prod.xml"
+
+# Confirm connectivity to the bundle host (the Office iframe loads
+# the JS from here; if this fails, the sidebar opens blank).
+Test-NetConnection complemento-excel.vercel.app -Port 443
+```
+
+Sideload (Microsoft 365 / Excel 2016+ on Windows):
+
+1. Open Excel Desktop and pick or create a workbook.
+2. **Insert → My Add-ins → Manage My Add-ins → Upload My Add-in**
+   (older builds: **More add-ins → My Add-ins → Upload My Add-in**).
+3. Pick `manifest.prod.xml` from `Downloads`.
+4. Accept the "Add-in source is not trusted" warning — that is the
+   standard sideload prompt for non-store manifests during development.
+5. A **Tasaciones** tile appears under Home → Add-ins. Click to open
+   the sidebar.
+
+Differences with the Excel web flow used during this session:
+
+| Surface                                  | Manifest storage                       | Sideload UX                                  |
+|------------------------------------------|----------------------------------------|-----------------------------------------------|
+| Excel web (`excel.office.com`, OneDrive) | iframe origin localStorage              | "More add-ins → My Add-ins → Upload My Add-in" — always available |
+| Excel Desktop, Microsoft 365 personal    | `%LOCALAPPDATA%\Microsoft\Office\…` hive | Insert → My Add-ins → Upload My Add-in — works out of the box |
+| Excel Desktop, Microsoft 365 family       | same                                   | Same path; sometimes requires admin consent for first run only |
+| Excel Desktop, M365 business / enterprise | Centrally deployed by tenant admin    | "Upload My Add-in" may be disabled by org policy |
+| Excel LTSC / 2019 (volume license)        | Desktop hive                            | May need **Trust Center → Trusted Add-in Catalogs** enabled first |
+
+> **Eventuality on Microsoft 365:** corporate tenants frequently
+> disable user-level custom-add-in sideload (compliance / IT policy).
+> If **Upload My Add-in** is greyed out, or the upload is silently
+> rejected, the only way to validate the addin is to have the tenant
+> admin deploy it from:
+>
+> Microsoft 365 admin center → **Settings → Integrated apps →
+> Upload custom app → Provide link to manifest**, paste
+> `https://complemento-excel.vercel.app/manifest.prod.xml`.
+>
+> That path is available to admins on every tenant and sidesteps the
+> user-level block. Until the admin deploys it, the per-user button
+> stays disabled and the only workaround is to install a personal
+> Microsoft 365 account (e.g. a personal/family license) on the same
+> machine for smoke testing.
+
+If the sidebar opens but is blank or dies immediately:
+
+1. Right-click in the sidebar → **Reload** (or close and reopen the
+   workbook).
+2. Open **F12 → Network → Fetch/XHR**; the first request should be
+   `GET /src/taskpane.html`. If it 404s, Vercel is mid-deploy — wait
+   30 s and retry.
+3. If the bundle hash in the JS request is older than the latest
+   `main` SHA, hard-refresh once more (Ctrl+F5 inside the sidebar).
+4. Confirm the bundle is reaching Vercel, not a stale local cache, by
+   checking the request's `Response → Cache-Control` header. The
+   live deployment serves `Cache-Control: no-store` for the taskpane
+   HTML (see `vercel.json` §).
 
 ## Skills
 
