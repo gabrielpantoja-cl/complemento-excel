@@ -5,6 +5,7 @@
 import type { ProviderKeysStore } from "@earendil-works/pi-web-ui/dist/storage/stores/provider-keys-store.js";
 import { getAppStorage } from "@earendil-works/pi-web-ui/dist/storage/app-storage.js";
 
+import { collectCustomProviderRuntimeInfo } from "../auth/custom-gateways.js";
 import { closeOverlayById, createOverlayDialog } from "../ui/overlay-dialog.js";
 import { WELCOME_LOGIN_OVERLAY_ID } from "../ui/overlay-ids.js";
 import { showToast } from "../ui/toast.js";
@@ -35,8 +36,10 @@ export async function showWelcomeLogin(providerKeys: ProviderKeysStore): Promise
   const { ALL_PROVIDERS, buildProviderRow } = await import("../ui/provider-login.js");
 
   // Make OAuth flows usable even before the user can access /settings.
+  let customProvidersStore: ReturnType<typeof getAppStorage>["customProviders"] | null = null;
   try {
     const storage = getAppStorage();
+    customProvidersStore = storage.customProviders;
     const enabled = await storage.settings.get("proxy.enabled");
     const url = await storage.settings.get("proxy.url");
 
@@ -231,23 +234,45 @@ export async function showWelcomeLogin(providerKeys: ProviderKeysStore): Promise
 
     const expandedRef: { current: HTMLElement | null } = { current: null };
 
+    const refreshActiveProviders = async (): Promise<Set<string>> => {
+      const combined = new Set<string>();
+      try {
+        for (const key of await providerKeys.list()) combined.add(key);
+      } catch {
+        // ignore - storage may be temporarily unavailable
+      }
+      try {
+        if (!customProvidersStore) {
+          customProvidersStore = getAppStorage().customProviders;
+        }
+        const customs = await customProvidersStore.getAll();
+        const info = collectCustomProviderRuntimeInfo(customs);
+        for (const name of info.providerNames) combined.add(name);
+      } catch {
+        // ignore
+      }
+      return combined;
+    };
+
     for (const provider of ALL_PROVIDERS) {
       const row = buildProviderRow(provider, {
         isActive: false,
         expandedRef,
-        onConnected: (_row, _id, label) => {
+        onConnected: (_row, _id, label, activeProviderName) => {
           void (async () => {
-            const updated = await providerKeys.list();
-            setActiveProviders(new Set(updated));
+            const updated = await refreshActiveProviders();
+            if (activeProviderName) updated.add(activeProviderName);
+            setActiveProviders(updated);
             document.dispatchEvent(new CustomEvent("pi:providers-changed"));
             showToast(`${label} connected — try “Explain this workbook”.`, 3200);
             closeOverlay();
           })();
         },
-        onDisconnected: (_row, _id, label) => {
+        onDisconnected: (_row, _id, label, activeProviderName) => {
           void (async () => {
-            const updated = await providerKeys.list();
-            setActiveProviders(new Set(updated));
+            const updated = await refreshActiveProviders();
+            if (activeProviderName) updated.delete(activeProviderName);
+            setActiveProviders(updated);
             document.dispatchEvent(new CustomEvent("pi:providers-changed"));
             showToast(`${label} disconnected`);
           })();

@@ -1,9 +1,11 @@
 node_modules/
 dist/
+dist-copy/
 dist-appsource/
 .env
 *.local.xml
 CLAUDE.local.md
+AGENTS.local.md
 .DS_Store
 
 # Temporary screenshots and downloads (root only — public/assets/ icons are versioned)

@@ -12,6 +12,11 @@ import { isCorsError } from "@earendil-works/pi-web-ui/dist/utils/proxy-utils.js
 import { getOAuthProvider } from "../auth/oauth-provider-registry.js";
 import { clearOAuthCredentials, saveOAuthCredentials } from "../auth/oauth-storage.js";
 import {
+  buildPresetProviderRecord,
+  getPresetProviderConfig,
+  presetProviderStorageId,
+} from "../auth/provider-presets.js";
+import {
   PROXY_HELPER_DOCS_URL,
   probeProxyReachability,
   resolveConfiguredProxyUrl,
@@ -183,6 +188,12 @@ export interface ProviderDef {
   label: string;
   oauth?: string;
   desc?: string;
+  /**
+   * Optional preset provider id. When set, the Save button stores the credential
+   * as a managed custom gateway keyed by the preset id, hiding the endpoint
+   * URL form from the user. See `src/auth/provider-presets.ts`.
+   */
+  preset?: string;
 }
 
 export const ALL_PROVIDERS: ProviderDef[] = [
@@ -202,11 +213,19 @@ export const ALL_PROVIDERS: ProviderDef[] = [
   { id: "mistral",            label: "Mistral" },
   { id: "groq",               label: "Groq" },
   { id: "xai",                label: "xAI / Grok" },
+
+  // Preset providers (managed custom OpenAI-compatible gateways)
+  { id: "minimax", label: "MiniMax (Token Plan Plus)", preset: "minimax", desc: "MiniMax-M3 - 1M context, multimodal" },
 ];
 
 export interface ProviderRowCallbacks {
-  onConnected: (row: HTMLElement, id: string, label: string) => void;
-  onDisconnected?: (row: HTMLElement, id: string, label: string) => void;
+  /**
+   * Fired after a successful Save. The third positional argument is the
+   * provider name used by the model picker filter (e.g., "MiniMax" for
+   * presets or the row id for built-in providers).
+   */
+  onConnected: (row: HTMLElement, id: string, label: string, activeProviderName: string) => void;
+  onDisconnected?: (row: HTMLElement, id: string, label: string, activeProviderName: string) => void;
 }
 
 class PromptCancelledError extends Error {
@@ -565,17 +584,24 @@ export function buildProviderRow(
     expandedRef: { current: HTMLElement | null };
   } & ProviderRowCallbacks,
 ): HTMLElement {
-  const { id, label, oauth, desc } = provider;
+  const { id, label, oauth, desc, preset: presetId } = provider;
+  const preset = presetId ? getPresetProviderConfig(presetId) : null;
   const { isActive, expandedRef, onConnected, onDisconnected } = opts;
   const storage = getAppStorage();
 
-  const keyPlaceholder = id === "anthropic"
-    ? "sk-ant-api… or sk-ant-oat…"
-    : id === "openai-codex"
-      ? "ChatGPT OAuth access token"
-      : id === "google-gemini-cli" || id === "google-antigravity"
-        ? "Google OAuth credential JSON"
-        : "Enter API key";
+  // For preset providers we look the model up by `providerName` (e.g., "MiniMax"),
+  // matching what `collectCustomProviderRuntimeInfo` stores under model.provider.
+  const activeProviderName = preset ? preset.providerName : id;
+
+  const keyPlaceholder = preset
+    ? (preset.apiKeyHint ?? "Enter API key")
+    : id === "anthropic"
+      ? "sk-ant-api… or sk-ant-oat…"
+      : id === "openai-codex"
+        ? "ChatGPT OAuth access token"
+        : id === "google-gemini-cli" || id === "google-antigravity"
+          ? "Google OAuth credential JSON"
+          : "Enter API key";
 
   const row = document.createElement("div");
   row.className = "pi-login-row";
@@ -734,7 +760,7 @@ export function buildProviderRow(
           await storage.providerKeys.set(id, apiKey);
           await saveOAuthCredentials(storage.settings, id, cred);
           setConnectedState(true);
-          onConnected(row, id, label);
+          onConnected(row, id, label, activeProviderName);
           detail.hidden = true;
           expandedRef.current = null;
         } catch (err: unknown) {
@@ -778,12 +804,16 @@ export function buildProviderRow(
         errorEl.hidden = true;
 
         try {
-          await storage.providerKeys.delete(id);
-          await clearOAuthCredentials(storage.settings, id);
+          if (preset) {
+            await storage.customProviders.delete(presetProviderStorageId(preset.id));
+          } else {
+            await storage.providerKeys.delete(id);
+            await clearOAuthCredentials(storage.settings, id);
+          }
 
           setConnectedState(false);
           keyInput.value = "";
-          onDisconnected?.(row, id, label);
+          onDisconnected?.(row, id, label, activeProviderName);
         } catch (err: unknown) {
           const msg = getErrorMessage(err);
           errorEl.textContent = msg ? `Failed to disconnect: ${msg}` : "Failed to disconnect";
@@ -814,9 +844,15 @@ export function buildProviderRow(
     saveBtn.style.opacity = "0.7";
     errorEl.hidden = true;
     try {
-      await storage.providerKeys.set(id, key);
+      if (preset) {
+        // Preset providers (e.g., MiniMax) are stored as a managed custom
+        // gateway with a stable id so re-saving overwrites in place.
+        await storage.customProviders.set(buildPresetProviderRecord(preset, key));
+      } else {
+        await storage.providerKeys.set(id, key);
+      }
       setConnectedState(true);
-      onConnected(row, id, label);
+      onConnected(row, id, label, activeProviderName);
       detail.hidden = true;
       expandedRef.current = null;
     } catch (err: unknown) {

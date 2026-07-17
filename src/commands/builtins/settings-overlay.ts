@@ -33,6 +33,8 @@ import { SETTINGS_OVERLAY_ID } from "../../ui/overlay-ids.js";
 import { ALL_PROVIDERS, buildProviderRow } from "../../ui/provider-login.js";
 import { showToast } from "../../ui/toast.js";
 import { isRecord } from "../../utils/type-guards.js";
+import { collectCustomProviderRuntimeInfo } from "../../auth/custom-gateways.js";
+import { getPresetProviderConfig } from "../../auth/provider-presets.js";
 import {
   buildExperimentalFeatureContent,
   buildExperimentalFeatureFooter,
@@ -202,11 +204,26 @@ async function buildProvidersSection(): Promise<HTMLElement> {
     shell.content.appendChild(warning);
   }
 
+  // Include preset providers (e.g., MiniMax) — they live in `customProviders`
+  // under a stable id, so we look up by `providerName` (their model.provider).
+  try {
+    const customProviders = await storage.customProviders.getAll();
+    const customInfo = collectCustomProviderRuntimeInfo(customProviders);
+    for (const name of customInfo.providerNames) configuredSet.add(name);
+  } catch {
+    // ignore - storage may be temporarily unavailable
+  }
+
   const expandedRef: { current: HTMLElement | null } = { current: null };
 
   for (const provider of ALL_PROVIDERS) {
+    // Preset rows connect via the preset's `providerName`, not the row's `id`.
+    const activeKey = provider.preset
+      ? getPresetProviderConfig(provider.preset)?.providerName ?? provider.id
+      : provider.id;
+
     const row = buildProviderRow(provider, {
-      isActive: configuredSet.has(provider.id),
+      isActive: configuredSet.has(activeKey),
       expandedRef,
       onConnected: (_row: HTMLElement, _id: string, label: string) => {
         document.dispatchEvent(new CustomEvent("pi:providers-changed"));
