@@ -2,9 +2,6 @@
 
 This folder contains **current** docs that should match shipped behavior. Top-level docs are organized into subfolders by purpose; each entry below points at the doc's new home.
 
-## Roadmap
-- [Roadmap — what we're building next](./planning/roadmap.md) (tracks A-G + issue log)
-
 ## Guides
 - [Install Tasaciones by Loxos](./guides/install.md)
 - [Sideload en Excel Desktop (Windows)](./guides/windows-sideload.md) — Trusted Add-in Catalog + script `scripts/sideload-windows.ps1`
@@ -34,10 +31,6 @@ This folder contains **current** docs that should match shipped behavior. Top-le
 ## Local bridge contracts
 - [Tmux bridge contract (v1)](./bridges/tmux-bridge-contract.md)
 - [Python / LibreOffice bridge contract (v1)](./bridges/python-bridge-contract.md)
-
-## Strategy & planning
-- [AI strategy (opencode tooling)](./ai-strategy/plan-2026-07-14.md) — current opencode config bootstrap plan
-- [AI strategy research (2026-07-14)](./ai-strategy/research-2026-07-14.md)
 
 ## Archive
 Historical planning/design docs were moved to [./archive](./archive/README.md) to keep top-level docs focused and current.

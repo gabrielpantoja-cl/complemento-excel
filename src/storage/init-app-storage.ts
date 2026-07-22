@@ -9,7 +9,7 @@ import { ProviderKeysStore } from "@earendil-works/pi-web-ui/dist/storage/stores
 import { SessionsStore } from "@earendil-works/pi-web-ui/dist/storage/stores/sessions-store.js";
 import { SettingsStore } from "@earendil-works/pi-web-ui/dist/storage/stores/settings-store.js";
 
-export function initAppStorage(dbName = "pi-for-excel") {
+export function initAppStorage(dbName = "tasaciones") {
   const settings = new SettingsStore();
   const providerKeys = new ProviderKeysStore();
   const sessions = new SessionsStore();

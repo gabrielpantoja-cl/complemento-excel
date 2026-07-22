@@ -7,7 +7,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
-const PACKAGE_TAG = "pi-for-excel-tmux-bridge";
+const PACKAGE_TAG = "tasaciones-tmux-bridge";
 const DEFAULT_PORT = "3341";
 const INSTALL_MISSING_FLAG = "--install-missing";
 
@@ -15,7 +15,7 @@ const cliDir = path.dirname(fileURLToPath(import.meta.url));
 const bridgeScriptPath = path.join(cliDir, "scripts", "tmux-bridge-server.mjs");
 
 const homeDir = os.homedir();
-const appDir = path.join(homeDir, ".pi-for-excel");
+const appDir = path.join(homeDir, ".tasaciones");
 const certDir = path.join(appDir, "certs");
 const keyPath = path.join(certDir, "key.pem");
 const certPath = path.join(certDir, "cert.pem");
@@ -234,8 +234,8 @@ function startBridge(bridgeArgs) {
   applyDefaultPort(childEnv);
   applyDefaultMode(childEnv);
 
-  if (typeof childEnv.PI_FOR_EXCEL_CERT_DIR !== "string" || childEnv.PI_FOR_EXCEL_CERT_DIR.trim().length === 0) {
-    childEnv.PI_FOR_EXCEL_CERT_DIR = certDir;
+  if (typeof childEnv.TASACIONES_CERT_DIR !== "string" || childEnv.TASACIONES_CERT_DIR.trim().length === 0) {
+    childEnv.TASACIONES_CERT_DIR = certDir;
   }
 
   const child = spawn(process.execPath, [bridgeScriptPath, ...bridgeArgs], {

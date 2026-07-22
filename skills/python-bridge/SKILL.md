@@ -9,7 +9,7 @@ metadata:
 
 # Python Bridge
 
-The Python bridge gives Pi access to native Python on the user's machine. It is an opt-in capability that upgrades the default in-browser Pyodide runtime.
+The Python bridge gives Tasaciones access to native Python on the user's machine. It is an opt-in capability that upgrades the default in-browser Pyodide runtime.
 
 ## Pyodide (default) vs Native bridge
 
@@ -28,7 +28,7 @@ The Python bridge gives Pi access to native Python on the user's machine. It is 
 ### 1. Start the bridge
 
 ```bash
-npx pi-for-excel-python-bridge
+npx tasaciones-python-bridge
 ```
 
 This defaults to **real execution mode** on `https://localhost:3340`.
@@ -43,7 +43,7 @@ Requirements:
 - `python3` must be on `PATH` (or set `PYTHON_BRIDGE_PYTHON_BIN`)
 - LibreOffice (`soffice`) is optional — only needed for `libreoffice_convert`
 
-### 2. Configure in Pi (optional)
+### 2. Configure in Tasaciones (optional)
 
 The default URL (`https://localhost:3340`) works automatically. Override if needed:
 
@@ -56,7 +56,7 @@ Or use: `/extensions` → **Connections** → **Python bridge**
 
 ### 3. First execution
 
-The first time Python runs through the native bridge, Pi will ask for explicit user confirmation (one-time per bridge URL).
+The first time Python runs through the native bridge, Tasaciones will ask for explicit user confirmation (one-time per bridge URL).
 
 ## Tools
 
@@ -79,7 +79,7 @@ The first time Python runs through the native bridge, Pi will ask for explicit u
 
 ## Troubleshooting
 
-- **Falls back to Pyodide unexpectedly** — the bridge process isn't running. Start it with `npx pi-for-excel-python-bridge`.
+- **Falls back to Pyodide unexpectedly** — the bridge process isn't running. Start it with `npx tasaciones-python-bridge`.
 - **Import errors on Pyodide** — the package likely has C extensions. Set up the native bridge.
 - **LibreOffice convert fails** — ensure `soffice` is on PATH. Install with `brew install --cask libreoffice` (macOS).
 - **CORS/cert errors** — visit `https://localhost:3340` in your browser and accept the certificate.

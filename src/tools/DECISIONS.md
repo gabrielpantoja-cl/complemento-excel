@@ -156,7 +156,7 @@ Concise record of recent tool behavior choices to avoid regressions. Update this
 - **Gate failure contract:** blocked gate checks return structured `AgentToolResult` payloads (`details.gateReason`, `details.skillHint`) instead of throwing, enabling inline setup UX and deterministic agent recovery.
 - **Execution policy:** classified as `read/none` in workbook coordinator (no workbook lock writes or blueprint invalidation).
 - **Bridge implementation:** local helper script `scripts/tmux-bridge-server.mjs`.
-  - one-command helper (`npx pi-for-excel-tmux-bridge`) defaults to real `tmux` mode
+  - one-command helper (`npx tasaciones-tmux-bridge`) defaults to real `tmux` mode
   - raw server script default remains `stub` for local development/tests
 - **Bridge contract:** POST JSON to `https://localhost:<port>/v1/tmux` with actions:
   - `list_sessions`
@@ -186,7 +186,7 @@ Concise record of recent tool behavior choices to avoid regressions. Update this
   - `python_run` + `libreoffice_convert` → `read/none` (no direct workbook mutation)
   - `python_transform_range` → `mutate/content` (writes transformed values into workbook)
 - **Bridge implementation:** local helper script `scripts/python-bridge-server.mjs`.
-  - one-command helper (`npx pi-for-excel-python-bridge`) defaults to real mode
+  - one-command helper (`npx tasaciones-python-bridge`) defaults to real mode
   - raw server script default remains `stub` for local development/tests
 - **Bridge contract:**
   - `POST /v1/python-run` — execute Python snippet with optional `input_json`, return stdout/stderr/result JSON

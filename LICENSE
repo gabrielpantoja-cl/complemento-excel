@@ -1,6 +1,12 @@
 MIT License
 
-Copyright (c) 2026 Thomas Mustier
+Copyright (c) 2026 Thomas Mustier (https://github.com/tmustier)
+Copyright (c) 2026-present Gabriel Pantoja / Loxos (https://github.com/gabrielpantoja-cl)
+
+This software is a fork of pi-for-excel by Thomas Mustier (MIT). It builds on
+that work and adds Chilean real-estate appraisal specialisations. The full
+list of upstream contributors, dependencies, and intentional divergences
+lives in NOTICE.md.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

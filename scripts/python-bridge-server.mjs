@@ -26,7 +26,7 @@ const useHttps = args.has("--https") || process.env.HTTPS === "1" || process.env
 const useHttp = args.has("--http");
 
 if (useHttps && useHttp) {
-  console.error("[pi-for-excel] Invalid args: can't use both --https and --http");
+  console.error("[tasaciones] Invalid args: can't use both --https and --http");
   process.exit(1);
 }
 
@@ -36,7 +36,7 @@ const PORT = Number.parseInt(process.env.PORT || "3340", 10);
 const MODE_RAW = (process.env.PYTHON_BRIDGE_MODE || "stub").trim().toLowerCase();
 const MODE = MODE_RAW === "real" ? "real" : MODE_RAW === "stub" ? "stub" : null;
 if (!MODE) {
-  console.error(`[pi-for-excel] Invalid PYTHON_BRIDGE_MODE: ${MODE_RAW}. Use "stub" or "real".`);
+  console.error(`[tasaciones] Invalid PYTHON_BRIDGE_MODE: ${MODE_RAW}. Use "stub" or "real".`);
   process.exit(1);
 }
 
@@ -56,13 +56,13 @@ function resolveOptionalEnvPath(name) {
   return path.resolve(trimmed);
 }
 
-const certDir = resolveOptionalEnvPath("PI_FOR_EXCEL_CERT_DIR") ?? path.resolve(process.cwd());
-const keyPath = resolveOptionalEnvPath("PI_FOR_EXCEL_KEY_PATH") ?? path.join(certDir, "key.pem");
-const certPath = resolveOptionalEnvPath("PI_FOR_EXCEL_CERT_PATH") ?? path.join(certDir, "cert.pem");
+const certDir = resolveOptionalEnvPath("TASACIONES_CERT_DIR") ?? path.resolve(process.cwd());
+const keyPath = resolveOptionalEnvPath("TASACIONES_KEY_PATH") ?? path.join(certDir, "key.pem");
+const certPath = resolveOptionalEnvPath("TASACIONES_CERT_PATH") ?? path.join(certDir, "cert.pem");
 
 const DEFAULT_ALLOWED_ORIGINS = new Set([
   "https://localhost:3000",
-  "https://pi-for-excel.vercel.app",
+  "https://complemento-excel.vercel.app",
 ]);
 
 const MAX_JSON_BODY_BYTES = 512 * 1024;
@@ -79,7 +79,7 @@ const LIBREOFFICE_MIN_TIMEOUT_MS = 1_000;
 const LIBREOFFICE_MAX_TIMEOUT_MS = 300_000;
 
 const LIBREOFFICE_TARGET_FORMATS = new Set(["csv", "pdf", "xlsx"]);
-const RESULT_JSON_MARKER = "__PI_FOR_EXCEL_RESULT_JSON_V1__";
+const RESULT_JSON_MARKER = "__TASACIONES_RESULT_JSON_V1__";
 
 const allowedOrigins = (() => {
   const raw = process.env.ALLOWED_ORIGINS;
@@ -432,7 +432,7 @@ function probeBinary(command, args) {
       ? probe.error.message
       : String(probe.error);
 
-    console.warn(`[pi-for-excel] Binary "${command}" not available (${code}): ${message}`);
+    console.warn(`[tasaciones] Binary "${command}" not available (${code}): ${message}`);
 
     return {
       available: false,
@@ -815,14 +815,14 @@ function createRealBackend() {
 
   if (!pythonInfo.available) {
     console.warn(
-      `[pi-for-excel] Python binary "${PYTHON_BIN}" is unavailable. ` +
+      `[tasaciones] Python binary "${PYTHON_BIN}" is unavailable. ` +
       "python_run and python_transform_range will fail until PYTHON_BRIDGE_PYTHON_BIN is set to a valid executable.",
     );
   }
 
   if (!libreOfficeInfo.available) {
     console.warn(
-      "[pi-for-excel] LibreOffice binary is unavailable. " +
+      "[tasaciones] LibreOffice binary is unavailable. " +
       "python_run can still work, but libreoffice_convert requires installing LibreOffice (soffice/libreoffice) " +
       "or setting PYTHON_BRIDGE_LIBREOFFICE_BIN.",
     );
@@ -968,7 +968,7 @@ const handler = async (req, res) => {
     const status = isHttpError ? error.status : 500;
 
     if (!isHttpError) {
-      console.error("[pi-for-excel] Unhandled python bridge error:", error);
+      console.error("[tasaciones] Unhandled python bridge error:", error);
     }
 
     const message = isHttpError
@@ -988,7 +988,7 @@ const server = (() => {
   }
 
   if (!fs.existsSync(keyPath) || !fs.existsSync(certPath)) {
-    console.error("[pi-for-excel] HTTPS requested but key.pem/cert.pem not found in repo root.");
+    console.error("[tasaciones] HTTPS requested but key.pem/cert.pem not found in repo root.");
     console.error("Generate them with mkcert (see README). Example: mkcert localhost");
     process.exit(1);
   }
@@ -1004,19 +1004,19 @@ const server = (() => {
 
 server.listen(PORT, HOST, () => {
   const scheme = useHttps ? "https" : "http";
-  console.log(`[pi-for-excel] python bridge listening on ${scheme}://${HOST}:${PORT}`);
-  console.log(`[pi-for-excel] mode: ${backend.mode}`);
-  console.log(`[pi-for-excel] health: ${scheme}://${HOST}:${PORT}/health`);
-  console.log(`[pi-for-excel] endpoint: ${scheme}://${HOST}:${PORT}/v1/python-run`);
-  console.log(`[pi-for-excel] endpoint: ${scheme}://${HOST}:${PORT}/v1/libreoffice-convert`);
-  console.log(`[pi-for-excel] allowed origins: ${Array.from(allowedOrigins).join(", ")}`);
+  console.log(`[tasaciones] python bridge listening on ${scheme}://${HOST}:${PORT}`);
+  console.log(`[tasaciones] mode: ${backend.mode}`);
+  console.log(`[tasaciones] health: ${scheme}://${HOST}:${PORT}/health`);
+  console.log(`[tasaciones] endpoint: ${scheme}://${HOST}:${PORT}/v1/python-run`);
+  console.log(`[tasaciones] endpoint: ${scheme}://${HOST}:${PORT}/v1/libreoffice-convert`);
+  console.log(`[tasaciones] allowed origins: ${Array.from(allowedOrigins).join(", ")}`);
 
   if (authToken) {
-    console.log("[pi-for-excel] auth: bearer token required for POST endpoints");
+    console.log("[tasaciones] auth: bearer token required for POST endpoints");
   }
 
   if (backend.mode === "stub") {
-    console.log("[pi-for-excel] stub mode: python/libreoffice calls are simulated.");
-    console.log("[pi-for-excel] use PYTHON_BRIDGE_MODE=real for local command execution.");
+    console.log("[tasaciones] stub mode: python/libreoffice calls are simulated.");
+    console.log("[tasaciones] use PYTHON_BRIDGE_MODE=real for local command execution.");
   }
 });

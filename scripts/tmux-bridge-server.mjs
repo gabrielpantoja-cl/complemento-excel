@@ -26,7 +26,7 @@ const useHttps = args.has("--https") || process.env.HTTPS === "1" || process.env
 const useHttp = args.has("--http");
 
 if (useHttps && useHttp) {
-  console.error("[pi-for-excel] Invalid args: can't use both --https and --http");
+  console.error("[tasaciones] Invalid args: can't use both --https and --http");
   process.exit(1);
 }
 
@@ -36,7 +36,7 @@ const PORT = Number.parseInt(process.env.PORT || "3341", 10);
 const MODE_RAW = (process.env.TMUX_BRIDGE_MODE || "stub").trim().toLowerCase();
 const MODE = MODE_RAW === "tmux" ? "tmux" : MODE_RAW === "stub" ? "stub" : null;
 if (!MODE) {
-  console.error(`[pi-for-excel] Invalid TMUX_BRIDGE_MODE: ${MODE_RAW}. Use "stub" or "tmux".`);
+  console.error(`[tasaciones] Invalid TMUX_BRIDGE_MODE: ${MODE_RAW}. Use "stub" or "tmux".`);
   process.exit(1);
 }
 
@@ -50,13 +50,13 @@ function resolveOptionalEnvPath(name) {
   return path.resolve(trimmed);
 }
 
-const certDir = resolveOptionalEnvPath("PI_FOR_EXCEL_CERT_DIR") ?? path.resolve(process.cwd());
-const keyPath = resolveOptionalEnvPath("PI_FOR_EXCEL_KEY_PATH") ?? path.join(certDir, "key.pem");
-const certPath = resolveOptionalEnvPath("PI_FOR_EXCEL_CERT_PATH") ?? path.join(certDir, "cert.pem");
+const certDir = resolveOptionalEnvPath("TASACIONES_CERT_DIR") ?? path.resolve(process.cwd());
+const keyPath = resolveOptionalEnvPath("TASACIONES_KEY_PATH") ?? path.join(certDir, "key.pem");
+const certPath = resolveOptionalEnvPath("TASACIONES_CERT_PATH") ?? path.join(certDir, "cert.pem");
 
 const DEFAULT_ALLOWED_ORIGINS = new Set([
   "https://localhost:3000",
-  "https://pi-for-excel.vercel.app",
+  "https://complemento-excel.vercel.app",
 ]);
 
 const MAX_JSON_BODY_BYTES = 256 * 1024;
@@ -114,7 +114,7 @@ const tmuxCommandTimeoutMs = (() => {
 })();
 
 const socketDir = path.resolve(
-  process.env.TMUX_BRIDGE_SOCKET_DIR || path.join(os.tmpdir(), "pi-for-excel-tmux-bridge"),
+  process.env.TMUX_BRIDGE_SOCKET_DIR || path.join(os.tmpdir(), "tasaciones-tmux-bridge"),
 );
 const socketPath = path.resolve(
   process.env.TMUX_BRIDGE_SOCKET_PATH || path.join(socketDir, "tmux.sock"),
@@ -874,9 +874,9 @@ const backend = (() => {
     return MODE === "tmux" ? createRealTmuxBackend() : createStubBackend();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error(`[pi-for-excel] Failed to initialize tmux backend: ${message}`);
+    console.error(`[tasaciones] Failed to initialize tmux backend: ${message}`);
     console.error(
-      "[pi-for-excel] Install tmux (for example: brew install tmux), " +
+      "[tasaciones] Install tmux (for example: brew install tmux), " +
       "or run TMUX_BRIDGE_MODE=stub for simulated mode.",
     );
     process.exit(1);
@@ -955,7 +955,7 @@ const handler = async (req, res) => {
       ? (typeof error.stack === "string" && error.stack.length > 0 ? error.stack : error.message)
       : String(error);
 
-    console.error(`[pi-for-excel] tmux bridge internal error: ${detail}`);
+    console.error(`[tasaciones] tmux bridge internal error: ${detail}`);
 
     respondJson(res, 500, {
       ok: false,
@@ -970,7 +970,7 @@ const server = (() => {
   }
 
   if (!fs.existsSync(keyPath) || !fs.existsSync(certPath)) {
-    console.error("[pi-for-excel] HTTPS requested but key.pem/cert.pem not found in repo root.");
+    console.error("[tasaciones] HTTPS requested but key.pem/cert.pem not found in repo root.");
     console.error("Generate them with mkcert (see README). Example: mkcert localhost");
     process.exit(1);
   }
@@ -986,20 +986,20 @@ const server = (() => {
 
 server.listen(PORT, HOST, () => {
   const scheme = useHttps ? "https" : "http";
-  console.log(`[pi-for-excel] tmux bridge listening on ${scheme}://${HOST}:${PORT}`);
-  console.log(`[pi-for-excel] mode: ${backend.mode}`);
-  console.log(`[pi-for-excel] health: ${scheme}://${HOST}:${PORT}/health`);
-  console.log(`[pi-for-excel] endpoint: ${scheme}://${HOST}:${PORT}/v1/tmux`);
-  console.log(`[pi-for-excel] allowed origins: ${Array.from(allowedOrigins).join(", ")}`);
+  console.log(`[tasaciones] tmux bridge listening on ${scheme}://${HOST}:${PORT}`);
+  console.log(`[tasaciones] mode: ${backend.mode}`);
+  console.log(`[tasaciones] health: ${scheme}://${HOST}:${PORT}/health`);
+  console.log(`[tasaciones] endpoint: ${scheme}://${HOST}:${PORT}/v1/tmux`);
+  console.log(`[tasaciones] allowed origins: ${Array.from(allowedOrigins).join(", ")}`);
 
   if (authToken) {
-    console.log("[pi-for-excel] auth: bearer token required for POST /v1/tmux");
+    console.log("[tasaciones] auth: bearer token required for POST /v1/tmux");
   }
 
   if (backend.mode === "tmux") {
-    console.log(`[pi-for-excel] tmux socket: ${socketPath}`);
+    console.log(`[tasaciones] tmux socket: ${socketPath}`);
   } else {
-    console.log("[pi-for-excel] stub mode: commands are simulated and not executed in a real shell.");
-    console.log("[pi-for-excel] use TMUX_BRIDGE_MODE=tmux for real command output.");
+    console.log("[tasaciones] stub mode: commands are simulated and not executed in a real shell.");
+    console.log("[tasaciones] use TMUX_BRIDGE_MODE=tmux for real command output.");
   }
 });

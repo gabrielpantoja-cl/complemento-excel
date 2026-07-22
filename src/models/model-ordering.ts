@@ -106,7 +106,6 @@ export function parseMajorMinor(id: string): number {
   // - gemini-2.5-pro-preview-06-05            -> 25 (not 65)
   // - google/gemini-3.1-pro-preview           -> 31
   // - gemini-3-pro-preview                    -> 30
-  // - MiniMax-M2.7                            -> 27 (letter-prefixed fallback)
   // - Qwen/Qwen3.5                            -> 35 (letter-prefixed fallback)
   // - gemma-4-31b-it                          -> 40 (generic fallback; ignores size suffix)
   // - zai.glm-5                               -> 50 (generic fallback)

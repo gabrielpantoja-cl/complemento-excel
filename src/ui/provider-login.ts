@@ -79,14 +79,14 @@ function showProxyGateDialog(): Promise<boolean> {
       "flex:1;padding:8px 10px;border-radius:6px;" +
       "background:var(--pi-code-bg, #1e1e1e);color:var(--pi-code-fg, #d4d4d4);" +
       "font-size:13px;font-family:var(--pi-monospace, monospace);user-select:all;";
-    codeEl.textContent = "npx pi-for-excel-proxy";
+    codeEl.textContent = "npx tasaciones-proxy";
 
     const copyBtn = document.createElement("button");
     copyBtn.type = "button";
     copyBtn.textContent = "Copy";
     copyBtn.style.cssText = "padding:6px 12px;border-radius:6px;font-size:13px;cursor:pointer;";
     copyBtn.addEventListener("click", () => {
-      void navigator.clipboard.writeText("npx pi-for-excel-proxy").then(() => {
+      void navigator.clipboard.writeText("npx tasaciones-proxy").then(() => {
         copyBtn.textContent = "Copied!";
         setTimeout(() => { copyBtn.textContent = "Copy"; }, 1500);
       });
@@ -198,7 +198,9 @@ export interface ProviderDef {
 
 export const ALL_PROVIDERS: ProviderDef[] = [
   // Preset providers at the top - one-click rows for high-frequency token-plan vendors.
-  { id: "minimax", label: "MiniMax (Token Plan Plus)", preset: "minimax", desc: "MiniMax-M3 - 1M context, multimodal" },
+  // The shipped public build has no preset entries by default. Downstream
+  // deployments and forks populate `PRESET_PROVIDERS` in
+  // `src/auth/provider-presets.ts` to surface their own rows here.
 
   // OAuth providers next (subscription / account-based flows).
   // Only list flows that are supported in-browser (PKCE/manual paste, no local callback server).
@@ -221,8 +223,8 @@ export const ALL_PROVIDERS: ProviderDef[] = [
 export interface ProviderRowCallbacks {
   /**
    * Fired after a successful Save. The third positional argument is the
-   * provider name used by the model picker filter (e.g., "MiniMax" for
-   * presets or the row id for built-in providers).
+   * provider name used by the model picker filter (the preset's
+   * `providerName` for presets, or the row id for built-in providers).
    */
   onConnected: (row: HTMLElement, id: string, label: string, activeProviderName: string) => void;
   onDisconnected?: (row: HTMLElement, id: string, label: string, activeProviderName: string) => void;
@@ -589,7 +591,7 @@ export function buildProviderRow(
   const { isActive, expandedRef, onConnected, onDisconnected } = opts;
   const storage = getAppStorage();
 
-  // For preset providers we look the model up by `providerName` (e.g., "MiniMax"),
+  // For preset providers we look the model up by `providerName`
   // matching what `collectCustomProviderRuntimeInfo` stores under model.provider.
   const activeProviderName = preset ? preset.providerName : id;
 
@@ -779,7 +781,7 @@ export function buildProviderRow(
               "Login couldn't connect — this provider needs a helper running on your Mac. " +
               "Open Terminal and run: <code style=\"padding:2px 5px;border-radius:4px;" +
               "background:var(--pi-code-bg, #1e1e1e);color:var(--pi-code-fg, #d4d4d4)\">" +
-              "npx pi-for-excel-proxy</code>, then try again. " +
+              "npx tasaciones-proxy</code>, then try again. " +
               `<a href="${PROXY_HELPER_DOCS_URL}" target="_blank" rel="noopener noreferrer">Step-by-step guide →</a>`;
           } else {
             errorEl.textContent = msg || "Login failed";
@@ -845,8 +847,8 @@ export function buildProviderRow(
     errorEl.hidden = true;
     try {
       if (preset) {
-        // Preset providers (e.g., MiniMax) are stored as a managed custom
-        // gateway with a stable id so re-saving overwrites in place.
+        // Preset providers are stored as a managed custom gateway with a
+        // stable id so re-saving overwrites in place.
         await storage.customProviders.set(buildPresetProviderRecord(preset, key));
       } else {
         await storage.providerKeys.set(id, key);

@@ -123,12 +123,12 @@ async function exportWorkbookAuditLog(rawArgs: string): Promise<void> {
 }
 
 // =============================================================================
-// Markdown transcript (paste-ready for the Continuous Improvement Mega Prompt)
+// Markdown transcript
 // =============================================================================
 //
-// Output format is designed to drop into the prompt at
-// `docs/planning/roadmap.md` §"Continuous Improvement Mega Prompt" verbatim.
-// Sections are separated by horizontal rules so the LLM sees clear boundaries.
+// Output format produces a clean Markdown transcript that can be pasted into
+// any external tool (a chat, an issue, a doc). Sections are separated by
+// horizontal rules so the consumer sees clear boundaries.
 
 export type MarkdownLimits = SerializeLimits;
 
@@ -271,7 +271,7 @@ async function exportTranscriptMarkdown(
     `- Model: \`${modelLabel}\``,
     `- Thinking level: \`${agent.state.thinkingLevel}\``,
     `- Messages: ${msgs.length}`,
-    `- Paste-ready for: Continuous Improvement Mega Prompt (\`docs/planning/roadmap.md\` §5)`,
+    `- Paste-ready for sharing, issue reports, or external chat tools`,
     "",
     "---",
     "",

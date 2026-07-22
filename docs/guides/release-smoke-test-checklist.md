@@ -6,7 +6,7 @@ Use this checklist before removing the **Experimental** badge or publishing a re
 
 ## Scope
 
-This checklist maps directly to issue [#179](https://github.com/tmustier/pi-for-excel/issues/179):
+This checklist maps to the upstream issue [#179](https://github.com/tmustier/pi-for-excel/issues/179) from the base project:
 
 - Landing-page claim validation
 - Prompt example validation
@@ -231,7 +231,7 @@ Expected:
 
 Steps:
 
-1. Start proxy (`npx pi-for-excel-proxy`)
+1. Start proxy (`npx tasaciones-proxy`)
 2. Enable proxy in settings
 3. `/login`
 4. Send provider-backed prompt

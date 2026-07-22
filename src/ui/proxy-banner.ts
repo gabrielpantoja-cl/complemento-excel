@@ -7,7 +7,7 @@
 
 import { AlertTriangle, Check, Copy, lucide } from "./lucide-icons.js";
 
-const PROXY_COMMAND = "npx pi-for-excel-proxy";
+const PROXY_COMMAND = "npx tasaciones-proxy";
 const INSTALL_GUIDE_URL = "https://pi.dev/excel#connect";
 
 export type ProxyBannerState = "detected" | "not-detected" | "unknown";

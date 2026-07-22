@@ -11,7 +11,7 @@ const cliDir = path.dirname(fileURLToPath(import.meta.url));
 const proxyScriptPath = path.join(cliDir, "scripts", "cors-proxy-server.mjs");
 
 const homeDir = os.homedir();
-const appDir = path.join(homeDir, ".pi-for-excel");
+const appDir = path.join(homeDir, ".tasaciones");
 const certDir = path.join(appDir, "certs");
 const keyPath = path.join(certDir, "key.pem");
 const certPath = path.join(certDir, "cert.pem");
@@ -29,7 +29,7 @@ function run(command, args, options = {}) {
   });
 
   if (result.error) {
-    console.error(`[pi-for-excel-proxy] Failed to run: ${command}`);
+    console.error(`[tasaciones-proxy] Failed to run: ${command}`);
     console.error(result.error.message);
     process.exit(1);
   }
@@ -39,7 +39,7 @@ function run(command, args, options = {}) {
   }
 
   if (result.signal) {
-    console.error(`[pi-for-excel-proxy] ${command} terminated by signal ${result.signal}`);
+    console.error(`[tasaciones-proxy] ${command} terminated by signal ${result.signal}`);
     process.exit(1);
   }
 }
@@ -80,12 +80,12 @@ function resolveMkcertCommand() {
 
   if (process.platform === "darwin") {
     if (!commandExists("brew")) {
-      console.error("[pi-for-excel-proxy] Homebrew is not installed.");
-      console.error("[pi-for-excel-proxy] Install Homebrew first: https://brew.sh");
+      console.error("[tasaciones-proxy] Homebrew is not installed.");
+      console.error("[tasaciones-proxy] Install Homebrew first: https://brew.sh");
       process.exit(1);
     }
 
-    console.log("[pi-for-excel-proxy] Installing mkcert via Homebrew...");
+    console.log("[tasaciones-proxy] Installing mkcert via Homebrew...");
     run("brew", ["install", "mkcert"]);
 
     const brewCandidates = ["/opt/homebrew/bin/mkcert", "/usr/local/bin/mkcert", "mkcert"];
@@ -99,13 +99,13 @@ function resolveMkcertCommand() {
       }
     }
 
-    console.error("[pi-for-excel-proxy] mkcert is installed but not compatible with required CLI flags.");
-    console.error("[pi-for-excel-proxy] Ensure FiloSottile mkcert is used (not the npm mkcert package).");
+    console.error("[tasaciones-proxy] mkcert is installed but not compatible with required CLI flags.");
+    console.error("[tasaciones-proxy] Ensure FiloSottile mkcert is used (not the npm mkcert package).");
     process.exit(1);
   }
 
-  console.error("[pi-for-excel-proxy] Please install mkcert, then run this command again.");
-  console.error("[pi-for-excel-proxy] Install instructions: https://github.com/FiloSottile/mkcert#installation");
+  console.error("[tasaciones-proxy] Please install mkcert, then run this command again.");
+  console.error("[tasaciones-proxy] Install instructions: https://github.com/FiloSottile/mkcert#installation");
   process.exit(1);
 }
 
@@ -118,9 +118,9 @@ function installMkcertCa(mkcertCommand) {
     return;
   }
 
-  console.error("[pi-for-excel-proxy] Failed to install mkcert local CA.");
-  console.error("[pi-for-excel-proxy] Run manually: mkcert -install");
-  console.error("[pi-for-excel-proxy] If it fails, fix trust-store permissions and retry.");
+  console.error("[tasaciones-proxy] Failed to install mkcert local CA.");
+  console.error("[tasaciones-proxy] Run manually: mkcert -install");
+  console.error("[tasaciones-proxy] If it fails, fix trust-store permissions and retry.");
 
   if (typeof result.status === "number" && result.status !== 0) {
     process.exit(result.status);
@@ -138,7 +138,7 @@ function ensureCertificates() {
 
   const mkcertCommand = resolveMkcertCommand();
 
-  console.log("[pi-for-excel-proxy] Generating local HTTPS certificates...");
+  console.log("[tasaciones-proxy] Generating local HTTPS certificates...");
   installMkcertCa(mkcertCommand);
 
   run(mkcertCommand, ["-key-file", keyPath, "-cert-file", certPath, "localhost"], {
@@ -146,7 +146,7 @@ function ensureCertificates() {
   });
 
   if (!fs.existsSync(keyPath) || !fs.existsSync(certPath)) {
-    console.error("[pi-for-excel-proxy] Failed to generate TLS certificates.");
+    console.error("[tasaciones-proxy] Failed to generate TLS certificates.");
     process.exit(1);
   }
 }
@@ -166,7 +166,7 @@ function resolveProxyConfig() {
 
 function startProxy(proxyArgs) {
   fs.mkdirSync(certDir, { recursive: true });
-  console.log(`[pi-for-excel-proxy] Using certificate directory: ${certDir}`);
+  console.log(`[tasaciones-proxy] Using certificate directory: ${certDir}`);
 
   const child = spawn(process.execPath, [proxyScriptPath, ...proxyArgs], {
     cwd: certDir,
@@ -198,15 +198,15 @@ function startProxy(proxyArgs) {
   });
 
   child.on("error", (error) => {
-    console.error("[pi-for-excel-proxy] Failed to start proxy process.");
+    console.error("[tasaciones-proxy] Failed to start proxy process.");
     console.error(error.message);
     process.exit(1);
   });
 }
 
 if (!fs.existsSync(proxyScriptPath)) {
-  console.error("[pi-for-excel-proxy] Missing proxy runtime files.");
-  console.error("[pi-for-excel-proxy] Reinstall the package or run npm pack again.");
+  console.error("[tasaciones-proxy] Missing proxy runtime files.");
+  console.error("[tasaciones-proxy] Reinstall the package or run npm pack again.");
   process.exit(1);
 }
 

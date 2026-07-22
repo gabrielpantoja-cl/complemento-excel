@@ -1,41 +1,42 @@
-# pi-for-excel-tmux-bridge
+# tasaciones-tmux-bridge
 
-Local HTTPS tmux bridge helper for Pi for Excel.
+Local HTTPS tmux bridge helper for Tasaciones by Loxos.
 
 ## Usage
 
 ```bash
-npx pi-for-excel-tmux-bridge
+npx tasaciones-tmux-bridge
 ```
 
 This command:
 
 1. Ensures `mkcert` exists (installs via Homebrew on macOS if missing)
-2. Creates certificates in `~/.pi-for-excel/certs/` when needed
-3. Starts the bridge at `https://localhost:3341`
-4. Runs in real `tmux` mode by default
+2. Creates certificates in `~/.tasaciones/certs/` when needed
+3. Starts the tmux bridge at `https://localhost:3341`
 
-Real mode requires `tmux` to be installed and available on `PATH`.
+Then in Tasaciones by Loxos, the bridge is reachable by default — configure `/experimental tmux-bridge-url` only to override.
 
-Optional assisted install (macOS/Homebrew):
-
-```bash
-npx pi-for-excel-tmux-bridge --install-missing
-```
-
-This installs missing `tmux` before starting the bridge.
-
-To force safe simulated mode:
+## Installing missing dependencies (macOS)
 
 ```bash
-TMUX_BRIDGE_MODE=stub npx pi-for-excel-tmux-bridge
+npx tasaciones-tmux-bridge --install-missing
 ```
 
-Then in Pi for Excel:
+This will (via Homebrew):
 
-1. The default tmux bridge URL is already `https://localhost:3341`
-2. (Optional) set `/experimental tmux-bridge-url <url>` to use a non-default URL
-3. (Optional) run `/experimental tmux-bridge-token <token>` if you set `TMUX_BRIDGE_TOKEN`
+- Install `tmux` if it is missing
+
+Manual install:
+
+```bash
+brew install tmux
+```
+
+To force safe simulated mode instead:
+
+```bash
+TMUX_BRIDGE_MODE=stub npx tasaciones-tmux-bridge
+```
 
 ## Publishing (maintainers)
 
@@ -44,6 +45,7 @@ Package source lives in `pkg/tmux-bridge/`.
 Before packing/publishing, `prepack` copies runtime files from repo root:
 
 - `scripts/tmux-bridge-server.mjs`
+- `scripts/proxy-target-policy.mjs` (shared with `tasaciones-proxy`)
 
 Publish from this directory:
 

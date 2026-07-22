@@ -117,10 +117,10 @@ function stripAnthropicBrowserHeader(init?: RequestInit): RequestInit | undefine
 
 /**
  * HTTP request-header prefixes that the OpenAI SDK (Stainless-generated
- * client) injects as telemetry. Many upstreams (MiniMax, Z.AI's
- * Anthropic-compat, etc.) do NOT whitelist these in `Access-Control-Allow-
- * Headers`, so the browser blocks the preflighted POST. Stripping them
- * makes the request look like a plain browser fetch.
+ * client) injects as telemetry. Many upstreams do NOT whitelist these
+ * in `Access-Control-Allow-Headers`, so the browser blocks the
+ * preflighted POST. Stripping them makes the request look like a plain
+ * browser fetch.
  *
  * Exported for unit tests; not part of the public API.
  */
@@ -204,7 +204,7 @@ export function installFetchInterceptor(): void {
 
     // Strip SDK telemetry headers BEFORE any other branch. The OpenAI
     // SDK (Stainless) injects `x-stainless-*` headers into every request,
-    // and many upstreams (e.g. api.minimax.io) do not whitelist them in
+    // and many upstreams do not whitelist them in
     // `Access-Control-Allow-Headers`, so Chromium blocks the preflighted
     // POST with "Request header field x-stainless-os is not allowed...".
     // The interceptor handles this once, so neither the OpenAI SDK nor

@@ -1,41 +1,44 @@
-# pi-for-excel-python-bridge
+# tasaciones-python-bridge
 
-Local HTTPS Python / LibreOffice bridge helper for Pi for Excel.
+Local HTTPS Python / LibreOffice bridge helper for Tasaciones by Loxos.
 
 ## Usage
 
 ```bash
-npx pi-for-excel-python-bridge
+npx tasaciones-python-bridge
 ```
 
 This command:
 
 1. Ensures `mkcert` exists (installs via Homebrew on macOS if missing)
-2. Creates certificates in `~/.pi-for-excel/certs/` when needed
-3. Starts the bridge at `https://localhost:3340`
-4. Runs in real local execution mode by default
+2. Creates certificates in `~/.tasaciones/certs/` when needed
+3. Starts the Python / LibreOffice bridge at `https://localhost:3340`
 
-Real mode requires `python3` on `PATH`. LibreOffice (`soffice` / `libreoffice`) is optional for Python execution but required for `libreoffice_convert`.
+Then in Tasaciones by Loxos, the bridge is reachable by default — configure `/experimental python-bridge-url` only to override.
 
-Optional assisted install (macOS/Homebrew):
-
-```bash
-npx pi-for-excel-python-bridge --install-missing
-```
-
-This installs missing `python3` and/or LibreOffice before starting the bridge.
-
-To force safe simulated mode:
+## Installing missing dependencies (macOS)
 
 ```bash
-PYTHON_BRIDGE_MODE=stub npx pi-for-excel-python-bridge
+npx tasaciones-python-bridge --install-missing
 ```
 
-Then in Pi for Excel:
+This will (via Homebrew):
 
-1. The default Python bridge URL is already `https://localhost:3340`
-2. (Optional) set `/experimental python-bridge-url <url>` to use a non-default URL
-3. (Optional) run `/experimental python-bridge-token <token>` if you set `PYTHON_BRIDGE_TOKEN`
+- Install `python` if `python3` is missing
+- Install LibreOffice (`--cask`) if `soffice` / `libreoffice` is not on PATH
+
+Manual install:
+
+```bash
+brew install python
+brew install --cask libreoffice
+```
+
+To force safe simulated mode instead:
+
+```bash
+PYTHON_BRIDGE_MODE=stub npx tasaciones-python-bridge
+```
 
 ## Publishing (maintainers)
 
@@ -44,6 +47,7 @@ Package source lives in `pkg/python-bridge/`.
 Before packing/publishing, `prepack` copies runtime files from repo root:
 
 - `scripts/python-bridge-server.mjs`
+- `scripts/proxy-target-policy.mjs` (shared with `tasaciones-proxy`)
 
 Publish from this directory:
 

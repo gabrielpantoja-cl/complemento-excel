@@ -38,7 +38,7 @@ const useHttps = args.has("--https") || process.env.HTTPS === "1" || process.env
 const useHttp = args.has("--http");
 
 if (useHttps && useHttp) {
-  console.error("[pi-for-excel] Invalid args: can't use both --https and --http");
+  console.error("[tasaciones] Invalid args: can't use both --https and --http");
   process.exit(1);
 }
 
@@ -65,7 +65,7 @@ const HOP_BY_HOP_HEADERS = new Set([
 // Default allowlist matches our dev + hosted origins; override via env var.
 const DEFAULT_ALLOWED_ORIGINS = new Set([
   "https://localhost:3000",
-  "https://pi-for-excel.vercel.app",
+  "https://complemento-excel.vercel.app",
 ]);
 
 const allowedOrigins = (() => {
@@ -111,8 +111,6 @@ const DEFAULT_ALLOWED_TARGET_HOSTS = new Set([
   "cloudcode-pa.googleapis.com",
   "daily-cloudcode-pa.sandbox.googleapis.com",
   "api.z.ai",
-  "api.minimax.io",
-  "api.minimaxi.com",
   // Web search providers
   "s.jina.ai",
   "api.firecrawl.dev",
@@ -429,7 +427,7 @@ const server = (() => {
   }
 
   if (!fs.existsSync(keyPath) || !fs.existsSync(certPath)) {
-    console.error("[pi-for-excel] HTTPS requested but key.pem/cert.pem not found in repo root.");
+    console.error("[tasaciones] HTTPS requested but key.pem/cert.pem not found in repo root.");
     console.error("Generate them with mkcert (see README). Example: mkcert localhost");
     process.exit(1);
   }
@@ -445,34 +443,34 @@ const server = (() => {
 
 server.listen(PORT, HOST, () => {
   const scheme = useHttps ? "https" : "http";
-  console.log(`[pi-for-excel] CORS proxy listening on ${scheme}://${HOST}:${PORT}`);
-  console.log(`[pi-for-excel] Format: ${scheme}://${HOST}:${PORT}/?url=<target-url>`);
-  console.log(`[pi-for-excel] Allowed origins: ${Array.from(allowedOrigins).join(", ")}`);
+  console.log(`[tasaciones] CORS proxy listening on ${scheme}://${HOST}:${PORT}`);
+  console.log(`[tasaciones] Format: ${scheme}://${HOST}:${PORT}/?url=<target-url>`);
+  console.log(`[tasaciones] Allowed origins: ${Array.from(allowedOrigins).join(", ")}`);
 
   if (allowAllTargetHosts) {
-    console.log("[pi-for-excel] WARNING: target host allowlisting disabled (ALLOW_ALL_TARGET_HOSTS=1)");
+    console.log("[tasaciones] WARNING: target host allowlisting disabled (ALLOW_ALL_TARGET_HOSTS=1)");
   } else {
     const source = configuredAllowedTargetHosts.size > 0 ? "ALLOWED_TARGET_HOSTS" : "default";
-    console.log(`[pi-for-excel] Allowed target hosts (${source}): ${Array.from(allowedTargetHosts).join(", ")}`);
+    console.log(`[tasaciones] Allowed target hosts (${source}): ${Array.from(allowedTargetHosts).join(", ")}`);
 
     if (configuredAllowedTargetHosts.size === 0) {
-      console.log("[pi-for-excel] GitHub enterprise OAuth/Copilot endpoints on custom domains are allowed by path.");
+      console.log("[tasaciones] GitHub enterprise OAuth/Copilot endpoints on custom domains are allowed by path.");
     }
   }
 
   if (hasConfiguredAllowedTargetHosts && configuredAllowedTargetHosts.size === 0) {
-    console.warn("[pi-for-excel] WARNING: ALLOWED_TARGET_HOSTS had no valid entries; using default allowlist.");
+    console.warn("[tasaciones] WARNING: ALLOWED_TARGET_HOSTS had no valid entries; using default allowlist.");
   }
 
   if (allowLoopbackTargets) {
-    console.log("[pi-for-excel] WARNING: loopback target blocking disabled (ALLOW_LOOPBACK_TARGETS=1)");
+    console.log("[tasaciones] WARNING: loopback target blocking disabled (ALLOW_LOOPBACK_TARGETS=1)");
   }
 
   if (allowPrivateTargets) {
-    console.log("[pi-for-excel] WARNING: private/local target blocking disabled (ALLOW_PRIVATE_TARGETS=1)");
+    console.log("[tasaciones] WARNING: private/local target blocking disabled (ALLOW_PRIVATE_TARGETS=1)");
   }
 
   if (strictTargetResolution) {
-    console.log("[pi-for-excel] Strict DNS resolution enabled (STRICT_TARGET_RESOLUTION=1)");
+    console.log("[tasaciones] Strict DNS resolution enabled (STRICT_TARGET_RESOLUTION=1)");
   }
 });

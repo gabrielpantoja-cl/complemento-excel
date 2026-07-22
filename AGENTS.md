@@ -282,10 +282,12 @@ update this section.
 
 ## Models and data residency
 
+> This section describes the opencode CLI configuration the maintainer uses to develop this repo. It is **not** required reading for contributors and is intentionally vague about provider-specific details, which change frequently. The add-in itself supports any provider the user configures in `/settings` (see `docs/features/integrations-external-tools.md`).
+
 | Field | Value |
 |---|---|
-| Primary model | `minimax-coding-plan/MiniMax-M3` (single-model, no fallback) |
-| Provider docs | **Unknown** â€” no public docs surfaced in research; treat pricing / limits / deprecations as unverified |
-| Data residency | Low-sensitivity repo (public code). Provider egress is acceptable for code review. Workbook contents do not leave the user's machine via opencode directly. |
-| Cost discipline | No routing available (single model). Discipline lives in prompt-cache hygiene (see "Prompt caching gotchas" above). |
-| Provider allow-list | `enabled_providers: ["minimax-coding-plan"]` â€” only this provider is loadable by opencode. |
+| Primary model | Single-model, no fallback. Configured locally via `opencode.json` (gitignored). |
+| Provider docs | Varies; treated as unverified unless explicitly linked in code or commit messages. |
+| Data residency | Low-sensitivity repo (public code). Provider egress is acceptable for code review. Workbook contents do not leave the user's machine via the opencode CLI. |
+| Cost discipline | No routing layer; discipline lives in prompt-cache hygiene (see "Prompt caching gotchas" above). |
+| Provider allow-list | Maintained locally in `opencode.json`. Out of scope for this document. |

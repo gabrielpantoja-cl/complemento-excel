@@ -20,7 +20,7 @@ import {
 import type { RuntimeLockState } from "./session-runtime-manager.js";
 
 const EXPORT_BUTTON_TOOLTIP =
-  "Copy this session to the clipboard in Markdown, paste-ready for the Continuous Improvement Mega Prompt (see docs/planning/roadmap.md).";
+  "Copy this session to the clipboard in Markdown. Useful for sharing a transcript, filing a bug, or pasting into another tool.";
 
 export type ActiveAgentProvider = () => Agent | null;
 export type ActiveLockStateProvider = () => RuntimeLockState;

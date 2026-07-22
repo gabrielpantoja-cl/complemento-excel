@@ -1,20 +1,20 @@
-# pi-for-excel-proxy
+# tasaciones-proxy
 
-Local HTTPS CORS proxy helper for Pi for Excel OAuth logins.
+Local HTTPS CORS proxy helper for Tasaciones by Loxos OAuth logins.
 
 ## Usage
 
 ```bash
-npx pi-for-excel-proxy
+npx tasaciones-proxy
 ```
 
 This command:
 
 1. Ensures `mkcert` exists (installs via Homebrew on macOS if missing)
-2. Creates certificates in `~/.pi-for-excel/certs/` when needed
+2. Creates certificates in `~/.tasaciones/certs/` when needed
 3. Starts the proxy at `https://localhost:3003`
 
-Then in Pi for Excel:
+Then in Tasaciones by Loxos:
 
 1. Open `/settings`
 2. Enable **Proxy**

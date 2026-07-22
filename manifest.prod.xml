@@ -11,7 +11,7 @@
   <ProviderName>Loxos</ProviderName>
   <DefaultLocale>es-CL</DefaultLocale>
   <DisplayName DefaultValue="Tasaciones" />
-  <Description DefaultValue="Complemento IA para tasaciones chilenas. Fork de pi-for-excel (MIT)." />
+  <Description DefaultValue="Tasaciones by Loxos — asistente IA para tasaciones y peritajes de expropiación en Chile. Fork open source de pi-for-excel (MIT)." />
   <IconUrl DefaultValue="https://complemento-excel.vercel.app/assets/icon-32.png" />
   <HighResolutionIconUrl DefaultValue="https://complemento-excel.vercel.app/assets/icon-80.png" />
   <SupportUrl DefaultValue="https://complemento-excel.vercel.app/" />

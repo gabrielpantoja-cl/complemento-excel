@@ -1,1 +1,10 @@
-github: tmustier
+# Funding
+
+Tasaciones by Loxos is open-source software maintained on a best-effort basis by
+Gabriel Pantoja ([@gabrielpantoja-cl](https://github.com/gabrielpantoja-cl)).
+
+If this fork saves you time on Chilean real-estate appraisal work, consider
+sponsoring the maintainer via GitHub Sponsors — see the badge on the repo root.
+
+The fork is built on top of [pi-for-excel](https://github.com/tmustier/pi-for-excel)
+by Thomas Mustier (MIT). Upstream credits live in [NOTICE.md](../NOTICE.md).

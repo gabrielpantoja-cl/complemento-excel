@@ -204,7 +204,7 @@ async function buildProvidersSection(): Promise<HTMLElement> {
     shell.content.appendChild(warning);
   }
 
-  // Include preset providers (e.g., MiniMax) — they live in `customProviders`
+  // Include preset providers — they live in `customProviders`
   // under a stable id, so we look up by `providerName` (their model.provider).
   try {
     const customProviders = await storage.customProviders.getAll();

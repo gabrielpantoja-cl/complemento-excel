@@ -7,6 +7,7 @@ import {
   findPresetIdForCustomProvider,
   getPresetProviderConfig,
   presetProviderStorageId,
+  type PresetProviderConfig,
 } from "../src/auth/provider-presets.ts";
 
 void test("PRESET_PROVIDERS has unique ids", () => {
@@ -40,39 +41,8 @@ void test("getPresetProviderConfig returns null for unknown ids", () => {
   assert.equal(getPresetProviderConfig("nope"), null);
 });
 
-void test("getPresetProviderConfig returns the registered MiniMax preset", () => {
-  const minimax = getPresetProviderConfig("minimax");
-  assert.ok(minimax, "MiniMax preset must be registered");
-  assert.equal(minimax?.baseUrl, "https://api.minimax.io/v1");
-  assert.equal(minimax?.modelId, "MiniMax-M3");
-  assert.equal(minimax?.contextWindow, 1_000_000);
-  assert.equal(minimax?.kind, "openai-completions");
-});
-
-void test("buildPresetProviderRecord builds an openai-completions record for MiniMax", () => {
-  const preset = getPresetProviderConfig("minimax");
-  assert.ok(preset);
-
-  const record = buildPresetProviderRecord(preset, "sk-cp-test-eyJ-fake");
-
-  assert.equal(record.id, presetProviderStorageId(preset.id));
-  assert.equal(record.name, preset.displayName);
-  assert.equal(record.type, "openai-completions");
-  assert.equal(record.baseUrl, preset.baseUrl);
-  assert.equal(record.apiKey, "sk-cp-test-eyJ-fake");
-
-  const model = record.models?.[0];
-  assert.ok(model, "record must declare at least one model");
-  assert.equal(model?.id, preset.modelId);
-  assert.equal(model?.provider, preset.providerName);
-  assert.equal(model?.baseUrl, preset.baseUrl);
-  assert.equal(model?.api, "openai-completions");
-  assert.equal(model?.contextWindow, preset.contextWindow);
-  assert.ok((model?.maxTokens ?? 0) <= preset.contextWindow, "maxTokens must respect contextWindow");
-});
-
 void test("buildPresetProviderRecord supports openai-completions presets", () => {
-  const preset: import("../src/auth/provider-presets.ts").PresetProviderConfig = {
+  const preset: PresetProviderConfig = {
     id: "test-openai",
     label: "Test OpenAI",
     baseUrl: "https://example.com/v1",
@@ -92,8 +62,17 @@ void test("buildPresetProviderRecord supports openai-completions presets", () =>
 });
 
 void test("anthropic-messages preset defaults anthropic-version to 2023-06-01", () => {
-  const preset = getPresetProviderConfig("minimax");
-  assert.ok(preset);
+  const preset: PresetProviderConfig = {
+    id: "test-anthropic-default",
+    label: "Test Anthropic",
+    baseUrl: "https://example.com/anthropic/v1",
+    displayName: "Test Anthropic",
+    providerName: "Test Anthropic",
+    modelId: "test-model",
+    contextWindow: 200_000,
+    maxTokens: 8_192,
+    kind: "anthropic-messages",
+  };
   const record = buildPresetProviderRecord(preset, "eyJ-test");
   const headers = record.models?.[0]?.headers;
   assert.ok(headers, "anthropic-messages models must declare anthropic-version");
@@ -101,7 +80,7 @@ void test("anthropic-messages preset defaults anthropic-version to 2023-06-01", 
 });
 
 void test("anthropic-messages preset honours anthropicVersion override", () => {
-  const preset: import("../src/auth/provider-presets.ts").PresetProviderConfig = {
+  const preset: PresetProviderConfig = {
     id: "test-anthropic",
     label: "Test Anthropic",
     baseUrl: "https://example.com/anthropic/v1",
@@ -123,8 +102,18 @@ void test("anthropic-messages preset honours anthropicVersion override", () => {
 void test("discriminated union: anthropic-messages fields are gated by kind", () => {
   // The TS compiler enforces this. The runtime check below is a documentation
   // guard so a future refactor cannot regress without breaking the test suite.
-  const preset = getPresetProviderConfig("minimax");
-  assert.ok(preset);
+  const preset: PresetProviderConfig = {
+    id: "test-discriminated",
+    label: "Test",
+    baseUrl: "https://example.com/v1",
+    displayName: "Test",
+    providerName: "Test",
+    modelId: "test-model",
+    contextWindow: 16_384,
+    maxTokens: 4_096,
+    kind: "openai-completions",
+  };
+  assert.equal(preset.kind, "openai-completions");
   if (preset.kind === "anthropic-messages") {
     // @ts-expect-error -- intentionally accessing only on openai branch below.
     const _openaiOnly = preset.kind === "openai-completions" ? preset : null;
@@ -133,8 +122,17 @@ void test("discriminated union: anthropic-messages fields are gated by kind", ()
 });
 
 void test("buildPresetProviderRecord overwrites in place (stable id)", () => {
-  const preset = getPresetProviderConfig("minimax");
-  assert.ok(preset);
+  const preset: PresetProviderConfig = {
+    id: "test-stable-id",
+    label: "Test",
+    baseUrl: "https://example.com/v1",
+    displayName: "Test",
+    providerName: "Test",
+    modelId: "test-model",
+    contextWindow: 16_384,
+    maxTokens: 4_096,
+    kind: "openai-completions",
+  };
 
   const store = new Map<string, ReturnType<typeof buildPresetProviderRecord>>();
   store.set(presetProviderStorageId(preset.id), buildPresetProviderRecord(preset, "old-key"));
@@ -144,27 +142,35 @@ void test("buildPresetProviderRecord overwrites in place (stable id)", () => {
   assert.equal(store.get(presetProviderStorageId(preset.id))?.apiKey, "new-key");
 });
 
-void test("save flow busts stale MiniMax config from prior bundle versions", () => {
-  // Regression guard: if a user had pi-preset:minimax stored under an
-  // older bundle (e.g. api.minimaxi.com/anthropic/v1, kind: anthropic-
-  // messages), the next Save must fully replace the record. Otherwise the
-  // host/protocol drift would cause a "Connection error" loop that only
-  // Disconnect+Save fixes. The stable id `pi-preset:minimax` plus
-  // CustomProvidersStore.set()'s id-keyed write gives us the guarantee;
-  // this test pins it.
-  const preset = getPresetProviderConfig("minimax");
-  assert.ok(preset);
+void test("save flow busts stale preset config from prior bundle versions", () => {
+  // Regression guard: if a user had a preset stored under an older bundle
+  // (different baseUrl / kind), the next Save must fully replace the
+  // record. Otherwise the host/protocol drift would cause a
+  // "Connection error" loop that only Disconnect+Save fixes. The stable
+  // id (`pi-preset:<id>`) plus `CustomProvidersStore.set()`'s id-keyed
+  // write gives us the guarantee; this test pins it.
+  const preset: PresetProviderConfig = {
+    id: "test-stale",
+    label: "Test",
+    baseUrl: "https://new-host.example.com/v1",
+    displayName: "Test",
+    providerName: "Test",
+    modelId: "test-model",
+    contextWindow: 16_384,
+    maxTokens: 4_096,
+    kind: "openai-completions",
+  };
 
   const storageId = presetProviderStorageId(preset.id);
 
   // Mimic the IndexedDB-backed store: keyed by record.id, last write wins.
   const store = new Map<string, ReturnType<typeof buildPresetProviderRecord>>();
 
-  // 1. Old bundle wrote this when the preset was anthropic-messages.
-  const oldConfig: import("../src/auth/provider-presets.ts").PresetProviderConfig = {
+  // 1. Old bundle wrote this with anthropic-messages.
+  const oldConfig: PresetProviderConfig = {
     id: preset.id,
     label: preset.label,
-    baseUrl: "https://api.minimaxi.com/anthropic/v1",
+    baseUrl: "https://old-host.example.com/anthropic/v1",
     displayName: preset.displayName,
     providerName: preset.providerName,
     modelId: preset.modelId,
@@ -173,10 +179,10 @@ void test("save flow busts stale MiniMax config from prior bundle versions", () 
     kind: "anthropic-messages",
     anthropicVersion: "2023-06-01",
   };
-  store.set(storageId, buildPresetProviderRecord(oldConfig, "old-sk-cp-key"));
+  store.set(storageId, buildPresetProviderRecord(oldConfig, "old-key"));
 
-  // 2. New bundle writes the current (openai-completions + .io) shape.
-  const newRecord = buildPresetProviderRecord(preset, "new-sk-cp-key");
+  // 2. New bundle writes the current shape.
+  const newRecord = buildPresetProviderRecord(preset, "new-key");
   store.set(storageId, newRecord);
 
   // 3. The stored record must reflect the new bundle exactly.
@@ -184,9 +190,9 @@ void test("save flow busts stale MiniMax config from prior bundle versions", () 
   const stored = store.get(storageId);
   assert.equal(stored?.id, storageId);
   assert.equal(stored?.type, "openai-completions", "kind must be overwritten");
-  assert.equal(stored?.baseUrl, "https://api.minimax.io/v1", "baseUrl must be overwritten");
-  assert.equal(stored?.apiKey, "new-sk-cp-key", "api key must be overwritten");
-  assert.equal(stored?.models?.[0]?.baseUrl, "https://api.minimax.io/v1");
+  assert.equal(stored?.baseUrl, "https://new-host.example.com/v1", "baseUrl must be overwritten");
+  assert.equal(stored?.apiKey, "new-key", "api key must be overwritten");
+  assert.equal(stored?.models?.[0]?.baseUrl, "https://new-host.example.com/v1");
   assert.equal(stored?.models?.[0]?.api, "openai-completions");
   assert.equal(
     stored?.models?.[0]?.headers,
@@ -196,11 +202,19 @@ void test("save flow busts stale MiniMax config from prior bundle versions", () 
 });
 
 void test("findPresetIdForCustomProvider matches preset records only", () => {
-  const preset = getPresetProviderConfig("minimax");
-  assert.ok(preset);
-
+  const preset: PresetProviderConfig = {
+    id: "test-find",
+    label: "Test",
+    baseUrl: "https://example.com/v1",
+    displayName: "Test",
+    providerName: "Test",
+    modelId: "test-model",
+    contextWindow: 16_384,
+    maxTokens: 4_096,
+    kind: "openai-completions",
+  };
   const stored = buildPresetProviderRecord(preset, "key");
-  assert.equal(findPresetIdForCustomProvider(stored), "minimax");
+  assert.equal(findPresetIdForCustomProvider(stored), preset.id);
 
   const foreign = {
     id: "pi-openai-gateway:abc",
@@ -214,7 +228,7 @@ void test("findPresetIdForCustomProvider matches preset records only", () => {
 });
 
 void test("presetProviderStorageId prefixes ids to avoid collisions", () => {
-  const id = presetProviderStorageId("minimax");
+  const id = presetProviderStorageId("test");
   assert.ok(id.startsWith("pi-preset:"), `unexpected id: ${id}`);
   assert.ok(!id.startsWith("pi-openai-gateway:"), "preset id must not collide with user gateways");
 });

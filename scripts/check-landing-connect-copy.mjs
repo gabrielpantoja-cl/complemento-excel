@@ -23,8 +23,8 @@ const LANDING_FORBIDDEN_SNIPPETS = [
 ];
 
 const INSTALL_DOC_REQUIRED_SNIPPETS = [
-  "npx pi-for-excel-proxy",
-  "curl -fsSL https://piforexcel.com/proxy | sh",
+  "npx tasaciones-proxy",
+  "curl -fsSL https://complemento-excel.vercel.app/proxy | sh",
 ];
 
 function rel(filePath) {

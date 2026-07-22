@@ -2,7 +2,7 @@
   "name": "tasaciones",
   "displayName": "Tasaciones",
   "version": "0.1.0",
-  "description": "Complemento IA para tasaciones chilenas — fork de pi-for-excel (MIT).",
+  "description": "Tasaciones by Loxos — AI sidebar add-in for Microsoft Excel specialised in Chilean real-estate appraisals. Open-source fork of pi-for-excel (MIT).",
   "type": "module",
   "scripts": {
     "dev": "vite --port 3000",

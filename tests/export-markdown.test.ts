@@ -21,7 +21,7 @@ void test("markdown transcript: user prompt renders as **User:** block", () => {
     },
   ];
 
-  const md = serializeConversationAsMarkdown(messages, LIMITS, "MiniMax-M3");
+  const md = serializeConversationAsMarkdown(messages, LIMITS, "claude-sonnet-test");
 
   assert.match(md, /\*\*User:\*\*/);
   assert.match(md, /Resume this tasaci\u00f3n worksheet\./);
@@ -40,18 +40,18 @@ void test("markdown transcript: assistant role shows model label and tool calls"
           arguments: { range: "A1:D20" },
         },
       ],
-      model: "MiniMax-M3",
+      model: "claude-sonnet-test",
       api: "openai-compat",
-      provider: "minimax-coding-plan",
+      provider: "anthropic-test",
       usage: { input: 10, output: 20, cacheRead: 0, cacheWrite: 0 },
       stopReason: "toolUse",
       timestamp: 2,
     },
   ];
 
-  const md = serializeConversationAsMarkdown(messages, LIMITS, "MiniMax-M3");
+  const md = serializeConversationAsMarkdown(messages, LIMITS, "claude-sonnet-test");
 
-  assert.match(md, /\*\*Assistant \(MiniMax-M3\):\*\*/);
+  assert.match(md, /\*\*Assistant \(claude-sonnet-test\):\*\*/);
   assert.match(md, /Let me read the range A1:D20\./);
   assert.match(md, /\*Tool calls:\*/);
   assert.match(md, /- `read_range` — `\{[^}]*\}/u);
@@ -71,7 +71,7 @@ void test("markdown transcript: tool result is italicized with tool name", () =>
     },
   ];
 
-  const md = serializeConversationAsMarkdown(messages, LIMITS, "MiniMax-M3");
+  const md = serializeConversationAsMarkdown(messages, LIMITS, "claude-sonnet-test");
 
   assert.match(md, /\*Tool result for `read_range`:\*/);
   assert.match(md, /\| A \| B \|/);
@@ -91,7 +91,7 @@ void test("markdown transcript: errored tool result is marked with (error)", () 
     },
   ];
 
-  const md = serializeConversationAsMarkdown(messages, LIMITS, "MiniMax-M3");
+  const md = serializeConversationAsMarkdown(messages, LIMITS, "claude-sonnet-test");
 
   assert.match(md, /\*Tool result for `write_cells` \(error\):\*/);
   assert.match(md, /Permission denied/);
@@ -107,7 +107,7 @@ void test("markdown transcript: artifact messages are skipped", () => {
     },
   ];
 
-  const md = serializeConversationAsMarkdown(messages, LIMITS, "MiniMax-M3");
+  const md = serializeConversationAsMarkdown(messages, LIMITS, "claude-sonnet-test");
 
   assert.doesNotMatch(md, /should not appear/);
   assert.match(md, /Hello/);
@@ -121,16 +121,16 @@ void test("markdown transcript: thinking block is wrapped in italics block", () 
         { type: "thinking", thinking: "analyzing the 7 homologation factors" },
         { type: "text", text: "The biggest factor is location." },
       ],
-      model: "MiniMax-M3",
+      model: "claude-sonnet-test",
       api: "openai-compat",
-      provider: "minimax-coding-plan",
+      provider: "anthropic-test",
       usage: { input: 5, output: 5, cacheRead: 0, cacheWrite: 0 },
       stopReason: "stop",
       timestamp: 1,
     },
   ];
 
-  const md = serializeConversationAsMarkdown(messages, LIMITS, "MiniMax-M3");
+  const md = serializeConversationAsMarkdown(messages, LIMITS, "claude-sonnet-test");
 
   assert.match(md, /\*Thinking:\*/);
   assert.match(md, /analyzing the 7 homologation factors/);
@@ -146,7 +146,7 @@ void test("markdown transcript: compaction summary is captured", () => {
     },
   ];
 
-  const md = serializeConversationAsMarkdown(messages, LIMITS, "MiniMax-M3");
+  const md = serializeConversationAsMarkdown(messages, LIMITS, "claude-sonnet-test");
 
   assert.match(md, /\*Compaction summary:\*/);
   assert.match(md, /faja vial/);
@@ -158,7 +158,7 @@ void test("markdown transcript: messages are joined with horizontal rule separat
     { role: "user", content: "Q2", timestamp: 2 },
   ];
 
-  const md = serializeConversationAsMarkdown(messages, LIMITS, "MiniMax-M3");
+  const md = serializeConversationAsMarkdown(messages, LIMITS, "claude-sonnet-test");
 
   assert.match(md, /\*\*User:\*\*\s*\n\nQ1\s*\n\n---\n\n\*\*User:\*\*\s*\n\nQ2/u);
 });
@@ -175,7 +175,7 @@ void test("markdown transcript: respects truncation limits on long user messages
     { role: "user", content: longText, timestamp: 1 },
   ];
 
-  const md = serializeConversationAsMarkdown(messages, tightLimits, "MiniMax-M3");
+  const md = serializeConversationAsMarkdown(messages, tightLimits, "claude-sonnet-test");
 
   assert.ok(md.length < 400, `expected truncated output, got ${md.length} chars`);
   assert.match(md, /\u2026\[truncated\]\u2026/);
@@ -187,7 +187,7 @@ void test("markdown transcript: empty user message is skipped", () => {
     { role: "user", content: "actual message", timestamp: 2 },
   ];
 
-  const md = serializeConversationAsMarkdown(messages, LIMITS, "MiniMax-M3");
+  const md = serializeConversationAsMarkdown(messages, LIMITS, "claude-sonnet-test");
 
   // Whitespace-only message produces no **User:** block, only the second one does.
   assert.strictEqual((md.match(/\*\*User:\*\*/g) ?? []).length, 1);

@@ -9,7 +9,7 @@ metadata:
 
 # Tmux Bridge
 
-The tmux bridge gives Pi access to a real local terminal on the user's machine. The `tmux` tool is always registered — it just needs the bridge process running locally to work.
+The tmux bridge gives Tasaciones access to a real local terminal on the user's machine. The `tmux` tool is always registered — it just needs the bridge process running locally to work.
 
 ## What it does
 
@@ -21,14 +21,14 @@ When the bridge is running, the `tmux` tool can:
 - **send_and_capture** — send a command and wait for output in one call
 - **kill_session** — close a session
 
-## Running `pi` (or other local CLIs) via tmux
+## Running a local CLI via tmux
 
-The tmux pane is a normal local shell. If `pi` is installed, you can invoke it directly with `send_keys`/`send_and_capture` text like any other command.
+The tmux pane is a normal local shell. If the CLI you want to drive is installed, you can invoke it directly with `send_keys`/`send_and_capture` text like any other command.
 
 Recommended flow:
 1. `list_sessions` then `create_session` (or reuse an existing session)
-2. Optional one-time check: `command -v pi`
-3. Send the `pi ...` command
+2. Optional one-time check: `command -v <cli-binary>`
+3. Send the `<cli-binary> ...` command
 4. Monitor output with `capture_pane`
 
 For long-running jobs, avoid rapid repeated captures. Prefer:
@@ -42,7 +42,7 @@ For long-running jobs, avoid rapid repeated captures. Prefer:
 The bridge is a local HTTPS server. Run it from a terminal:
 
 ```bash
-npx pi-for-excel-tmux-bridge
+npx tasaciones-tmux-bridge
 ```
 
 This defaults to **real tmux mode** on `https://localhost:3341`.
@@ -52,7 +52,7 @@ Options:
 - `TMUX_BRIDGE_MODE=stub` — safe simulated mode (no real shell execution)
 - `TMUX_BRIDGE_TOKEN=your-secret` — require auth token
 
-### 2. Configure in Pi (usually not needed)
+### 2. Configure in Tasaciones (usually not needed)
 
 The default bridge URL (`https://localhost:3341`) works automatically — no configuration required. If you need a custom URL or auth token:
 
@@ -80,6 +80,6 @@ The `tmux` tool stays registered but returns an error if the bridge is unreachab
 
 ## Troubleshooting
 
-- **"bridge URL is unavailable"** — the bridge process isn't running. Start it with `npx pi-for-excel-tmux-bridge`.
+- **"bridge URL is unavailable"** — the bridge process isn't running. Start it with `npx tasaciones-tmux-bridge`.
 - **"timed out"** — the bridge is running but the command took too long. Default timeout is 15s; use `timeout_ms` for longer operations.
 - **CORS/cert errors** — visit the bridge URL directly in your browser and accept the certificate.
