@@ -15,6 +15,7 @@ Colección de skills para el flujo completo de una tasación con fines de exprop
 | `tasaciones/honorarios` | Calcular honorarios periciales por tramos |
 | `tasaciones/sec-indemnizacion` | Calcular indemnización por servidumbre eléctrica (6 categorías) |
 | `tasaciones/faja-vial` | Calcular expropiación de faja vial existente (DFL 850 art. 24) |
+| `tasaciones/cuadro-referenciales` | Vincular/reparar el cuadro "8.- VALORES REFERENCIALES" entre `referenciales`, `fichas VR` y hojas de lote |
 | `tasaciones/verificar-consistencia` | Checklist de validación del informe completo |
 
 ## When to use these skills

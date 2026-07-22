@@ -16,6 +16,8 @@ export const CORE_TOOL_NAMES = [
   "conventions",
   "workbook_history",
   "skills",
+  "audit_ref_errors",
+  "link_referenciales_cuadro",
 ] as const;
 
 export type CoreToolName = (typeof CORE_TOOL_NAMES)[number];

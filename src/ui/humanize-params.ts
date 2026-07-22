@@ -960,6 +960,31 @@ function humanizeOperator(op: string): string {
 
 type HumanizerFn = (p: Record<string, unknown>) => ParamItem[];
 
+function humanizeAuditRefErrors(p: Record<string, unknown>): ParamItem[] {
+  const items: ParamItem[] = [];
+  if (p.sheet) items.push({ label: "Sheet", value: cellRefs(str(p.sheet)) });
+  if (p.range) items.push({ label: "Range", value: cellRefs(str(p.range), Infinity) });
+  if (p.referenciales_sheet) {
+    items.push({ label: "Master sheet", value: str(p.referenciales_sheet) });
+  }
+  return items;
+}
+
+function humanizeLinkReferencialesCuadro(p: Record<string, unknown>): ParamItem[] {
+  const items: ParamItem[] = [];
+  if (p.target_sheet) items.push({ label: "Target sheet", value: cellRefs(str(p.target_sheet)) });
+  if (p.target_row !== undefined) items.push({ label: "Target row", value: str(p.target_row) });
+  if (p.ref_number !== undefined) items.push({ label: "Ref N°", value: str(p.ref_number) });
+  if (p.uf_mode) items.push({ label: "UF mode", value: str(p.uf_mode) });
+  if (p.fichas_sheet) items.push({ label: "fichas VR sheet", value: str(p.fichas_sheet) });
+  if (p.referenciales_sheet) {
+    items.push({ label: "referenciales sheet", value: str(p.referenciales_sheet) });
+  }
+  if (p.dry_run) items.push({ label: "Mode", value: "Dry run (no writes)" });
+  if (p.allow_overwrite) items.push({ label: "Overwrite", value: "yes" });
+  return items;
+}
+
 const CORE_HUMANIZERS = {
   format_cells: humanizeFormatCells,
   write_cells: humanizeWriteCells,
@@ -977,6 +1002,8 @@ const CORE_HUMANIZERS = {
   conventions: humanizeConventions,
   workbook_history: humanizeWorkbookHistory,
   skills: humanizeSkills,
+  audit_ref_errors: humanizeAuditRefErrors,
+  link_referenciales_cuadro: humanizeLinkReferencialesCuadro,
 } satisfies Record<CoreToolName, HumanizerFn>;
 
 const EXTRA_HUMANIZERS = {

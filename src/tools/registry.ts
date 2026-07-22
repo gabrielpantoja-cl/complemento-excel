@@ -25,6 +25,8 @@ import { createCommentsTool } from "./comments.js";
 import { createInstructionsTool } from "./instructions.js";
 import { createConventionsTool } from "./conventions.js";
 import { createWorkbookHistoryTool } from "./workbook-history.js";
+import { createAuditRefErrorsTool } from "./audit-ref-errors.js";
+import { createLinkReferencialesCuadroTool } from "./link-referenciales-cuadro.js";
 import {
   createSkillsTool,
   type SkillsToolDependencies,
@@ -59,6 +61,8 @@ export function createCoreTools(options: CreateCoreToolsOptions = {}): AnyCoreTo
     createInstructionsTool(),
     createConventionsTool(),
     createWorkbookHistoryTool(),
+    createAuditRefErrorsTool(),
+    createLinkReferencialesCuadroTool(),
     createSkillsTool(options.skills),
   ];
 }

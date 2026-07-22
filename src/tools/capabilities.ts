@@ -111,6 +111,16 @@ const CORE_TOOL_CAPABILITY_METADATA = {
     category: "skills",
     promptDescription: "list/read Agent Skills and install/uninstall external SKILL.md skills",
   },
+  audit_ref_errors: {
+    tier: "core",
+    category: "inspect",
+    promptDescription: "scan a sheet for #REF! errors and broken cross-sheet formula chains; flags orphan rows whose N° is not in `referenciales`",
+  },
+  link_referenciales_cuadro: {
+    tier: "core",
+    category: "write",
+    promptDescription: "repair one row of the \"Cuadro de Referenciales\" (punto 8) by linking it to `referenciales` + `fichas VR`; writes 7 formulas and verifies post-write",
+  },
 } satisfies Record<CoreToolName, CoreToolCapabilityMetadata>;
 
 export const CORE_TOOL_CAPABILITIES: readonly CoreToolCapability[] = CORE_TOOL_NAMES.map((name) => ({
@@ -289,6 +299,8 @@ export const TOOL_UI_METADATA = {
   conventions: { renderer: true, humanizer: true },
   workbook_history: { renderer: true, humanizer: true },
   skills: { renderer: true, humanizer: true },
+  audit_ref_errors: { renderer: true, humanizer: true },
+  link_referenciales_cuadro: { renderer: true, humanizer: true },
   web_search: { renderer: true, humanizer: true },
   fetch_page: { renderer: true, humanizer: true },
   mcp: { renderer: true, humanizer: true },

@@ -451,7 +451,22 @@ Apply 10.75% SII withholding (retención) and divide net among commission member
 - Composite homologation factor must be within 0.50–1.50.
 - A comparable is only valid when it has both ROL SII and CBR inscription data (trazability rule: "una referencia es válida sólo cuando es rastreable").
 - Cells containing parameters (UF value, interest rate, etc.) must use style "input" (yellow fill) — never hardcode them inside formulas.
-- Do not use TEXT() with locale-dependent formats; use separate formatted cells.`;
+- Do not use TEXT() with locale-dependent formats; use separate formatted cells.
+
+### Cuadro de referenciales (punto 8 del informe)
+
+El cuadro "8.- VALORES REFERENCIALES" de cada hoja de lote (81-100) suele romperse cuando se borran o mueven filas en \`fichas VR\` o \`referenciales\`. Patrones frecuentes:
+
+- **Concatenación muerta**: \`=#REF!&". Rol "&#REF!\` — firma clásica de cuadro roto. Se origina al borrar una fila en \`referenciales\`.
+- **Columna incorrecta**: la "Ruta X-XXX" (calle de referencia) vive en **columna P** del bloque de la ficha en \`fichas VR\`, NO en Q. Apuntar a Q devuelve \`0\`.
+- **VU crudo vs UF-actualizado**: hoja \`referenciales\` columna M es el VU crudo (\`=L/K\`). Hoja \`fichas VR\` columna \`U*\` (offset +52 desde inicio del bloque) es el VU **actualizado por UF** a la fecha de tasación. Si la fecha de tasación es posterior a la fecha de escritura, usar el actualizado.
+- **Fecha de transacción = fecha de escritura**, NO fecha de inscripción CBR.
+
+**Workflow recomendado**:
+1. Antes de tocar nada, leer la skill \`tasaciones/cuadro-referenciales\` (con \`skills\` tool) para conocer el layout exacto y los offsets.
+2. Si el cuadro tiene \`#REF!\`, llamar \`audit_ref_errors\` para mapear las celdas rotas y los offsets de bloque correctos.
+3. Si vas a vincular/reparar una fila entera, preferir \`link_referenciales_cuadro\` (calcula offsets, escribe las 7 fórmulas B–H y verifica post-write). Fallback: \`write_cells\` manual con la skill como referencia.
+4. **Siempre** leer de vuelta el rango escrito (ver regla "Excel tool discipline" arriba). Si el VU actualizó a \`0\` o el formato \`m/d/yyyy\` se perdió, corregir antes de declarar éxito.`;
 
 const CORE_TOOL_PROMPT_LINES = buildCoreToolPromptLines();
 
@@ -511,7 +526,18 @@ const WORKFLOW = `## Workflow
 4. **Prefer formulas** over hardcoded values. Put assumptions in separate cells and reference them.
 5. **Plan complex tasks.** In Confirm mode, present a plan and get approval first. In Auto mode, keep plans concise and proceed unless the user asked to review first.
 6. **Analysis = read-only.** When the user asks about data, read and answer in chat. Only write when asked to modify.
-7. **Extension requests.** If the user asks to create/update an extension, generate code and use **extensions_manager** so it is installed directly.`;
+7. **Extension requests.** If the user asks to create/update an extension, generate code and use **extensions_manager** so it is installed directly.
+
+### Excel tool discipline — read-back is mandatory after every write
+
+After any \`write_cells\` (or any tool that creates cross-sheet formulas), you MUST issue a \`read_range\` of the written cells in the SAME turn and verify all of the following before declaring success:
+
+1. **No cell evaluates to \`#REF!\`** — broken reference. If found, rewrite that cell with a corrected source.
+2. **No cell evaluates to \`0\`, \`0.0000e+0\`, or empty** when the formula was expected to return a string. This is the signature of column-letter hallucination (e.g. pointing to \`fichas VR!Q405\` when the data is in \`P405\`).
+3. **Number formats preserved** — \`m/d/yyyy\`, \`#,##0\`, etc. Use mode \`"detailed"\` in \`read_range\` to inspect.
+4. **Formulas reference the intended sheets/columns** — re-read 2-3 candidate columns explicitly before the second write if a column-letter mismatch is suspected.
+
+Never present a fix as complete based on the write_cells return value alone - that return value only confirms the write happened, not that the formulas resolved correctly. The post-write read is what catches a column-letter hallucination (e.g. wrote Q405 but data is at P405) before the user sees it.`;
 
 const CONVENTIONS = `## Conventions
 
