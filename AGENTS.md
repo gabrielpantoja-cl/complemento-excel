@@ -1,6 +1,6 @@
 ﻿# AGENTS.md
 
-**Last reviewed:** 2026-07-16
+**Last reviewed:** 2026-07-22
 
 Notes for agents working in this repo. Read this file before making any change.
 
@@ -24,14 +24,15 @@ Brand colours, display name (`Tasaciones`), and add-in metadata live in `manifes
 
 ### Core tools: one source of truth
 
-- Define core tool names in `src/tools/registry.ts` (`CORE_TOOL_NAMES`, `CoreToolName`, `createCoreTools()`).
-- Do not duplicate tool-name lists; import `CORE_TOOL_NAMES`.
+- Define core tool names in `src/tools/names.ts` (`CORE_TOOL_NAMES`, `CoreToolName`).
+- Construct the toolset in `src/tools/registry.ts` (`createCoreTools()`) -- do not duplicate tool-name lists; import `CORE_TOOL_NAMES`.
 - When adding/removing a core tool, update in the same PR:
-  - `src/tools/registry.ts`
-  - `src/ui/tool-renderers.ts`
-  - `src/ui/humanize-params.ts`
-  - `src/context/tool-disclosure.ts`
-  - `src/prompt/system-prompt.ts` (if documented tool list changes)
+  - `src/tools/names.ts` (the source of truth for the name list)
+  - `src/tools/registry.ts` (factory wiring)
+  - `src/tools/capabilities.ts` (metadata: tier, category, prompt description; UI `renderer` / `humanizer` flags -- both must be `true` for a core tool)
+  - `src/ui/humanize-params.ts` (per-tool humanizer for the taskpane card)
+  - `src/prompt/system-prompt.ts` (if the documented tool list changes)
+- Reference: `0f052da` shipped `audit_ref_errors` + `link_referenciales_cuadro` touching all five files.
 
 ### Tool results (`ToolResultMessage.details`)
 
@@ -256,7 +257,8 @@ Bundled Agent Skills (loaded into the Excel add-in at build time by
 | `tmux-bridge` | Local terminal access via the tmux bridge. |
 | `python-bridge` | Native Python execution via the Python bridge. |
 | `extending-pi` | Plan and build Pi for Excel extensions safely. |
-| `tasaciones` | Loxos-specific index of Chilean tasaciÃ³n sub-procedures. |
+| `tasaciones` | Loxos-specific index of Chilean tasacion sub-procedures. |
+| `tasaciones/cuadro-referenciales` | Vincular/reparar el cuadro "8.- VALORES REFERENCIALES" entre `referenciales`, `fichas VR` y hojas de lote. Required reading before any operation that touches `fichas VR`. |
 
 The fork's `skills/` directory is consumed by the add-in's own runtime loader,
 not by opencode's `skill` discovery. Do **not** move `skills/` to
