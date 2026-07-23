@@ -16,6 +16,7 @@
     "python:bridge:https": "node scripts/python-bridge-server.mjs --https",
     "serve:dist": "node scripts/serve-dist-https.mjs",
     "manifest:prod": "node scripts/generate-manifest.mjs",
+    "audit:ci": "audit-ci --config ./audit-ci.jsonc",
     "typecheck": "tsc --noEmit",
     "check:css-theme": "node scripts/check-css-theme-vars.mjs",
     "check:theme-utility-overrides": "node scripts/check-theme-utility-overrides.mjs",
@@ -44,6 +45,7 @@
   },
   "devDependencies": {
     "@types/office-js": "^1.0.592",
+    "audit-ci": "^7.1.0",
     "eslint": "^10.4.1",
     "office-addin-debugging": "^6.0.6",
     "office-addin-manifest": "^2.1.2",

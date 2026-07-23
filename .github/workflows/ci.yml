@@ -31,7 +31,7 @@ jobs:
         run: npm ci
 
       - name: Security audit (npm)
-        run: npm audit --audit-level=high
+        run: npm run audit:ci
 
       - name: Lint + typecheck
         # eslint over the full Pi stack exceeds Node's default heap on the

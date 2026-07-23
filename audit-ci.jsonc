@@ -1,0 +1,212 @@
+{
+  "$schema": "https://github.com/IBM/audit-ci/raw/main/docs/audit-ci.schema.json",
+  "low": false,
+  "moderate": false,
+  "high": true,
+  "critical": true,
+  "allowlist": [
+    {
+      "GHSA-frvp-7c67-39w9": {
+        "active": true,
+        "notes": "@hono/node-server path-traversal in serve-static. Pulled in transitively via @google/genai -> @modelcontextprotocol/sdk. The add-in does not expose a Hono server (only consumers are MCP integrations opted in by the user).",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-xcpc-8h2w-3j85": {
+        "active": true,
+        "notes": "adm-zip <0.6.0 4GB allocation. Pulled in by office-addin-manifest and office-addin-debugging (dev tooling for sideloading). Bumping requires a major office-addin-manifest release.",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-42h9-826w-cgv3": {
+        "active": true,
+        "notes": "axios excessive recursion in formDataToJSON. Dev tooling transitive (office-addin-debugging -> @microsoft/dev-tunnels-management).",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-xj6q-8x83-jv6g": {
+        "active": true,
+        "notes": "axios prototype pollution auth subfields. Dev tooling transitive.",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-pmv8-rq9r-6j72": {
+        "active": true,
+        "notes": "axios Deep formToJSON key recursion DoS. Dev tooling transitive.",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-jqh4-m9w3-8hp9": {
+        "active": true,
+        "notes": "axios ReadableStream uploads bypass maxBodyLength. Dev tooling transitive.",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-mmx7-hfxf-jppx": {
+        "active": true,
+        "notes": "axios prototype pollution gadgets. Dev tooling transitive.",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-f4gw-2p7v-4548": {
+        "active": true,
+        "notes": "axios NO_PROXY bypass for 0.0.0.0. Dev tooling transitive.",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-gcfj-64vw-6mp9": {
+        "active": true,
+        "notes": "axios HTTP adapter proxy inheritance. Dev tooling transitive.",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-hcpx-6fm6-wx23": {
+        "active": true,
+        "notes": "axios form serializer maxDepth bypass. Dev tooling transitive.",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-7q8q-rj6j-mhjq": {
+        "active": true,
+        "notes": "axios nested option prototype pollution. Dev tooling transitive.",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-mwf2-3pr3-8698": {
+        "active": true,
+        "notes": "axios HTTP/2 streamed uploads bypass maxBodyLength. Dev tooling transitive.",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-v422-hmwv-36x6": {
+        "active": true,
+        "notes": "body-parser DoS via invalid limit. Dev tooling transitive (express in @modelcontextprotocol/sdk).",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-3jxr-9vmj-r5cp": {
+        "active": true,
+        "notes": "brace-expansion DoS via consecutive {}. Dev tooling transitive.",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-v2hh-gcrm-f6hx": {
+        "active": true,
+        "notes": "fast-uri host confusion via literal backslash. Dev tooling transitive.",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-4c8g-83qw-93j6": {
+        "active": true,
+        "notes": "fast-uri host confusion via failed IDN canonicalization. Dev tooling transitive.",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-xgm2-5f3f-mvvc": {
+        "active": true,
+        "notes": "hono API Gateway v1 header dedup. Pulled in via @google/genai -> @modelcontextprotocol/sdk. Not exploitable from the add-in (no Hono server exposed).",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-hvrm-45r6-mjfj": {
+        "active": true,
+        "notes": "hono/jsx cross-request context disclosure. Not exploitable from the add-in (no JSX rendering).",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-w62v-xxxg-mg59": {
+        "active": true,
+        "notes": "hono Server-Side XSS via cx(). Not exploitable from the add-in (no JSX rendering).",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-52cp-r559-cp3m": {
+        "active": true,
+        "notes": "js-yaml YAML merge-key quadratic CPU. Dev tooling transitive (yaml parsing in test runners / office-addin tooling).",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-f38q-mgvj-vph7": {
+        "active": true,
+        "notes": "protobufjs schema-derived property shadowing. Pulled in via @google/genai. Bumping requires a new @earendil-works/pi-ai release that bumps @google/genai to a version with the protobufjs fix.",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-j3f2-48v5-ccww": {
+        "active": true,
+        "notes": "protobufjs infinite loop in .proto option parsing. Same transitive path as GHSA-f38q-mgvj-vph7.",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-395f-4hp3-45gv": {
+        "active": true,
+        "notes": "shell-quote parse() quadratic complexity. Dev tooling transitive.",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-vmf3-w455-68vh": {
+        "active": true,
+        "notes": "node-tar PAX size override smuggling. Dev tooling transitive (office-addin-manifest).",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-w8wr-v893-vjvp": {
+        "active": true,
+        "notes": "node-tar PAX numeric path type confusion. Dev tooling transitive.",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-23hp-3jrh-7fpw": {
+        "active": true,
+        "notes": "node-tar decompression/parse DoS. Dev tooling transitive.",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-8x88-c5mf-7j5w": {
+        "active": true,
+        "notes": "node-tar negative entry size infinite loop. Dev tooling transitive.",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-gvwx-54wh-qm9j": {
+        "active": true,
+        "notes": "node-tar NUL byte in PAX records DoS. Dev tooling transitive.",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-w5hq-g745-h8pq": {
+        "active": true,
+        "notes": "uuid v3/v5/v6 buffer bounds check. Dev tooling transitive (office-addin-manifest).",
+        "expiry": "2026-12-31"
+      }
+    }
+  ]
+}
