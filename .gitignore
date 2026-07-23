@@ -24,3 +24,7 @@ AGENTS.local.md
 *.tsbuildinfo
 *.log
 coverage/
+
+# opencode CLI local config (provider keys, model overrides, etc.)
+opencode.json
+opencode.jsonc
