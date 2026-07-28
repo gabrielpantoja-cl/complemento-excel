@@ -92,10 +92,10 @@ export async function showWelcomeLogin(providerKeys: ProviderKeysStore): Promise
 
     const subtitle = createElement("p", "pi-welcome-subtitle");
     subtitle.id = subtitleId;
-    subtitle.textContent = "Connect an AI provider to get started";
+    subtitle.textContent = "Conecta un proveedor de IA para comenzar";
 
     const intro = createElement("p", "pi-welcome-intro");
-    intro.textContent = "An AI agent that reads your spreadsheet, makes changes, and does the research — using models you already have.";
+    intro.textContent = "Un agente de IA que lee tu hoja de cálculo, realiza cambios e investiga — usando los modelos que ya tienes.";
 
     const providerSectionTitle = createElement("p", "pi-welcome-section-title");
     providerSectionTitle.textContent = "Choose a provider";
