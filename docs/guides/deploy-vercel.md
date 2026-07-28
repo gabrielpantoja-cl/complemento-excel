@@ -64,3 +64,9 @@ For most UI/behavior changes:
 If a release requires a manifest change (rare):
 - update and redistribute `manifest.prod.xml`
 - users re-upload the manifest in Excel
+
+> For the end-user perspective ("did my push actually land?"), see
+> [`../architecture/update-flow.md`](../architecture/update-flow.md).
+> That doc covers the full pipeline, cache headers, the end-user
+> smoke recipe, and the known gap that there is no visible version
+> indicator in the UI today.
