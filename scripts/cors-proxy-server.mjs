@@ -105,6 +105,12 @@ const DEFAULT_ALLOWED_TARGET_HOSTS = new Set([
   "api.github.com",
   "auth.openai.com",
   "api.openai.com",
+  // MiniMax: token-plan cluster (Subscription Keys sk-cp-...) live here.
+  // The .com cluster is the PAYG host; the .io cluster is the subscription
+  // cluster. Only one is needed; the preset in `src/auth/provider-presets.ts`
+  // picks the cluster. Keep both allowlisted for symmetry.
+  "api.minimax.io",
+  "api.minimaxi.com",
   "chatgpt.com",
   "oauth2.googleapis.com",
   "generativelanguage.googleapis.com",

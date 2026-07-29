@@ -198,9 +198,13 @@ export interface ProviderDef {
 
 export const ALL_PROVIDERS: ProviderDef[] = [
   // Preset providers at the top - one-click rows for high-frequency token-plan vendors.
-  // The shipped public build has no preset entries by default. Downstream
-  // deployments and forks populate `PRESET_PROVIDERS` in
-  // `src/auth/provider-presets.ts` to surface their own rows here.
+  // The preset's id matches an entry in `PRESET_PROVIDERS` in
+  // `src/auth/provider-presets.ts`; `buildPresetProviderRecord()` looks up
+  // the model + baseUrl + kind from there. MiniMax is shipped at position 0
+  // because it is the project's primary token plan (see comment in
+  // `provider-presets.ts` for why this routing works end-to-end).
+
+  { id: "minimax",            label: "MiniMax (Token Plan Plus)", preset: "minimax",          desc: "MiniMax-M3 - solo pegar la Subscription Key" },
 
   // OAuth providers next (subscription / account-based flows).
   // Only list flows that are supported in-browser (PKCE/manual paste, no local callback server).

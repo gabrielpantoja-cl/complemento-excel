@@ -13,11 +13,21 @@
  * can store it via the existing `CustomProvidersStore` without schema
  * changes.
  *
- * Default content shipped with the open-source release is empty. Regional
- * providers that the maintainer uses internally (and any provider-specific
- * routing quirks discovered in production) live in the private mirror of
- * this file. Public contributors can add their own presets by populating
- * `PRESET_PROVIDERS`; see NOTICE.md for the rationale.
+ * `PRESET_PROVIDERS` is the single source of truth for which token-plan
+ * vendors get a one-click login row. The UI in `src/ui/provider-login.ts`
+ * pulls them via `getPresetProviderConfig()` and renders them at the top
+ * of `ALL_PROVIDERS` (see the `preset` field on `ProviderDef`).
+ *
+ * The MiniMax preset is the default for this fork (Tasaciones by Loxos).
+ * It is wired against `api.minimax.io` because that is the cluster that
+ * authenticates the project's Token Plan Plus Subscription Keys (prefix
+ * `sk-cp-...`). The routing choice (openai-completions vs
+ * anthropic-messages) is non-obvious and was settled by live probes
+ * (see commit `b11c297`): only the openai-completions endpoint at
+ * `api.minimax.io` passes the browser's CORS preflight because its
+ * `access-control-allow-headers` includes `Authorization` (the header
+ * the openai SDK sends by default), while the anthropic-messages
+ * endpoint at the same host does NOT include `x-api-key`.
  */
 
 import type { CustomProvider } from "@earendil-works/pi-web-ui/dist/storage/stores/custom-providers-store.js";
@@ -75,11 +85,33 @@ export type PresetProviderConfig =
   | (PresetCommonFields & AnthropicMessagesPresetFields & { kind: "anthropic-messages" });
 
 /**
- * Shipped preset list. Empty by default — downstream deployments and forks
- * populate this with their own entries via the `CustomProvidersStore` UI
- * or by overriding this constant in their private mirror.
+ * Shipped preset list. Default ships with MiniMax (Token Plan Plus)
+ * because that is the project's primary token plan. To add another
+ * token-plan vendor, append a new entry here with a unique `id` and
+ * reference it from a `ProviderDef` row in `src/ui/provider-login.ts`.
  */
-export const PRESET_PROVIDERS: ReadonlyArray<PresetProviderConfig> = Object.freeze([]);
+export const PRESET_PROVIDERS: ReadonlyArray<PresetProviderConfig> = Object.freeze([
+  Object.freeze({
+    id: "minimax",
+    label: "MiniMax (Token Plan Plus)",
+    desc: "MiniMax-M3 (1M context) - plan Plus 20 USD/mes",
+    apiKeyHint: "Subscription Key de MiniMax (eyJ...)",
+    baseUrl: "https://api.minimax.io/v1",
+    displayName: "MiniMax",
+    providerName: "MiniMax",
+    modelId: "MiniMax-M3",
+    contextWindow: 1_000_000,
+    maxTokens: 131_072,
+    supportedModelIds: Object.freeze([
+      "MiniMax-M3",
+      "MiniMax-M2.7",
+      "MiniMax-M2.7-highspeed",
+      "MiniMax-M2.5",
+      "MiniMax-M2.5-highspeed",
+    ]),
+    kind: "openai-completions",
+  }),
+]);
 
 /**
  * Stable id used inside the `customProviders` IndexedDB store.

@@ -232,3 +232,66 @@ void test("presetProviderStorageId prefixes ids to avoid collisions", () => {
   assert.ok(id.startsWith("pi-preset:"), `unexpected id: ${id}`);
   assert.ok(!id.startsWith("pi-openai-gateway:"), "preset id must not collide with user gateways");
 });
+
+// ---------------------------------------------------------------------------
+// Project-specific regression pins.
+//
+// MiniMax is the project's primary token plan. The default first-click
+// UX in the welcome overlay depends on these two invariants. A future
+// "let's remove the MiniMax preset" PR must consciously break these tests.
+// ---------------------------------------------------------------------------
+
+void test("MiniMax preset is registered and points at the .io openai-compat endpoint", () => {
+  const preset = getPresetProviderConfig("minimax");
+  assert.ok(preset, "MiniMax preset must be registered (see src/auth/provider-presets.ts)");
+  assert.equal(preset?.baseUrl, "https://api.minimax.io/v1");
+  assert.equal(preset?.modelId, "MiniMax-M3");
+  assert.equal(preset?.contextWindow, 1_000_000);
+  assert.equal(preset?.kind, "openai-completions");
+  // The .io cluster authenticates Subscription Keys (sk-cp-...); the .com
+  // cluster is PAYG. The openai-compat route is the only one whose CORS
+  // preflight passes for browser-based taskpane (see commit b11c297).
+});
+
+// Static analysis pin: `ALL_PROVIDERS[0]` must be the MiniMax row.
+// We avoid importing `src/ui/provider-login.ts` here because that module
+// transitively imports `@earendil-works/pi-web-ui/dist/storage/...` which
+// is not resolvable from the Node test loader (see
+// `tests/cuadro-referenciales-tools.test.ts` for the same pattern).
+// The text-level check below catches the regression if someone moves
+// MiniMax to position 1+ in the array.
+void test("ALL_PROVIDERS first row is the MiniMax preset", async () => {
+  const fs = await import("node:fs/promises");
+  const path = await import("node:path");
+  const fileURL = await import("node:url");
+  const source = await fs.readFile(
+    fileURL.fileURLToPath(new URL("../src/ui/provider-login.ts", import.meta.url)),
+    "utf8",
+  );
+
+  // Find the `ALL_PROVIDERS = [` block and the next 8 lines.
+  const startIdx = source.indexOf("export const ALL_PROVIDERS");
+  if (startIdx < 0) {
+    throw new Error("ALL_PROVIDERS export not found in provider-login.ts");
+  }
+  const blockStart = source.indexOf("[", startIdx);
+  if (blockStart < 0) {
+    throw new Error("Could not find ALL_PROVIDERS array start");
+  }
+  const block = source.slice(blockStart, blockStart + 2000);
+  const lines = block.split(/\r?\n/).slice(1); // skip the `[` line
+  const firstNonEmpty = lines.find((l) => l.trim() && !l.trim().startsWith("//"));
+  if (!firstNonEmpty) {
+    throw new Error("ALL_PROVIDERS array is empty");
+  }
+  assert.match(
+    firstNonEmpty,
+    /id:\s*"minimax"/,
+    `expected first row to be MiniMax, got: ${firstNonEmpty}`,
+  );
+  assert.match(
+    firstNonEmpty,
+    /preset:\s*"minimax"/,
+    `expected first row to reference preset: "minimax", got: ${firstNonEmpty}`,
+  );
+});

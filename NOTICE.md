@@ -78,8 +78,8 @@ A non-exhaustive list of intentional divergences from upstream `pi-for-excel`. F
 
 ### Providers and presets
 
-- Promoted the "preset provider" framework (a discriminated union of `kind: "openai-compat" | "anthropic-messages" | …`) so that adding a regional provider is a small change in `src/models/presets.ts`.
-- Shipped a first regional preset (subscription-style token plan routed through an OpenAI-compatible gateway with header overrides) to prove the framework works end-to-end. The preset ID and routing details are intentionally not documented here — they live in the maintainer's local config.
+- Promoted the "preset provider" framework (a discriminated union of `kind: "openai-completions" | "anthropic-messages"`) so that adding a regional provider is a small change in `PRESET_PROVIDERS` in `src/auth/provider-presets.ts`.
+- Ships with the **MiniMax (Token Plan Plus)** preset at the top of the welcome overlay. Routing: openai-completions against `https://api.minimax.io/v1` (the subscription cluster; the .com cluster is PAYG). The CORS preflight only passes on openai-compat at .io (see commit `b11c297` for the live probe matrix). To add another vendor, append a `PresetProviderConfig` entry to `PRESET_PROVIDERS` and reference it from a `ProviderDef` row in `src/ui/provider-login.ts` with `preset: "<id>"`.
 
 ### Documentation and developer experience
 
