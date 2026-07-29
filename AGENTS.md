@@ -19,6 +19,7 @@ Brand colours, display name (`Tasaciones`), and add-in metadata live in `manifes
 - Upstream divergences: `docs/architecture/upstream-divergences.md`
 - Docs index: `docs/README.md`
 - Model registry freshness: `docs/architecture/model-updates.md` (if **Last verified** > 1 week, refresh Pi deps + re-verify model IDs before model UX changes)
+- OpenCode per-project agents/commands: `.opencode/README.md` (custom `@qa-excel`, `@perito`, `@release-manager` agents and `/audit-cuadro`, `/bump-version`, `/check-prompt-cache` commands -- read before adding new ones to avoid the deferred-list anti-patterns documented there)
 
 ## High-leverage conventions
 
@@ -71,6 +72,13 @@ Brand colours, display name (`Tasaciones`), and add-in metadata live in `manifes
 - Keep tool ordering deterministic; do not rebuild tool lists with unstable ordering.
 - Do not reintroduce blanket eager `setTools(...)` on refresh passes when extension tools exist; use fingerprint + extension tool revision semantics.
 - When changing context/tool/model wiring, validate against `docs/architecture/cache-observability-baselines.md` and record expected vs observed `prefixChangeReasons`.
+
+### OpenCode per-project configuration
+
+- Custom agents and commands live in `.opencode/`. Layout and rationale in [.opencode/README.md](.opencode/README.md).
+- LLM provider keys, model IDs, and per-machine config live in `opencode.json` at repo root, **gitignored** (per "Cost discipline" and "Provider allow-list" rows below). Do not commit a checked-in `opencode.json` that references `AGENTS.local.md` or hardcodes a model ID.
+- The shared skill catalog (`skills/tasaciones/*.md`) is loaded into the add-in at build time by `src/skills/catalog.ts`. It is **not** auto-loaded by opencode. Do not move/edit these files without also updating the catalog reader.
+- When adding a new `.opencode/agent` or `.opencode/command`, update `.opencode/README.md` so the next agent/discoverer knows why it exists.
 
 ## TypeScript policy
 
