@@ -207,6 +207,20 @@
         "notes": "uuid v3/v5/v6 buffer bounds check. Dev tooling transitive (office-addin-manifest).",
         "expiry": "2026-12-31"
       }
+    },
+    {
+      "GHSA-r292-9mhp-454m": {
+        "active": true,
+        "notes": "node-tar uncontrolled recursion in mapHas/filesFilter (stack-overflow DoS). Dev tooling transitive (office-addin-debugging -> @microsoft/teamsfx-core -> tar). Bumping requires a major @microsoft/teamsfx-core release.",
+        "expiry": "2026-12-31"
+      }
+    },
+    {
+      "GHSA-ph9p-34f9-6g65": {
+        "active": true,
+        "notes": "tmp path traversal via unsanitized prefix/postfix. Dev tooling transitive (office-addin-debugging -> @microsoft/teamsfx-core -> tmp). Bumping requires a major @microsoft/teamsfx-core release.",
+        "expiry": "2026-12-31"
+      }
     }
   ]
 }
