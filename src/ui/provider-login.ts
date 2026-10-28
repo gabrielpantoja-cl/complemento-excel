@@ -215,6 +215,9 @@ export const ALL_PROVIDERS: ProviderDef[] = [
   { id: "github-copilot",     label: "GitHub Copilot",           oauth: "github-copilot" },
 
   // API key providers
+  // OpenRouter is the recommended BYOK gateway in the landing/install copy;
+  // pi-ai ships its model registry under provider "openrouter".
+  { id: "openrouter",         label: "OpenRouter",               desc: "Una API key, cientos de modelos" },
   { id: "openai",             label: "OpenAI (API)",             desc: "API key" },
   { id: "google",             label: "Google Gemini (API)",      desc: "API key" },
   { id: "deepseek",           label: "DeepSeek" },

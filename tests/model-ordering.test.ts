@@ -160,6 +160,12 @@ void test("pickDefaultModel prefers the latest Opus for Anthropic-only setups", 
   assert.equal(selected.id, "claude-opus-4-8");
 });
 
+void test("pickDefaultModel prefers the latest Claude Sonnet for OpenRouter-only setups", () => {
+  const selected = pickDefaultModel(["openrouter"]);
+  assert.equal(selected.provider, "openrouter");
+  assert.match(selected.id, /^anthropic\/claude-sonnet-[\d.]+$/);
+});
+
 void test("current OpenAI providers expose at least one default-model candidate", () => {
   for (const provider of OPENAI_PROVIDERS) {
     const expected = pickExpectedOpenAiDefault(provider);

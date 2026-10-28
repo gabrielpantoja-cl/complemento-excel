@@ -17,7 +17,8 @@ type DefaultProvider =
   | "openai"
   | "google"
   | "google-gemini-cli"
-  | "google-antigravity";
+  | "google-antigravity"
+  | "openrouter";
 
 type DefaultModelRule = { provider: DefaultProvider; match: RegExp };
 
@@ -43,6 +44,10 @@ const DEFAULT_MODEL_RULES: DefaultModelRule[] = [
   { provider: "google-antigravity", match: /^gemini-.*-pro/i },
   { provider: "google-antigravity", match: /^gemini-/i },
   { provider: "google-antigravity", match: /^.+$/ },
+
+  // OpenRouter: latest Claude Sonnet (skip "-fast" variants), then the auto router
+  { provider: "openrouter", match: /^anthropic\/claude-sonnet-[\d.]+$/ },
+  { provider: "openrouter", match: /^openrouter\/auto$/ },
 ];
 
 function pickLatestMatchingModel(provider: DefaultProvider, match: RegExp): Model<Api> | null {
