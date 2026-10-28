@@ -2,6 +2,9 @@
 
 This folder contains **current** docs that should match shipped behavior. Top-level docs are organized into subfolders by purpose; each entry below points at the doc's new home.
 
+## Planning
+- [Roadmap](./roadmap.md)
+
 ## Guides
 - [Install Tasaciones by Loxos](./guides/install.md)
 - [Sideload en Excel Desktop (Windows)](./guides/windows-sideload.md) — Trusted Add-in Catalog + script `scripts/sideload-windows.ps1`
