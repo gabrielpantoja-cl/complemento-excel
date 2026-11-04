@@ -11,9 +11,11 @@
  * - mid-turn auto-compaction between tool-loop continuations (via
  *   `agent.prepareNextTurn`)
  * - one compact-and-retry recovery when a run ends in a context-overflow error
+ * - model fallback when a run ends in a quota/rate-limit error (#free-tier)
  */
 
 import type { Agent } from "@earendil-works/pi-agent-core";
+import type { Api, Model } from "@earendil-works/pi-ai";
 
 import { commandRegistry } from "../commands/types.js";
 import {
@@ -21,6 +23,7 @@ import {
   maybeAutoCompactBeforePrompt,
 } from "../compaction/auto-compaction.js";
 import { recoverFromContextOverflow } from "../compaction/overflow-recovery.js";
+import { recoverByModelFallback, type ModelRef } from "../models/fallback-chain.js";
 
 export type QueuedAction =
   | { type: "prompt"; text: string }
@@ -49,6 +52,17 @@ export function createActionQueue(opts: {
   autoCompactEnabled: boolean;
   /** Runs compaction for this queue's agent (not the active tab's agent). */
   runCompact: () => Promise<void>;
+  /**
+   * Model fallback on quota/rate-limit failures. Omitted (or returning an
+   * empty chain) disables the behavior, which keeps the queue usable in
+   * tests and in runtimes that never configured a chain.
+   */
+  modelFallback?: {
+    isEnabled: () => Promise<boolean> | boolean;
+    getChain: () => Promise<readonly ModelRef[]> | readonly ModelRef[];
+    resolveModel: (ref: ModelRef) => Model<Api> | null;
+    onSwitch?: (model: Model<Api>, failed: Pick<ModelRef, "provider" | "id">) => void;
+  };
 }): ActionQueue {
   const { agent, sidebar, queueDisplay, autoCompactEnabled } = opts;
 
@@ -118,6 +132,34 @@ export function createActionQueue(opts: {
     await cmd.execute(args);
   }
 
+  const maybeFallbackToNextModel = async (): Promise<void> => {
+    const fallback = opts.modelFallback;
+    if (!fallback) return;
+
+    try {
+      if (!(await fallback.isEnabled())) return;
+
+      const chain = await fallback.getChain();
+      if (chain.length === 0) return;
+
+      sidebar.setBusyIndicator("Cambiando de modelo…", "El modelo anterior agotó su cuota");
+      try {
+        await recoverByModelFallback({
+          agent,
+          chain,
+          resolveModel: fallback.resolveModel,
+          onSwitch: fallback.onSwitch,
+        });
+      } finally {
+        sidebar.setBusyIndicator(null);
+      }
+    } catch (error: unknown) {
+      // Never let fallback bookkeeping break the queue: the original error is
+      // already in the transcript and surfaced by the error banner.
+      console.warn("[pi] Model fallback failed:", error);
+    }
+  };
+
   async function process(): Promise<void> {
     if (running || closed) return;
     running = true;
@@ -162,6 +204,12 @@ export function createActionQueue(opts: {
             runCompact: runCompactWithIndicator,
           });
         }
+
+        if (closed) break;
+        // Quota/rate-limit failures: walk the fallback chain so a daily cap
+        // reached mid-tasacion does not lose the turn. Bounded by the chain
+        // length — each model is tried at most once per prompt.
+        await maybeFallbackToNextModel();
       }
     } finally {
       running = false;

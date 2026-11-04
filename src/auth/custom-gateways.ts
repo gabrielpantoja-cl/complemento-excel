@@ -345,6 +345,31 @@ export function resolveCustomProviderModel(
   return fallbackMatches.length === 1 ? fallbackMatches[0] : null;
 }
 
+/**
+ * Looks up a configured custom-provider model by provider name + model id.
+ *
+ * Used by the model fallback chain, whose entries are stored as plain
+ * `{provider, id}` refs and therefore carry no `api`/`baseUrl` to match on.
+ * Returns null when the provider was removed or the model is no longer part
+ * of its catalog, so a stale chain entry is skipped instead of throwing.
+ */
+export function findCustomProviderModelByRef(
+  customProviders: CustomProvider[],
+  ref: { provider: string; id: string },
+): Model<Api> | null {
+  for (const provider of customProviders) {
+    const storedModels = Array.isArray(provider.models) ? provider.models : [];
+
+    for (const storedModel of storedModels) {
+      if (storedModel.provider === ref.provider && storedModel.id === ref.id) {
+        return storedModel;
+      }
+    }
+  }
+
+  return null;
+}
+
 export async function deleteOpenAiGatewayConfig(
   customProvidersStore: CustomProvidersStoreLike,
   id: string,

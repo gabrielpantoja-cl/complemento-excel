@@ -30,10 +30,35 @@
  * endpoint at the same host does NOT include `x-api-key`.
  */
 
+import type { Api } from "@earendil-works/pi-ai";
 import type { CustomProvider } from "@earendil-works/pi-web-ui/dist/storage/stores/custom-providers-store.js";
 
 /** Gateway protocols the preset framework knows how to wire. */
 export type PresetGatewayKind = "openai-completions" | "anthropic-messages";
+
+/**
+ * One selectable model inside a preset provider.
+ *
+ * Context windows differ per model, so they cannot be inherited from the
+ * preset: a 1M-context model and a 256K one must advertise their real limits
+ * or auto-compaction thresholds will be wrong.
+ */
+export interface PresetModel {
+  /** Model id as the gateway expects it (e.g. `nvidia/nemotron-3.5-lightning:free`). */
+  id: string;
+  /** Human label for the picker. Defaults to `id`. */
+  name?: string;
+  /** Context window in tokens. */
+  contextWindow: number;
+  /** Max output tokens. Capped at `contextWindow` when the record is built. */
+  maxTokens: number;
+  /** Input modalities. Defaults to `["text"]`. */
+  input?: readonly ("text" | "image")[];
+  /** Whether the model exposes reasoning/thinking output. Defaults to false. */
+  reasoning?: boolean;
+  /** Free endpoints cost nothing; paid presets can declare real costs. */
+  cost?: { input: number; output: number; cacheRead: number; cacheWrite: number };
+}
 
 /** Fields shared by every preset, regardless of gateway protocol. */
 interface PresetCommonFields {
@@ -57,8 +82,17 @@ interface PresetCommonFields {
   contextWindow: number;
   /** Default max output tokens (capped at contextWindow). */
   maxTokens: number;
-  /** Optional list of supported model ids shown in `/model`. */
-  supportedModelIds?: readonly string[];
+  /**
+   * Optional catalog of additional models exposed by this preset.
+   *
+   * Every entry becomes its own record in the `customProviders` store, so the
+   * model picker lists them all under `providerName`. The model named by
+   * `modelId` is always included (first), even when absent from this list.
+   *
+   * Keep the order stable: it is part of the model-picker ordering and of the
+   * prompt-cache prefix (see "Prompt caching gotchas" in AGENTS.md).
+   */
+  models?: readonly PresetModel[];
 }
 
 /** Anthropic-Messages-specific knobs. */
@@ -102,12 +136,90 @@ export const PRESET_PROVIDERS: ReadonlyArray<PresetProviderConfig> = Object.free
     modelId: "MiniMax-M3",
     contextWindow: 1_000_000,
     maxTokens: 131_072,
-    supportedModelIds: Object.freeze([
-      "MiniMax-M3",
-      "MiniMax-M2.7",
-      "MiniMax-M2.7-highspeed",
-      "MiniMax-M2.5",
-      "MiniMax-M2.5-highspeed",
+    models: Object.freeze([
+      { id: "MiniMax-M3", contextWindow: 1_000_000, maxTokens: 131_072 },
+      { id: "MiniMax-M2.7", contextWindow: 204_800, maxTokens: 131_072 },
+      { id: "MiniMax-M2.7-highspeed", contextWindow: 204_800, maxTokens: 131_072 },
+      { id: "MiniMax-M2.5", contextWindow: 204_800, maxTokens: 131_072 },
+      { id: "MiniMax-M2.5-highspeed", contextWindow: 204_800, maxTokens: 131_072 },
+    ]),
+    kind: "openai-completions",
+  }),
+
+  // OpenRouter free tier.
+  //
+  // Why a preset instead of the built-in `openrouter` provider: the pinned
+  // `@earendil-works/pi-ai` registry predates every model below, so none of
+  // them can be selected through the built-in provider. The preset declares
+  // the ids explicitly, which keeps the add-in's model catalog independent
+  // from the upstream registry's release cadence.
+  //
+  // Model list verified against `GET https://openrouter.ai/api/v1/models` on
+  // 2026-11-04: every entry is priced at 0/0, advertises `tools` in
+  // `supported_parameters`, and reported >= 94% uptime over the previous day.
+  // Re-verify before editing — OpenRouter rotates the free catalog often.
+  //
+  // Rate limits are account-wide, not per model: 20 requests/minute always,
+  // plus 1,000 requests/day once >= 10 credits have been purchased all-time
+  // (50/day below that). Deliberately excluded: `stealth/*` models, which are
+  // free because the lab reads the prompts.
+  Object.freeze({
+    id: "openrouter-free",
+    label: "OpenRouter (modelos gratis)",
+    desc: "Nemotron 3.5 / Gemma 4 - 1.000 solicitudes al dia",
+    apiKeyHint: "API key de OpenRouter (sk-or-v1-...)",
+    baseUrl: "https://openrouter.ai/api/v1",
+    displayName: "OpenRouter Free",
+    providerName: "OpenRouter Free",
+    modelId: "nvidia/nemotron-3.5-super-vl:free",
+    contextWindow: 1_000_000,
+    maxTokens: 131_072,
+    models: Object.freeze([
+      {
+        id: "nvidia/nemotron-3.5-super-vl:free",
+        name: "Nemotron 3.5 Super VL (free)",
+        contextWindow: 1_000_000,
+        maxTokens: 131_072,
+        input: Object.freeze(["text", "image"] as const),
+        reasoning: true,
+      },
+      {
+        id: "nvidia/nemotron-3-ultra-550b-a55b:free",
+        name: "Nemotron 3 Ultra (free)",
+        contextWindow: 1_000_000,
+        maxTokens: 65_536,
+        reasoning: true,
+      },
+      {
+        id: "nvidia/nemotron-3.5-lightning:free",
+        name: "Nemotron 3.5 Lightning (free)",
+        contextWindow: 1_000_000,
+        maxTokens: 65_536,
+        reasoning: true,
+      },
+      {
+        id: "cohere/north-mini-code:free",
+        name: "North Mini Code (free)",
+        contextWindow: 256_000,
+        maxTokens: 64_000,
+        reasoning: true,
+      },
+      {
+        id: "google/gemma-4-31b-it:free",
+        name: "Gemma 4 31B (free)",
+        contextWindow: 262_144,
+        maxTokens: 32_768,
+        input: Object.freeze(["text", "image"] as const),
+        reasoning: true,
+      },
+      {
+        id: "google/gemma-4-26b-a4b-it:free",
+        name: "Gemma 4 26B A4B (free)",
+        contextWindow: 262_144,
+        maxTokens: 32_768,
+        input: Object.freeze(["text", "image"] as const),
+        reasoning: true,
+      },
     ]),
     kind: "openai-completions",
   }),
@@ -126,66 +238,87 @@ export function getPresetProviderConfig(presetId: string): PresetProviderConfig 
   return PRESET_PROVIDERS.find((p) => p.id === presetId) ?? null;
 }
 
+/** Storage shape of one model inside a `CustomProvider` record. */
+type StoredPresetModel = NonNullable<CustomProvider["models"]>[number];
+
+/**
+ * Ordered, de-duplicated model list for a preset.
+ *
+ * `modelId` always comes first so it stays the preset's default, and the
+ * order is otherwise the declaration order in `models` — both the model
+ * picker and the prompt-cache prefix depend on it being deterministic.
+ */
+export function resolvePresetModels(preset: PresetProviderConfig): PresetModel[] {
+  const declared = preset.models ?? [];
+  const primary =
+    declared.find((m) => m.id === preset.modelId)
+    ?? {
+      id: preset.modelId,
+      contextWindow: preset.contextWindow,
+      maxTokens: preset.maxTokens,
+    };
+
+  const out: PresetModel[] = [primary];
+  const seen = new Set<string>([primary.id]);
+
+  for (const model of declared) {
+    if (seen.has(model.id)) continue;
+    seen.add(model.id);
+    out.push(model);
+  }
+
+  return out;
+}
+
 /**
  * Build a `CustomProvider` record (the storage shape) for the given preset.
  *
- * The runtime model is registered with `provider: preset.providerName` and
- * `baseUrl: preset.baseUrl`. The `kind` decides the gateway protocol and the
- * `api` field on the embedded model — dispatch happens via `model.api` in
- * `pi-ai`'s api-registry.
+ * Every model from `resolvePresetModels()` is registered with
+ * `provider: preset.providerName` and `baseUrl: preset.baseUrl`, so the model
+ * picker lists them all under one login row. The `kind` decides the gateway
+ * protocol and the `api` field on each embedded model — dispatch happens via
+ * `model.api` in `pi-ai`'s api-registry.
  */
 export function buildPresetProviderRecord(
   preset: PresetProviderConfig,
   apiKey: string,
 ): CustomProvider {
-  if (preset.kind === "anthropic-messages") {
-    return {
-      id: presetProviderStorageId(preset.id),
-      name: preset.displayName,
-      type: "anthropic-messages",
+  const api: Api = preset.kind === "anthropic-messages" ? "anthropic-messages" : "openai-completions";
+
+  const headers =
+    preset.kind === "anthropic-messages"
+      ? {
+          "anthropic-version": preset.anthropicVersion ?? "2023-06-01",
+          ...preset.extraHeaders,
+        }
+      : undefined;
+
+  const models = resolvePresetModels(preset).map((model) => {
+    const contextWindow = model.contextWindow;
+    const record: StoredPresetModel = {
+      id: model.id,
+      name: model.name ?? model.id,
+      provider: preset.providerName,
+      api,
       baseUrl: preset.baseUrl,
-      apiKey,
-      models: [
-        {
-          id: preset.modelId,
-          name: preset.modelId,
-          provider: preset.providerName,
-          api: "anthropic-messages",
-          baseUrl: preset.baseUrl,
-          contextWindow: preset.contextWindow,
-          maxTokens: Math.min(preset.maxTokens, preset.contextWindow),
-          input: ["text"],
-          reasoning: false,
-          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-          headers: {
-            "anthropic-version": preset.anthropicVersion ?? "2023-06-01",
-            ...preset.extraHeaders,
-          },
-        },
-      ],
+      contextWindow,
+      maxTokens: Math.min(model.maxTokens, contextWindow),
+      input: [...(model.input ?? ["text"])],
+      reasoning: model.reasoning ?? false,
+      cost: model.cost ?? { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
     };
-  }
+
+    if (headers) record.headers = headers;
+    return record;
+  });
 
   return {
     id: presetProviderStorageId(preset.id),
     name: preset.displayName,
-    type: "openai-completions",
+    type: preset.kind,
     baseUrl: preset.baseUrl,
     apiKey,
-    models: [
-      {
-        id: preset.modelId,
-        name: preset.modelId,
-        provider: preset.providerName,
-        api: "openai-completions",
-        baseUrl: preset.baseUrl,
-        contextWindow: preset.contextWindow,
-        maxTokens: Math.min(preset.maxTokens, preset.contextWindow),
-        input: ["text"],
-        reasoning: false,
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-      },
-    ],
+    models,
   };
 }
 

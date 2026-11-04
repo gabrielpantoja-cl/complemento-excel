@@ -7,6 +7,7 @@
 
 import { html, render } from "lit";
 import { Agent } from "@earendil-works/pi-agent-core";
+import { getModels, type Api, type Model } from "@earendil-works/pi-ai";
 import { ApiKeyPromptDialog } from "@earendil-works/pi-web-ui/dist/dialogs/ApiKeyPromptDialog.js";
 import { ModelSelector } from "@earendil-works/pi-web-ui/dist/dialogs/ModelSelector.js";
 import { getAppStorage } from "@earendil-works/pi-web-ui/dist/storage/app-storage.js";
@@ -23,6 +24,7 @@ import {
 import { restoreCredentials } from "../auth/restore.js";
 import {
   collectCustomProviderRuntimeInfo,
+  findCustomProviderModelByRef,
   resolveCustomProviderModel,
 } from "../auth/custom-gateways.js";
 import { invalidateBlueprint } from "../context/blueprint.js";
@@ -34,6 +36,11 @@ import {
 import { createConvertToLlm } from "../messages/convert-to-llm.js";
 import { effectiveToolOutputLimits } from "../context/window-budgets.js";
 import { findTrailingContextOverflowError } from "../compaction/overflow-recovery.js";
+import {
+  getStoredFallbackChain,
+  isFallbackEnabled,
+  type ModelRef,
+} from "../models/fallback-chain.js";
 import { runCompactCommand } from "../commands/builtins/export.js";
 import { getFilesWorkspace } from "../files/workspace.js";
 import { ConnectionManager } from "../connections/manager.js";
@@ -303,6 +310,26 @@ export async function initTaskpane(opts: {
     defaultCustomModel = nextDefaultCustomModel;
     defaultModel = pickDefaultModel(availableProviders, defaultCustomModel);
     setActiveProviders(combinedProviders);
+  };
+
+  /**
+   * Resolves a fallback-chain ref to a usable model.
+   *
+   * Configured custom/preset providers win over the built-in registry: the
+   * free OpenRouter models only exist as preset records (the pinned pi-ai
+   * registry predates them), and a preset record also carries the right
+   * `baseUrl` for routing.
+   */
+  const resolveFallbackModel = (ref: ModelRef): Model<Api> | null => {
+    const custom = findCustomProviderModelByRef(configuredCustomProviders, ref);
+    if (custom) return custom;
+
+    try {
+      const builtIns = getModels(ref.provider as Parameters<typeof getModels>[0]);
+      return builtIns.find((model) => model.id === ref.id) ?? null;
+    } catch {
+      return null;
+    }
   };
 
   let onProvidersChanged: (() => void) | null = null;
@@ -1051,6 +1078,16 @@ export async function initTaskpane(opts: {
       queueDisplay,
       autoCompactEnabled,
       runCompact: () => runCompactCommand(agent, ""),
+      modelFallback: {
+        isEnabled: () => isFallbackEnabled(settings),
+        getChain: () => getStoredFallbackChain(settings),
+        resolveModel: resolveFallbackModel,
+        onSwitch: (model, failed) => {
+          showToast(
+            `Cuota agotada en ${failed.id} — continuando con ${model.name || model.id}.`,
+          );
+        },
+      },
     });
 
     const persistence = await setupSessionPersistence({
