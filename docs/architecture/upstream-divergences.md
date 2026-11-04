@@ -1,6 +1,6 @@
 ﻿# Upstream divergences from pi-mono
 
-**Last reviewed:** 2026-02-22
+**Last reviewed:** 2026-11-04
 
 This document records every place Pi for Excel intentionally diverges from
 [pi-mono](https://github.com/badlogic/pi-mono) / `@earendil-works/pi-coding-agent`
@@ -144,6 +144,64 @@ worst-case tool-loop context proportional to the model's actual capacity (#566).
 
 **Files:** `src/context/window-budgets.ts`, wired in `src/taskpane/init.ts`
 (tool truncation limits) and `src/messages/convert-to-llm.ts` (history shaping).
+
+---
+
+## 6. Independent model catalog (preset providers)
+
+| | pi-mono | Tasaciones |
+|---|---|---|
+| Selectable models | Whatever `@earendil-works/pi-ai`'s generated registry ships | Registry **plus** a fork-owned catalog declared in `src/auth/provider-presets.ts` |
+
+**Rationale:** The add-in pins `pi-ai` (see `scripts/check-pi-deps-lockstep.mjs`),
+and its `models.generated.js` only grows when that pin moves. Model releases do
+not wait for our dependency bumps: as of 2026-11-04 the pinned 0.79.1 registry
+tops out at `gpt-5.5`, so every GPT-6 model and every OpenRouter free model is
+unselectable through the built-in providers.
+
+Preset providers already existed for MiniMax token plans. Extending them with a
+per-preset `models[]` list turns that mechanism into a catalog we control: each
+entry is stored as a `customProviders` record, which the model picker lists
+alongside built-ins. Adding a model is a one-line change with no dependency bump
+and no upstream coordination.
+
+**Trade-off:** context windows and model ids are hand-maintained here, so they
+can drift from reality. `tests/provider-presets.test.ts` guards the invariants
+that are checkable offline (`:free` suffix, `maxTokens <= contextWindow`, unique
+ids, default model present); the values themselves must be re-verified against
+`GET https://openrouter.ai/api/v1/models` when the catalog is edited.
+
+**Files:** `src/auth/provider-presets.ts`, `src/ui/provider-login.ts`
+(`ALL_PROVIDERS`), `src/auth/custom-gateways.ts`
+(`findCustomProviderModelByRef`).
+
+---
+
+## 7. Model fallback on quota failures
+
+| | pi-mono | Tasaciones |
+|---|---|---|
+| Run ends in 402/429 | Error surfaces, turn is lost | Switch to the next model in a configured chain and continue the turn |
+
+**Rationale:** The fork's default setup is OpenRouter's free tier, which is
+capped per UTC day (50 requests, or 1,000 once >= 10 credits have been purchased
+all-time) and at 20 requests/minute. A tasación turn can burn several requests,
+so hitting the cap mid-session is routine rather than exceptional — and losing a
+turn halfway through linking a `cuadro de referenciales` is expensive.
+
+The mechanism mirrors the existing context-overflow recovery (drop the trailing
+failure, fix the condition, `agent.continue()`), with one deliberate difference:
+overflow recovery retries **once**, while quota recovery walks the chain, since
+one model's daily cap says nothing about the next model's. The walk is bounded —
+each model is attempted at most once per prompt.
+
+Detection is deliberately narrow: 401/403/400 and aborts never trigger a switch,
+because every model in the chain would fail those identically and the user would
+just watch the chain burn down.
+
+**Files:** `src/models/fallback-chain.ts`, wired in
+`src/taskpane/action-queue.ts`; quota visibility in
+`src/auth/openrouter-quota.ts` + `src/taskpane/quota-indicator.ts`.
 
 ---
 

@@ -158,7 +158,8 @@ import {
   type WorkbookTabLayout,
 } from "./tab-layout.js";
 import { createTabLayoutPersistence } from "./tab-layout-persistence.js";
-import { injectStatusBar } from "./status-bar.js";
+import { injectStatusBar, updateStatusBar } from "./status-bar.js";
+import { installQuotaIndicator } from "./quota-indicator.js";
 import {
   parseStatusContextWarningSeverity,
   STATUS_CONTEXT_DESC_ATTR,
@@ -2015,6 +2016,20 @@ export async function initTaskpane(opts: {
     getActiveAgent,
     getLockState: getActiveLockState,
     getExecutionMode,
+  });
+
+  // ── Free-tier quota indicator ──
+  // Polls OpenRouter's free-model daily allowance so the user sees the cap
+  // coming instead of discovering it as a failed turn mid-tasacion.
+  installQuotaIndicator({
+    getActiveModel: () => {
+      const model = getActiveAgent()?.state.model;
+      return model ? { provider: model.provider, id: model.id } : null;
+    },
+    getApiKey: (provider) => customProviderApiKeys.get(provider) ?? undefined,
+    requestRender: () => {
+      updateStatusBar(getActiveAgent, getActiveLockState, getExecutionMode);
+    },
   });
 
   // ── Proxy status polling ──

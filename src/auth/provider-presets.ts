@@ -331,5 +331,15 @@ export function findPresetIdForCustomProvider(provider: CustomProvider): string 
   for (const preset of PRESET_PROVIDERS) {
     if (provider.id === presetProviderStorageId(preset.id)) return preset.id;
   }
+
+  // Fall back to the storage prefix so a record written by an older bundle —
+  // whose preset has since been renamed or dropped — is still recognised as a
+  // preset record instead of being mistaken for a user-defined gateway.
+  const prefix = presetProviderStorageId("");
+  if (provider.id.startsWith(prefix)) {
+    const id = provider.id.slice(prefix.length);
+    return id.length > 0 ? id : null;
+  }
+
   return null;
 }

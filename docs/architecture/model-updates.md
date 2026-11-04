@@ -1,12 +1,49 @@
 # Model / dependency update playbook
 
-**Last verified:** 2026-06-09
+**Last verified:** 2026-11-04
 
 This repo hardcodes a small set of "featured" and "preferred" model IDs (for sorting + default selection). Those IDs come from Pi’s model registry (`@earendil-works/pi-ai`) and will drift as new models ship (e.g. `gpt-5.5`, `gpt-5.3-codex`, `claude-fable-5`, `claude-opus-4-8`, `gemini-3.1-pro-preview`).
 
 This doc describes how to update:
 - the **Pi dependency versions** we ship (`@earendil-works/pi-ai`, `@earendil-works/pi-web-ui`, `@earendil-works/pi-agent-core`)
 - the **model ordering/default-selection behavior** in the add-in (`src/models/model-ordering.ts`, `src/taskpane/default-model.ts`, `src/compat/model-selector-patch.ts`)
+
+## Two catalogs, not one
+
+Since 2026-11-04 the add-in has **two** sources of selectable models:
+
+1. **Pi's generated registry** (`@earendil-works/pi-ai`) — grows only when the
+   pinned dependency moves. As of 2026-11-04 the pin is 0.79.1, whose registry
+   tops out at `gpt-5.5`; npm's latest is 1.5.0 (a major bump, so it is not a
+   drop-in).
+2. **The fork's own catalog** — `PRESET_PROVIDERS` in
+   `src/auth/provider-presets.ts`. Each preset declares its model ids,
+   context windows and output caps explicitly, and is stored as a
+   `customProviders` record, so the model picker lists them next to the
+   built-ins.
+
+**Prefer the preset catalog for new models.** It needs no dependency bump, no
+upstream release, and no Excel-side regression risk. Reach for a `pi-ai` bump
+only when you need new *runtime* behavior (a new provider protocol, a bug fix
+in the agent loop), not just new model ids.
+
+When editing a preset's catalog, re-verify the values against the provider's
+own API — for OpenRouter:
+
+```bash
+curl -s https://openrouter.ai/api/v1/models   | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{
+      const d=JSON.parse(s).data.filter(m=>Number(m.pricing.prompt)===0
+        && Number(m.pricing.completion)===0
+        && (m.supported_parameters||[]).includes('tools'));
+      for(const m of d) console.log(m.id, m.context_length,
+        m.top_provider&&m.top_provider.max_completion_tokens);})"
+```
+
+Tool support is not optional: a model without `tools` in
+`supported_parameters` cannot drive the add-in's Excel tools at all.
+
+`tests/provider-presets.test.ts` enforces the offline-checkable invariants
+(`:free` suffix, `maxTokens <= contextWindow`, unique ids, default present).
 
 ## Source of truth
 

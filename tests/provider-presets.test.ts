@@ -7,6 +7,7 @@ import {
   findPresetIdForCustomProvider,
   getPresetProviderConfig,
   presetProviderStorageId,
+  resolvePresetModels,
   type PresetProviderConfig,
 } from "../src/auth/provider-presets.ts";
 
@@ -294,4 +295,138 @@ void test("ALL_PROVIDERS first row is the MiniMax preset", async () => {
     /preset:\s*"minimax"/,
     `expected first row to reference preset: "minimax", got: ${firstNonEmpty}`,
   );
+});
+
+// ── Multi-model preset catalog (2026-11-04) ───────────────────────────────
+// Presets became the fork's own model catalog: each one may declare several
+// models, all of which land in the `customProviders` record so the model
+// picker lists them. See docs/architecture/upstream-divergences.md §6.
+
+void test("every preset's resolved catalog leads with its default model", () => {
+  for (const preset of PRESET_PROVIDERS) {
+    const models = resolvePresetModels(preset);
+    assert.ok(models.length > 0, `${preset.id} has no models`);
+    assert.equal(models[0]?.id, preset.modelId, `${preset.id}: default must come first`);
+
+    const ids = models.map((m) => m.id);
+    assert.equal(new Set(ids).size, ids.length, `${preset.id} has duplicate model ids`);
+  }
+});
+
+void test("resolvePresetModels synthesizes an entry when the default is not declared", () => {
+  const models = resolvePresetModels({
+    id: "test",
+    label: "Test",
+    baseUrl: "https://example.invalid/v1",
+    displayName: "Test",
+    providerName: "Test",
+    modelId: "solo-model",
+    contextWindow: 123_456,
+    maxTokens: 4_096,
+    kind: "openai-completions",
+  });
+
+  assert.deepEqual(models, [{ id: "solo-model", contextWindow: 123_456, maxTokens: 4_096 }]);
+});
+
+void test("buildPresetProviderRecord registers every model of the preset", () => {
+  const preset = getPresetProviderConfig("openrouter-free");
+  assert.ok(preset, "openrouter-free preset is missing");
+
+  const record = buildPresetProviderRecord(preset, "sk-or-v1-test");
+  const models = record.models ?? [];
+
+  assert.equal(models.length, resolvePresetModels(preset).length);
+  assert.ok(models.length > 1, "the free preset must expose alternatives for the fallback chain");
+
+  for (const model of models) {
+    assert.equal(model.provider, preset.providerName);
+    assert.equal(model.baseUrl, preset.baseUrl);
+    assert.equal(model.api, "openai-completions");
+    assert.ok(model.maxTokens <= model.contextWindow, `${model.id}: maxTokens exceeds context`);
+    assert.ok(model.contextWindow > 0, `${model.id}: missing context window`);
+  }
+});
+
+void test("every OpenRouter free model id carries the :free suffix", () => {
+  // A paid id in this preset would silently start charging the account
+  // instead of drawing on the daily free allowance.
+  const preset = getPresetProviderConfig("openrouter-free");
+  assert.ok(preset);
+
+  for (const model of resolvePresetModels(preset)) {
+    assert.ok(model.id.endsWith(":free"), `${model.id} is not a :free endpoint`);
+  }
+});
+
+void test("free preset models are stored with zero cost", () => {
+  const preset = getPresetProviderConfig("openrouter-free");
+  assert.ok(preset);
+
+  for (const model of buildPresetProviderRecord(preset, "k").models ?? []) {
+    assert.deepEqual(model.cost, { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 });
+  }
+});
+
+void test("MiniMax preset keeps its multi-model catalog", () => {
+  const preset = getPresetProviderConfig("minimax");
+  assert.ok(preset);
+
+  const ids = resolvePresetModels(preset).map((m) => m.id);
+  assert.equal(ids[0], "MiniMax-M3");
+  assert.ok(ids.includes("MiniMax-M2.7"));
+  assert.ok(ids.length >= 5);
+});
+
+void test("anthropic-messages presets attach version headers to every model", () => {
+  const record = buildPresetProviderRecord(
+    {
+      id: "test-anthropic",
+      label: "Test",
+      baseUrl: "https://example.invalid",
+      displayName: "Test",
+      providerName: "Test",
+      modelId: "primary",
+      contextWindow: 200_000,
+      maxTokens: 8_192,
+      models: [
+        { id: "primary", contextWindow: 200_000, maxTokens: 8_192 },
+        { id: "secondary", contextWindow: 100_000, maxTokens: 4_096 },
+      ],
+      kind: "anthropic-messages",
+      anthropicVersion: "2024-01-01",
+      extraHeaders: { "x-test": "1" },
+    },
+    "key",
+  );
+
+  const models = record.models ?? [];
+  assert.equal(models.length, 2);
+  for (const model of models) {
+    assert.equal(model.api, "anthropic-messages");
+    assert.deepEqual(model.headers, { "anthropic-version": "2024-01-01", "x-test": "1" });
+  }
+});
+
+void test("preset provider names are unique", () => {
+  const providerNames = PRESET_PROVIDERS.map((p) => p.providerName);
+  assert.equal(new Set(providerNames).size, providerNames.length);
+});
+
+void test("the OpenRouter free row sits directly below the MiniMax row", async () => {
+  // MiniMax stays first (pinned above); the free row is the second choice so
+  // the welcome overlay leads with the paid plan the project already owns.
+  const fs = await import("node:fs/promises");
+  const fileURL = await import("node:url");
+  const source = await fs.readFile(
+    fileURL.fileURLToPath(new URL("../src/ui/provider-login.ts", import.meta.url)),
+    "utf8",
+  );
+
+  const minimaxIdx = source.indexOf('id: "minimax"');
+  const freeIdx = source.indexOf('id: "openrouter-free"');
+
+  assert.ok(minimaxIdx > 0, "MiniMax row not found");
+  assert.ok(freeIdx > 0, "openrouter-free row not found");
+  assert.ok(minimaxIdx < freeIdx, "MiniMax must stay above the OpenRouter free row");
 });

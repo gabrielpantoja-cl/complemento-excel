@@ -18,6 +18,7 @@ import {
   STATUS_CONTEXT_WARNING_SEVERITY_ATTR,
 } from "./status-context.js";
 import type { RuntimeLockState } from "./session-runtime-manager.js";
+import { quotaSeverity, type OpenRouterQuota } from "../auth/openrouter-quota.js";
 
 const EXPORT_BUTTON_TOOLTIP =
   "Copy this session to the clipboard in Markdown. Useful for sharing a transcript, filing a bug, or pasting into another tool.";
@@ -25,6 +26,50 @@ const EXPORT_BUTTON_TOOLTIP =
 export type ActiveAgentProvider = () => Agent | null;
 export type ActiveLockStateProvider = () => RuntimeLockState;
 export type ActiveExecutionModeProvider = () => ExecutionMode;
+
+/**
+ * Supplies the free-tier quota snapshot for the active model, or null when
+ * the model is not on a metered free tier.
+ *
+ * The status bar renders synchronously from agent state, so the provider must
+ * be a cheap, non-async peek at an already-fetched snapshot — the polling
+ * lives in `src/taskpane/quota-indicator.ts`.
+ */
+export type StatusQuotaProvider = (model: { provider: string; id: string } | null) => OpenRouterQuota | null;
+
+let quotaProvider: StatusQuotaProvider | null = null;
+
+export function setStatusQuotaProvider(provider: StatusQuotaProvider | null): void {
+  quotaProvider = provider;
+}
+
+function renderQuotaBadge(model: { provider: string; id: string } | null): {
+  markup: string;
+  signature: string;
+} {
+  if (!quotaProvider) return { markup: "", signature: "" };
+
+  let quota: OpenRouterQuota | null = null;
+  try {
+    quota = quotaProvider(model);
+  } catch {
+    quota = null;
+  }
+
+  if (!quota) return { markup: "", signature: "" };
+
+  const severity = quotaSeverity(quota);
+  const label = `${quota.remaining.toLocaleString()} libres`;
+  const tooltip = escapeAttr(
+    `Solicitudes gratuitas de OpenRouter: ${quota.used.toLocaleString()} usadas de ${quota.limit.toLocaleString()} hoy (UTC). `
+    + (severity === "ok"
+      ? "Al agotarse, la sesión cambia al siguiente modelo de la cadena."
+      : "Quedan pocas: la sesión cambiará al siguiente modelo de la cadena al agotarse."),
+  );
+
+  const markup = `<span class="pi-status-quota pi-status-quota--${severity}" data-tooltip="${tooltip}" aria-label="${escapeAttr(`${quota.remaining} solicitudes gratuitas restantes hoy`)}">${escapeHtml(label)}</span>`;
+  return { markup, signature: `${severity}:${quota.remaining}/${quota.limit}` };
+}
 
 function adjustContextTooltipAlignment(statusBar: HTMLElement): void {
   const trigger = statusBar.querySelector<HTMLElement>(".pi-status-ctx--trigger");
@@ -119,6 +164,8 @@ function renderStatusBar(
     ? `<span class="pi-status-ctx__debug">${escapeHtml(formatUsageDebug(lastUsage))}</span>`
     : "";
 
+  const quotaBadge = renderQuotaBadge(model ? { provider: model.provider, id: model.id } : null);
+
   let lockBadge = "";
   if (lockState === "waiting_for_lock") {
     lockBadge = `<span class="pi-status-lock pi-status-lock--waiting" data-tooltip="A workbook write is queued behind another session.">lock…</span>`;
@@ -154,6 +201,7 @@ function renderStatusBar(
       </button>
       <button type="button" class="pi-status-thinking pi-status-clickable" data-tooltip="${thinkingTooltip}" aria-label="Thinking level ${thinkingLevel}">${brainSvg} ${thinkingLevel}<span class="pi-status-affordance" aria-hidden="true">${affordanceChevronSvg}</span></button>
       <button type="button" class="pi-status-ctx pi-status-ctx--trigger pi-status-clickable has-tooltip" ${STATUS_CONTEXT_DESC_ATTR}="${ctxPopoverDesc}" ${STATUS_CONTEXT_TOKENS_ATTR}="${ctxPopoverTokens}" ${STATUS_CONTEXT_WARNING_ATTR}="${ctxPopoverWarnText}" ${STATUS_CONTEXT_WARNING_SEVERITY_ATTR}="${ctxWarningSeverity}" aria-label="Context usage ${pct}% of ${ctxLabel}"><span class="pi-status-ctx__pct ${ctxColor}">${pct}%</span><span class="pi-status-ctx__sep">/</span><span class="pi-status-ctx__limit">${ctxLabel}</span>${usageDebug}<span class="pi-status-affordance" aria-hidden="true">${affordanceChevronSvg}</span><span class="pi-tooltip"><span class="pi-tooltip__desc">${escapeHtml(ctxDescription)}</span><span class="pi-tooltip__tokens">${escapeHtml(ctxTokenDetail)}</span>${ctxWarning}</span></button>
+      ${quotaBadge.markup}
       ${lockBadge}
     </div>
     <div class="pi-status-side">
@@ -172,6 +220,7 @@ function renderStatusBar(
     ctxWarningText,
     ctxWarningSeverity,
     usageDebug,
+    quota: quotaBadge.signature,
     lockState,
     executionMode,
   });

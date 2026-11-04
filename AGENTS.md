@@ -1,6 +1,6 @@
 ﻿# AGENTS.md
 
-**Last reviewed:** 2026-07-22
+**Last reviewed:** 2026-11-04
 
 Notes for agents working in this repo. Read this file before making any change.
 
@@ -34,6 +34,22 @@ Brand colours, display name (`Tasaciones`), and add-in metadata live in `manifes
   - `src/ui/humanize-params.ts` (per-tool humanizer for the taskpane card)
   - `src/prompt/system-prompt.ts` (if the documented tool list changes)
 - Reference: `0f052da` shipped `audit_ref_errors` + `link_referenciales_cuadro` touching all five files.
+
+### Model catalog + fallback chain
+
+- Selectable models come from **two** places: Pi's pinned registry and the
+  fork's own `PRESET_PROVIDERS` catalog (`src/auth/provider-presets.ts`).
+  Add new models to the preset catalog — no dependency bump needed. See
+  `docs/architecture/model-updates.md` ("Two catalogs, not one").
+- A preset's `models[]` entries each become a `customProviders` record. Keep
+  the order stable (model-picker ordering + prompt-cache prefix) and declare
+  **real** context windows: they drive auto-compaction thresholds.
+- Quota/rate-limit failures switch models via `src/models/fallback-chain.ts`
+  (wired in `src/taskpane/action-queue.ts`). Keep `isQuotaExhaustedError()`
+  narrow — auth/schema errors must never trigger a switch, or the chain burns
+  down on an error every model shares.
+- Free OpenRouter ids must keep the `:free` suffix; a paid id in that preset
+  silently starts charging. Enforced by `tests/provider-presets.test.ts`.
 
 ### Tool results (`ToolResultMessage.details`)
 

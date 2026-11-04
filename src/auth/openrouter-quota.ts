@@ -91,9 +91,7 @@ export type QuotaSeverity = "ok" | "warn" | "critical";
  */
 export function quotaSeverity(quota: Pick<OpenRouterQuota, "remaining" | "limit">): QuotaSeverity {
   if (quota.remaining <= 5) return "critical";
-  if (quota.remaining <= 25 || quotaUsedFraction({ used: quota.limit - quota.remaining, limit: quota.limit }) >= 0.9) {
-    return "warn";
-  }
+  if (quota.remaining <= 25) return "warn";
   return "ok";
 }
 

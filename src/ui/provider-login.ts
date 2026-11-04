@@ -204,8 +204,8 @@ export const ALL_PROVIDERS: ProviderDef[] = [
   // because it is the project's primary token plan (see comment in
   // `provider-presets.ts` for why this routing works end-to-end).
 
-  { id: "openrouter-free",    label: "OpenRouter (gratis)",      preset: "openrouter-free",  desc: "Nemotron 3.5 / Gemma 4 - sin costo, 1.000 req/dia" },
   { id: "minimax",            label: "MiniMax (Token Plan Plus)", preset: "minimax",          desc: "MiniMax-M3 - solo pegar la Subscription Key" },
+  { id: "openrouter-free",    label: "OpenRouter (gratis)",      preset: "openrouter-free",  desc: "Nemotron 3.5 / Gemma 4 - sin costo, 1.000 req/dia" },
 
   // OAuth providers next (subscription / account-based flows).
   // Only list flows that are supported in-browser (PKCE/manual paste, no local callback server).
