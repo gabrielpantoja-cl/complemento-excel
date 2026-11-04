@@ -142,7 +142,7 @@ export function createActionQueue(opts: {
       const chain = await fallback.getChain();
       if (chain.length === 0) return;
 
-      sidebar.setBusyIndicator("Cambiando de modelo…", "El modelo anterior agotó su cuota");
+      sidebar.setBusyIndicator("Switching model…", "The previous model ran out of quota");
       try {
         await recoverByModelFallback({
           agent,

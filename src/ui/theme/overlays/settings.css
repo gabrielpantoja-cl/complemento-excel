@@ -141,3 +141,103 @@
   gap: 6px;
   align-items: center;
 }
+
+/* ── Model fallback chain card ─────────────────────────────────────────── */
+
+.pi-settings-fallback-card--off .pi-fallback-list,
+.pi-settings-fallback-card--off .pi-fallback-add {
+  opacity: 0.5;
+}
+
+.pi-fallback-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  counter-reset: pi-fallback;
+}
+
+.pi-fallback-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: var(--radius-xs);
+  background: var(--alpha-4);
+  counter-increment: pi-fallback;
+}
+
+.pi-fallback-item::before {
+  content: counter(pi-fallback) ".";
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+}
+
+.pi-fallback-item__label {
+  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+
+.pi-fallback-item__provider {
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pi-fallback-item__actions {
+  display: inline-flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.pi-fallback-item__action {
+  border: none;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  padding: 0 4px;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  border-radius: var(--radius-xs);
+}
+
+.pi-fallback-item__action:hover:not(:disabled) {
+  background: var(--alpha-8);
+  color: var(--foreground);
+}
+
+.pi-fallback-item__action:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.pi-fallback-item__action--remove:hover:not(:disabled) {
+  color: var(--destructive);
+}
+
+.pi-fallback-add {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.pi-fallback-select {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
+  padding: 4px 6px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--alpha-8);
+  background: var(--background);
+  color: var(--foreground);
+}

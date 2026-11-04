@@ -6,12 +6,15 @@ import type { Api, AssistantMessage, Model, Usage } from "@earendil-works/pi-ai"
 
 import {
   DEFAULT_FREE_FALLBACK_CHAIN,
+  addChainEntry,
   findTrailingQuotaError,
   getStoredFallbackChain,
   isFallbackEnabled,
   isQuotaExhaustedError,
   modelRefKey,
+  moveChainEntry,
   normalizeFallbackChain,
+  removeChainEntry,
   recoverByModelFallback,
   selectNextFallbackModel,
   setFallbackEnabled,
@@ -373,4 +376,52 @@ void test("fallback is enabled by default and can be turned off", async () => {
 
   await setFallbackEnabled(store, true);
   assert.equal(await isFallbackEnabled(store), true);
+});
+
+// ── Chain editing (settings UI) ───────────────────────────────────────────
+
+const EDIT_CHAIN: ModelRef[] = [
+  { provider: "OpenRouter Free", id: "a:free" },
+  { provider: "OpenRouter Free", id: "b:free" },
+  { provider: "OpenRouter Free", id: "c:free" },
+];
+
+void test("moveChainEntry reorders without mutating the input", () => {
+  const moved = moveChainEntry(EDIT_CHAIN, 2, -1);
+
+  assert.deepEqual(moved.map((m) => m.id), ["a:free", "c:free", "b:free"]);
+  assert.deepEqual(EDIT_CHAIN.map((m) => m.id), ["a:free", "b:free", "c:free"]);
+});
+
+void test("moveChainEntry is a no-op at the edges and out of range", () => {
+  assert.deepEqual(moveChainEntry(EDIT_CHAIN, 0, -1), EDIT_CHAIN);
+  assert.deepEqual(moveChainEntry(EDIT_CHAIN, 2, 1), EDIT_CHAIN);
+  assert.deepEqual(moveChainEntry(EDIT_CHAIN, 9, -1), EDIT_CHAIN);
+  assert.deepEqual(moveChainEntry(EDIT_CHAIN, -1, 1), EDIT_CHAIN);
+});
+
+void test("removeChainEntry drops one entry and ignores bad indices", () => {
+  assert.deepEqual(removeChainEntry(EDIT_CHAIN, 1).map((m) => m.id), ["a:free", "c:free"]);
+  assert.deepEqual(removeChainEntry(EDIT_CHAIN, 9), EDIT_CHAIN);
+  assert.deepEqual(removeChainEntry([], 0), []);
+});
+
+void test("addChainEntry appends and refuses duplicates", () => {
+  const added = addChainEntry(EDIT_CHAIN, { provider: "OpenAI", id: "gpt-6-luna" });
+  assert.equal(added.length, 4);
+  assert.equal(added[3]?.id, "gpt-6-luna");
+
+  // Same provider + id: no duplicate.
+  assert.deepEqual(addChainEntry(EDIT_CHAIN, { provider: "OpenRouter Free", id: "b:free" }), EDIT_CHAIN);
+  // Same id on another provider is a different model.
+  assert.equal(addChainEntry(EDIT_CHAIN, { provider: "Other", id: "b:free" }).length, 4);
+});
+
+void test("an emptied chain falls back to the free default on read", async () => {
+  const store = new MemoryStore();
+  await setStoredFallbackChain(store, []);
+
+  // Removing every entry must not silently disable the feature with no trace;
+  // the toggle is the documented way to turn it off.
+  assert.deepEqual(await getStoredFallbackChain(store), [...DEFAULT_FREE_FALLBACK_CHAIN]);
 });

@@ -59,15 +59,15 @@ function renderQuotaBadge(model: { provider: string; id: string } | null): {
   if (!quota) return { markup: "", signature: "" };
 
   const severity = quotaSeverity(quota);
-  const label = `${quota.remaining.toLocaleString()} libres`;
+  const label = `${quota.remaining.toLocaleString()} left`;
   const tooltip = escapeAttr(
-    `Solicitudes gratuitas de OpenRouter: ${quota.used.toLocaleString()} usadas de ${quota.limit.toLocaleString()} hoy (UTC). `
+    `OpenRouter free requests: ${quota.used.toLocaleString()} of ${quota.limit.toLocaleString()} used today (UTC). `
     + (severity === "ok"
-      ? "Al agotarse, la sesión cambia al siguiente modelo de la cadena."
-      : "Quedan pocas: la sesión cambiará al siguiente modelo de la cadena al agotarse."),
+      ? "When they run out, the session continues with the next model in the fallback chain."
+      : "Running low — the session will switch to the next model in the fallback chain."),
   );
 
-  const markup = `<span class="pi-status-quota pi-status-quota--${severity}" data-tooltip="${tooltip}" aria-label="${escapeAttr(`${quota.remaining} solicitudes gratuitas restantes hoy`)}">${escapeHtml(label)}</span>`;
+  const markup = `<span class="pi-status-quota pi-status-quota--${severity}" data-tooltip="${tooltip}" aria-label="${escapeAttr(`${quota.remaining} free requests left today`)}">${escapeHtml(label)}</span>`;
   return { markup, signature: `${severity}:${quota.remaining}/${quota.limit}` };
 }
 

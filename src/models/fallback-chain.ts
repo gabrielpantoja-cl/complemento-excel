@@ -199,6 +199,41 @@ export function modelRefKey(ref: Pick<ModelRef, "provider" | "id">): string {
   return `${ref.provider}\u0000${ref.id}`;
 }
 
+/**
+ * Chain editing primitives.
+ *
+ * Pure and total: an out-of-range index or a duplicate entry returns the
+ * chain unchanged rather than throwing, so the settings UI can call them
+ * without guarding every click.
+ */
+export function moveChainEntry(
+  chain: readonly ModelRef[],
+  index: number,
+  delta: number,
+): ModelRef[] {
+  const next = [...chain];
+  const target = index + delta;
+  if (index < 0 || index >= next.length) return next;
+  if (target < 0 || target >= next.length) return next;
+
+  const [entry] = next.splice(index, 1);
+  if (!entry) return [...chain];
+  next.splice(target, 0, entry);
+  return next;
+}
+
+export function removeChainEntry(chain: readonly ModelRef[], index: number): ModelRef[] {
+  if (index < 0 || index >= chain.length) return [...chain];
+  return chain.filter((_, i) => i !== index);
+}
+
+/** Appends a model, ignoring one already in the chain. */
+export function addChainEntry(chain: readonly ModelRef[], ref: ModelRef): ModelRef[] {
+  const key = modelRefKey(ref);
+  if (chain.some((entry) => modelRefKey(entry) === key)) return [...chain];
+  return [...chain, { provider: ref.provider, id: ref.id }];
+}
+
 export interface FallbackRecoveryResult {
   /** Whether a switch happened and the turn was retried. */
   switched: boolean;

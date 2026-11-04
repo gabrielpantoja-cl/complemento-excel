@@ -39,6 +39,8 @@ import { findTrailingContextOverflowError } from "../compaction/overflow-recover
 import {
   getStoredFallbackChain,
   isFallbackEnabled,
+  setFallbackEnabled as persistFallbackEnabled,
+  setStoredFallbackChain,
   type ModelRef,
 } from "../models/fallback-chain.js";
 import { runCompactCommand } from "../commands/builtins/export.js";
@@ -331,6 +333,40 @@ export async function initTaskpane(opts: {
     } catch {
       return null;
     }
+  };
+
+  /**
+   * Models the user can pick for the fallback chain: the same set the model
+   * picker offers, i.e. every model whose provider has a credential.
+   */
+  const listModelsForActiveProviders = (): { provider: string; id: string; name?: string }[] => {
+    const out: { provider: string; id: string; name?: string }[] = [];
+    const seen = new Set<string>();
+
+    const push = (provider: string, id: string, name?: string): void => {
+      const key = `${provider} ${id}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push({ provider, id, name });
+    };
+
+    for (const provider of configuredCustomProviders) {
+      for (const model of provider.models ?? []) {
+        push(model.provider, model.id, model.name);
+      }
+    }
+
+    for (const provider of availableProviders) {
+      try {
+        for (const model of getModels(provider as Parameters<typeof getModels>[0])) {
+          push(provider, model.id, model.name);
+        }
+      } catch {
+        // Not a built-in provider name (e.g. a preset's display name).
+      }
+    }
+
+    return out;
   };
 
   let onProvidersChanged: (() => void) | null = null;
@@ -1084,9 +1120,7 @@ export async function initTaskpane(opts: {
         getChain: () => getStoredFallbackChain(settings),
         resolveModel: resolveFallbackModel,
         onSwitch: (model, failed) => {
-          showToast(
-            `Cuota agotada en ${failed.id} — continuando con ${model.name || model.id}.`,
-          );
+          showToast(`${failed.id} ran out of quota — continuing with ${model.name || model.id}.`);
         },
       },
     });
@@ -1660,6 +1694,15 @@ export async function initTaskpane(opts: {
     setExecutionMode,
     getModelSwitchBehavior,
     setModelSwitchBehavior,
+    getFallbackEnabled: () => isFallbackEnabled(settings),
+    setFallbackEnabled: async (enabled) => {
+      await persistFallbackEnabled(settings, enabled);
+    },
+    getFallbackChain: () => getStoredFallbackChain(settings),
+    setFallbackChain: async (chain) => {
+      await setStoredFallbackChain(settings, chain);
+    },
+    listSelectableModels: () => listModelsForActiveProviders(),
   });
 
   const applyModelSelection = async (runtimeId: string, nextModel: RuntimeModel): Promise<void> => {

@@ -14,7 +14,12 @@ import {
   validateOfficeProxyUrl,
 } from "../../auth/proxy-validation.js";
 import { PI_EXECUTION_MODE_CHANGED_EVENT, type ExecutionMode } from "../../execution/mode.js";
+import type { ModelRef } from "../../models/fallback-chain.js";
 import type { ModelSwitchBehavior } from "../../models/switch-behavior.js";
+import {
+  createFallbackChainCard,
+  type SelectableModel,
+} from "../../ui/fallback-chain-card.js";
 import { getProxyState, type ProxyState } from "../../taskpane/proxy-status.js";
 import {
   createCallout,
@@ -81,6 +86,11 @@ interface SettingsDialogDependencies {
   setExecutionMode?: (mode: ExecutionMode) => Promise<void>;
   getModelSwitchBehavior?: () => ModelSwitchBehavior;
   setModelSwitchBehavior?: (behavior: ModelSwitchBehavior) => Promise<void>;
+  getFallbackEnabled?: () => Promise<boolean>;
+  setFallbackEnabled?: (enabled: boolean) => Promise<void>;
+  getFallbackChain?: () => Promise<ModelRef[]>;
+  setFallbackChain?: (chain: readonly ModelRef[]) => Promise<void>;
+  listSelectableModels?: () => SelectableModel[];
 }
 
 interface ResolvedSectionFocus {
@@ -626,6 +636,32 @@ function buildMoreSection(registerCleanup?: SettingsCleanupRegistrar): HTMLEleme
         modelSwitchToggle.input.disabled = false;
       });
     });
+  }
+
+  // Fallback chain: only rendered when the host wired the settings accessors,
+  // so the overlay stays usable in contexts that never configured them.
+  const {
+    getFallbackEnabled,
+    setFallbackEnabled,
+    getFallbackChain,
+    setFallbackChain,
+    listSelectableModels,
+  } = dependencies;
+
+  if (
+    getFallbackEnabled && setFallbackEnabled
+    && getFallbackChain && setFallbackChain
+    && listSelectableModels
+  ) {
+    advanced.content.appendChild(
+      createFallbackChainCard({
+        getEnabled: getFallbackEnabled,
+        setEnabled: setFallbackEnabled,
+        getChain: getFallbackChain,
+        setChain: setFallbackChain,
+        listSelectableModels,
+      }),
+    );
   }
 
   const advancedActions = document.createElement("div");
