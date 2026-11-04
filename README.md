@@ -11,7 +11,7 @@ A sidebar agent that reads appraisal workbooks and writes values, formulas and f
 
 ## What's different from pi-for-excel
 
-- **Chilean appraisal system prompt** — DL 2.186, DFL 850, LGSE, CPC art. 411, SII 10.75 % withholding, 7 rural homologation factors, fee tiering.
+- **Chilean appraisal system prompt** — DL 2.186, DFL 850, LGSE, CPC art. 411, SII withholding by boleta year (Ley 21.133 ramp), 7 rural homologation factors, fee tiering.
 - **Bundled skills** — homologación, honorarios, indemnización SEC, faja vial, cuadro de referenciales, consistency checks ([index](skills/tasaciones/SKILL.md)).
 - **Two extra tools** — `audit_ref_errors` and `link_referenciales_cuadro` repair section 8 (*valores referenciales*).
 - **Chilean formats** by default (`1.331.832`, `33,54`, DD-MM-YYYY, CLP/UF) and Spanish responses.

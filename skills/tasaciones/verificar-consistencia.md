@@ -52,7 +52,11 @@ Report findings as a checklist: ✓ pass, ✗ fail (with cell reference), ⚠ wa
 - [ ] SEC recargo legal = exactly 20% of categories 1–5
 - [ ] Faja vial factor = exactly 30% of base land value (if applicable)
 - [ ] Fee brackets are applied progressively (not flat rate on total)
-- [ ] SII withholding = exactly 10.75% of gross fee per appraiser
+- [ ] SII withholding matches the rate for the **año comercial de la boleta**, not
+      the current year, and not a hardcoded constant (Ley 21.133 ramp: 2024 =
+      13,75%, 2025 = 14,5%, 2026 = 15,25%, 2027 = 16%, 2028 y siguientes = 17%;
+      see `tasaciones/honorarios` for the full table)
+- [ ] The withholding rate lives in its own cell and the formula references it
 
 ### 6. Cell conventions
 

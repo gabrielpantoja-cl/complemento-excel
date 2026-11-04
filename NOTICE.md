@@ -62,7 +62,7 @@ A non-exhaustive list of intentional divergences from upstream `pi-for-excel`. F
 - Replaced the English-language generic system prompt with a Chilean-appraisal specialised identity block (`src/prompt/system-prompt.ts`).
 - Shipped six new Agent Skills under `skills/tasaciones/`:
   - `homologacion` — rural referencial homologation (7 factors).
-  - `honorarios` — per-appraiser fee schedule with 10.75% SII withholding.
+  - `honorarios` — per-appraiser fee schedule with dated SII withholding (Ley 21.133).
   - `sec-indemnizacion` — SEC electrical easement indemnification (6 categories).
   - `faja-vial` — DFL 850 art. 24 faja vial procedure.
   - `cuadro-referenciales` — repair of the "8.- VALORES REFERENCIALES" cross-sheet cuadro.

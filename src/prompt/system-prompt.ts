@@ -7,6 +7,7 @@
 
 import type { ResolvedConventions } from "../conventions/types.js";
 import { diffFromDefaults } from "../conventions/store.js";
+import { RETENCION_SII_LEY, renderRetencionSiiTable } from "../domain/retencion-sii.js";
 import type { ExecutionMode } from "../execution/mode.js";
 import { ACTIVE_INTEGRATIONS_PROMPT_HEADING } from "../integrations/naming.js";
 import { buildCoreToolPromptLines } from "../tools/capabilities.js";
@@ -428,7 +429,16 @@ The base value must be explicitly defined in the report body.
 **Fee schedule (honorarios):**
 Up to 1,000 UF → 10%; 1,001–3,000 UF → 8%; 3,001–5,000 UF → 7%;
 5,001–10,000 UF → 6%; over 10,000 UF → 5%. Minimum 3.5 UF per appraiser.
-Apply 10.75% SII withholding (retención) and divide net among commission members.
+
+**SII withholding (retención):** the rate depends on the **commercial year of
+the boleta**, not on the current date (${RETENCION_SII_LEY} ramps it yearly to 2028).
+If the year is not stated in the workbook or by the user, **ask for it** — never
+assume the present year.
+
+${renderRetencionSiiTable()}
+
+Withhold on the gross fee per appraiser, then divide the net among commission
+members. For a fee agreed net of withholding, gross = net ÷ (1 − rate).
 
 ### Chilean number format (always use in this workbook)
 

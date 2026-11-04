@@ -1,6 +1,6 @@
 # Roadmap
 
-**Last reviewed:** 2026-11-03
+**Last reviewed:** 2026-11-04
 
 Public roadmap for Tasaciones by Loxos. Work is grouped in tracks, ordered by
 impact. Each item should land as its own commit with `npm run check` green.
@@ -21,7 +21,6 @@ of work: pick from it with [How to pick the next item](#how-to-pick-the-next-ite
 
 | ID | Item | Status |
 |---|---|---|
-| P0 | **SII withholding is stale: 10.75 % is the 2020 rate.** Ley 21.133 steps it yearly; 2026 is **15.25 %**, 2027 16 %, 2028 17 %. Hardcoded in four places (`src/prompt/system-prompt.ts:431`, `skills/tasaciones/honorarios.md` ×3, `skills/tasaciones/verificar-consistencia.md:55`). Make it a dated table keyed by the boleta's year, not a constant, and add a test. Every fee figure the add-in has produced since launch is wrong by ~4.5 points. | Open, highest value |
 | P1 | **OpenRouter as a first-class provider.** Login row in `/login` + welcome overlay, default model (latest Claude Sonnet via `anthropic/claude-sonnet-*`, fallback `openrouter/auto`). Uses pi-ai's built-in `openrouter` registry (~250 models). | Shipped in code; needs Excel smoke |
 | P2 | **Excel Desktop smoke with OpenRouter** (Windows, then macOS): login, stream, `write_cells` round-trip, `/model` switching between OpenRouter models. | Open |
 | P3 | **Refresh Pi deps** (`pi-ai` / `pi-agent-core` are on `0.79.1`; npm has `1.x`). Follow `docs/architecture/model-updates.md` — the major bump needs an API review. | Open |
@@ -43,7 +42,7 @@ of work: pick from it with [How to pick the next item](#how-to-pick-the-next-ite
 
 | ID | Item |
 |---|---|
-| B1 | Audit the `DOMAIN_KNOWLEDGE` block in `src/prompt/system-prompt.ts`: 7 homologation factors, fee calculation (see P0), faja vial (DL 2.186), DFL 850. |
+| B1 | Audit the `DOMAIN_KNOWLEDGE` block in `src/prompt/system-prompt.ts`: 7 homologation factors, fee calculation (retención done; brackets per mandante are I6), faja vial (DL 2.186), DFL 850. |
 | B2 | Skills per sub-procedure under `skills/tasaciones/` (predio vs lote, escritura vs inscripción CBR, …), each with a worked example and common pitfalls. |
 | B3 | 3–5 anonymised historic workbooks as smoke fixtures. Candidates with a written audit to check against: Lanco Res-10 (3 lotes, 4 refs), Valdivia Res-55 (multi-lote with sub-lots 1-A…2-C), Las Cabras Res-174/175/181/182 (concesiones, 54 lotes across 4 resolutions). |
 | B4 | Jurisprudence block: CS Rol 31.423-2025 (fusion potential is not indemnisable; lucro cesante by lease needs proven continuity). Used to defend the report against a private counter-appraisal. |
@@ -150,7 +149,7 @@ Each is small on its own; together they are the reason the workbook exists.
 | I3 | DL 2.186 deadline calculator: 3 days to accept, 10 to constitute the commission, 30 to issue the report, extendable by 30. Art. 40 counting is Monday to Saturday, Sunday does not run, the first day is not counted. Surface the result in the workbook and in the sidebar. |
 | I4 | Atypical Vialidad lotes: inactive ROL, two lotes sharing one ROL, sitio eriazo in an agricultural zone, total expropriation, and very small fractions. |
 | I5 | Daño al resto for partial expropriation (DFL 850 Art. 38: actual patrimonial damage only). |
-| I6 | Fee calculation beyond P0: bracket table per mandante and per year (Vialidad changes annually, SERVIU follows its instructivo, SEC follows the resolution that created the commission), viáticos per real field day, distribution across commission members. |
+| I6 | Fee calculation beyond the retención table: bracket table per mandante and per year (Vialidad changes annually, SERVIU follows its instructivo, SEC follows the resolution that created the commission), viáticos per real field day, distribution across commission members. |
 | I7 | Plantations and fruit trees: the archive has a dedicated `PLANTILLAS-AGROECONOMICAS` family and a `valuador-frutales` agent. Scope what belongs in Excel versus what stays a document. |
 | I8 | Faja vial (DFL 850 Art. 24) — skill exists; add the arithmetic checks and a worked example to it. |
 | I9 | SEC electrical servitude — skill exists with 6 categories; add the resolution-citation checks from G10. |
@@ -221,9 +220,11 @@ owner authorising a provider.
 
 In order, stop at the first that applies:
 
-1. **A wrong number the add-in produces.** P0 today. A stale rate or a bad
-   formula propagates into signed legal documents and is worse than any missing
-   feature.
+1. **A wrong number the add-in produces.** None open today. A stale rate or a
+   bad formula propagates into signed legal documents and is worse than any
+   missing feature. The retención SII fix is the worked example: the rate was
+   right once and then silently wasn't, so prefer a dated table plus a lockstep
+   test over a constant.
 2. **Something shipped but unverified.** P1 → P2. Code that has never run in
    Excel Desktop is not shipped.
 3. **A blocker for a track you want to open.** F1/F2 gate G, H and I. Doing
@@ -269,6 +270,12 @@ addresses. No RUT, owner name, amount or ROL belongs in this public repo.
 
 ## Done
 
+- **SII withholding as a dated table.** `src/domain/retencion-sii.ts` keys the
+  rate to the boleta's commercial year (Ley 21.133: 10,75 % in 2020 → 15,25 %
+  in 2026 → 17 % from 2028), verified against the SII. Replaces the 10,75 %
+  constant in the system prompt, `honorarios`, `verificar-consistencia`,
+  `README.md` and `NOTICE.md`. `tests/retencion-sii.test.ts` pins the schedule
+  and fails if prompt or skill text quotes a rate outside it. Was P0.
 - Cuadro de referenciales tools: `audit_ref_errors`, `link_referenciales_cuadro` (`0f052da`).
 - Markdown transcript export (`a7e1daf`).
 - Preset provider framework (`src/auth/provider-presets.ts`).
