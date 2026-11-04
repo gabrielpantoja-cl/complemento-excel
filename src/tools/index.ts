@@ -23,6 +23,12 @@ export interface CreateAllToolsOptions {
   getExtensionManager?: () => ExtensionsManagerToolRuntime | null;
   getSessionId?: () => string | null;
   skillReadCache?: SkillReadCache;
+  /**
+   * Input modalities the active model declares (`Model.input`). `read_pdf`
+   * uses it to withhold page images from a text-only model instead of letting
+   * the provider reject them.
+   */
+  getActiveModelInput?: () => readonly string[] | undefined;
 }
 
 export function createAllTools(options: CreateAllToolsOptions = {}) {
@@ -40,7 +46,7 @@ export function createAllTools(options: CreateAllToolsOptions = {}) {
     createLibreOfficeConvertTool(),
     createPythonTransformRangeTool(),
     createFilesTool(),
-    createReadPdfTool(),
+    createReadPdfTool({ getActiveModelInput: options.getActiveModelInput }),
     createExecuteOfficeJsTool(),
     createExtensionsManagerTool({ getManager: getExtensionManager }),
   ];

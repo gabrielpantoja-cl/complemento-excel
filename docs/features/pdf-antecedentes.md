@@ -58,9 +58,13 @@ notarial layouts than a bundled Tesseract would.
 
 Consequences worth knowing:
 
-- **A text-only model cannot read scanned pages.** It will see the tool's text
-  summary ("rendered as image") and nothing else. Switch to a vision model —
-  the preset catalog marks these with `input: ["text", "image"]`.
+- **A text-only model cannot read scanned pages.** When the active model's
+  registry entry does not list `"image"` in `Model.input`, `read_pdf` renders
+  the pages but **withholds the image blocks** and says so in the result
+  (`details.imagesWithheld`), instead of letting the provider reject the
+  request with an opaque error. The model is told to ask the user to switch
+  with `/model`. If the modality is unknown, the images are sent and the
+  provider decides.
 - The system prompt instructs the model to **transcribe** the fields it needs
   (foja, número, año, fecha de escritura, ROL, monto, superficie) and to state
   which page each figure came from, before writing anything into the workbook.

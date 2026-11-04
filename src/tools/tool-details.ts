@@ -434,6 +434,8 @@ export interface ReadPdfDetails {
   textPageCount: number;
   imagePageCount: number;
   pages: ReadPdfPageDetails[];
+  /** True when page images were rendered but held back from a text-only model. */
+  imagesWithheld: boolean;
   notes: string[];
 }
 

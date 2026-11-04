@@ -268,6 +268,49 @@ void test("read_pdf returns one image content block per rasterised page", async 
   });
 });
 
+void test("read_pdf withholds page images from a text-only model and says why", async () => {
+  const engine = makeFakeEngine([{ text: "" }]);
+  const tool = createReadPdfTool({
+    openDocument: engine.opener,
+    getActiveModelInput: () => ["text"],
+  });
+
+  await withPdfInWorkspace("imports/scan.pdf", new Uint8Array([37, 80, 68, 70]), async () => {
+    const result = await tool.execute("call-4", { path: "imports/scan.pdf" });
+
+    assert.equal(result.content.filter((block) => block.type === "image").length, 0);
+    assert.equal(result.details.imagesWithheld, true);
+    // The page was still rendered, so the count reflects the work done; only
+    // the attachment is withheld.
+    assert.equal(result.details.imagePageCount, 1);
+    assert.ok(result.details.notes.some((note) => note.includes("does not accept image input")));
+    assert.ok(result.details.notes.some((note) => note.includes("/model")));
+  });
+});
+
+void test("read_pdf attaches page images for a vision model and when modality is unknown", async () => {
+  const bytes = new Uint8Array([37, 80, 68, 70]);
+
+  for (const getActiveModelInput of [
+    () => ["text", "image"],
+    () => undefined,
+    () => [],
+    () => {
+      throw new Error("registry unavailable");
+    },
+  ]) {
+    const engine = makeFakeEngine([{ text: "" }]);
+    const tool = createReadPdfTool({ openDocument: engine.opener, getActiveModelInput });
+
+    await withPdfInWorkspace("imports/scan.pdf", bytes, async () => {
+      const result = await tool.execute("call-5", { path: "imports/scan.pdf" });
+
+      assert.equal(result.content.filter((block) => block.type === "image").length, 1);
+      assert.equal(result.details.imagesWithheld, false);
+    });
+  }
+});
+
 void test("read_pdf refuses non-PDF paths and missing files", async () => {
   const engine = makeFakeEngine([{ text: PROSE }]);
   const tool = createReadPdfTool({ openDocument: engine.opener });

@@ -951,6 +951,7 @@ export async function initTaskpane(opts: {
         getExtensionManager: () => extensionManager,
         getSessionId: () => runtimeAgent?.sessionId ?? runtimeSessionId,
         skillReadCache: runtimeSkillReadCache,
+        getActiveModelInput: () => runtimeAgent?.state.model?.input,
       }).filter(isRuntimeAgentTool);
 
       const gatedCoreTools = await applyExperimentalToolGates(coreTools, {

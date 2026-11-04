@@ -99,6 +99,15 @@ const TOOL_AUDIT_CONTEXT: FilesWorkspaceAuditContext = {
 export interface ReadPdfToolDependencies {
   /** Overridable for tests; defaults to the lazily-loaded pdf.js engine. */
   openDocument?: PdfDocumentOpener;
+  /**
+   * Input modalities the active model accepts, as declared by the registry
+   * (`Model.input`). When it is known and excludes `"image"`, page images are
+   * withheld: sending them would fail at the provider with an opaque error,
+   * and the user needs to be told to switch models instead.
+   *
+   * Returning `undefined` means "unknown" and the images are sent.
+   */
+  getActiveModelInput?: () => readonly string[] | undefined;
 }
 
 async function defaultOpenDocument(bytes: Uint8Array) {
@@ -179,6 +188,7 @@ function buildDetails(args: {
   fileName: string;
   fileSize: number;
   result: PdfReadResult;
+  imagesWithheld: boolean;
 }): ReadPdfDetails {
   const { result } = args;
 
@@ -202,8 +212,29 @@ function buildDetails(args: {
       imageWidth: page.image?.width,
       imageHeight: page.image?.height,
     })),
+    imagesWithheld: args.imagesWithheld,
     notes: [...result.notes],
   };
+}
+
+/**
+ * `undefined` when the active model's modalities are unknown (send images and
+ * let the provider decide), otherwise whether it accepts image input.
+ */
+function resolveVisionSupport(
+  getActiveModelInput: (() => readonly string[] | undefined) | undefined,
+): boolean | undefined {
+  if (!getActiveModelInput) return undefined;
+
+  let input: readonly string[] | undefined;
+  try {
+    input = getActiveModelInput();
+  } catch {
+    return undefined;
+  }
+
+  if (!input || input.length === 0) return undefined;
+  return input.includes("image");
 }
 
 export function createReadPdfTool(
@@ -274,6 +305,22 @@ export function createReadPdfTool(
         signal,
       });
 
+      const supportsVision = resolveVisionSupport(dependencies.getActiveModelInput);
+      const withheldImages = supportsVision === false && result.imagePageCount > 0;
+
+      if (withheldImages) {
+        const pageList = result.pages
+          .filter((page) => page.outcome === "image")
+          .map((page) => page.pageNumber)
+          .join(", ");
+
+        result.notes.push(
+          `The active model does not accept image input, so ${result.imagePageCount} rendered `
+          + `page(s) (${pageList}) were NOT attached. Tell the user that reading this scan needs a `
+          + "vision-capable model and that they can switch with /model; do not guess at the content.",
+        );
+      }
+
       const content: (TextContent | ImageContent)[] = [{
         type: "text",
         text: renderMarkdown({
@@ -284,14 +331,16 @@ export function createReadPdfTool(
         }),
       }];
 
-      for (const page of result.pages) {
-        if (page.outcome !== "image" || !page.image) continue;
+      if (!withheldImages) {
+        for (const page of result.pages) {
+          if (page.outcome !== "image" || !page.image) continue;
 
-        content.push({
-          type: "image",
-          data: page.image.base64,
-          mimeType: page.image.mimeType,
-        });
+          content.push({
+            type: "image",
+            data: page.image.base64,
+            mimeType: page.image.mimeType,
+          });
+        }
       }
 
       return {
@@ -301,6 +350,7 @@ export function createReadPdfTool(
           fileName,
           fileSize: file.size,
           result,
+          imagesWithheld: withheldImages,
         }),
       };
     },
