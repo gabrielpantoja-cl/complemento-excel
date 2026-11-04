@@ -9,15 +9,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--alpha-25);
+  background: var(--dialog-scrim);
   backdrop-filter: var(--glass-blur-heavy);
   -webkit-backdrop-filter: var(--glass-blur-heavy);
 }
 
 .pi-welcome-card {
-  background: var(--glass-bg-solid);
+  background: var(--dialog-surface);
   border-radius: var(--radius-xl);
-  border: var(--glass-border);
+  border: var(--dialog-border);
   padding: 28px 24px;
   width: min(340px, 90vw);
   max-height: min(680px, 86vh);

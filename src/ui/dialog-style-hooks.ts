@@ -23,9 +23,19 @@ function applyModelSelectorItemHooks(item: HTMLElement): void {
   const metaRow = itemRows[1];
 
   if (topRow) {
+    topRow.classList.add("pi-model-selector-item-head");
+
     const modelId = topRow.querySelector<HTMLElement>("span");
     if (modelId) {
       modelId.classList.add("pi-model-selector-item-id");
+
+      // The sidebar is ~350px wide, so upstream's `truncate` hides the tail of
+      // long ids. CSS lets the id wrap; the native tooltip is the fallback for
+      // ids that still overflow two lines.
+      const fullId = modelId.textContent?.trim() ?? "";
+      if (fullId.length > 0 && modelId.title !== fullId) {
+        modelId.title = fullId;
+      }
     }
 
     const providerBadge = topRow.lastElementChild;

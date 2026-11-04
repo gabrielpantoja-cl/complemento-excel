@@ -264,6 +264,7 @@ export const AUXILIARY_UI_TOOL_NAMES = [
   "fetch_page",
   "mcp",
   "files",
+  "read_pdf",
   "python_transform_range",
   "execute_office_js",
 ] as const;
@@ -305,6 +306,7 @@ export const TOOL_UI_METADATA = {
   fetch_page: { renderer: true, humanizer: true },
   mcp: { renderer: true, humanizer: true },
   files: { renderer: true, humanizer: true },
+  read_pdf: { renderer: true, humanizer: true },
   python_transform_range: { renderer: true, humanizer: true },
   execute_office_js: { renderer: true, humanizer: true },
 } as const satisfies Record<UiToolName, ToolUiMetadata>;

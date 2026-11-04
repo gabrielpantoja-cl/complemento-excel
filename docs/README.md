@@ -21,6 +21,7 @@ This folder contains **current** docs that should match shipped behavior. Top-le
 - [Compaction (`/compact`)](./features/compaction.md)
 - [Manual full-workbook backups (`/backup`)](./features/manual-full-backups.md)
 - [Files workspace](./features/files-workspace.md)
+- [PDF antecedentes (`read_pdf`)](./features/pdf-antecedentes.md) — text layer vs scanned pages, the decision rule, budgets
 
 ## Architecture & policy
 - [Upstream divergences from pi-mono](./architecture/upstream-divergences.md)

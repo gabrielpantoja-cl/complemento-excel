@@ -145,6 +145,14 @@
   --glass-shadow-lg: 0 12px 40px var(--alpha-10), 0 2px 6px var(--alpha-6);
   /* Border: subtle, semi-transparent */
   --glass-border: 1px solid var(--white-alpha-50);
+
+  /* ── Modal dialog surface ───────────────────────────── */
+  /* Opaque on purpose: chat text behind a dialog must never show
+     through it (contrast). Scrim is darker than --alpha-25 so the
+     dialog edge reads even when backdrop-filter is unsupported. */
+  --dialog-surface: oklch(0.995 0.002 90);
+  --dialog-border: 1px solid var(--alpha-10);
+  --dialog-scrim: oklch(0.22 0.01 260 / 0.42);
 }
 
 .dark {
@@ -209,4 +217,8 @@
   --glass-shadow: 0 3px 10px oklch(0 0 0 / 0.35), 0 1px 0 oklch(0 0 0 / 0.2);
   --glass-shadow-lg: 0 16px 44px oklch(0 0 0 / 0.45), 0 4px 10px oklch(0 0 0 / 0.3);
   --glass-border: 1px solid oklch(1 0 0 / 0.14);
+
+  --dialog-surface: oklch(0.215 0.014 260);
+  --dialog-border: 1px solid oklch(1 0 0 / 0.14);
+  --dialog-scrim: oklch(0 0 0 / 0.6);
 }

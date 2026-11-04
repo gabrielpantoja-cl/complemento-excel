@@ -205,6 +205,35 @@ just watch the chain burn down.
 
 ---
 
+## 8. PDF intake: `read_pdf` instead of `extract_document`
+
+| | pi-mono / pi-web-ui | Tasaciones |
+|---|---|---|
+| PDF tool | `extract_document`, via `loadAttachment()` | `read_pdf`, reading from the files workspace |
+| Scanned page (no text layer) | Returns an empty string | Rasterised and returned as an image content block |
+| Bundled deps | `pdfjs-dist` + `docx-preview` + `xlsx`, eager | `pdfjs-dist` only, dynamic `import()` |
+
+**Rationale:** upstream's extractor reads the PDF text layer and nothing else.
+For this fork's inputs that is the wrong half of the problem: resoluciones
+exentas, copias de inscripción del CBR and certificados de avalúo frequently
+arrive as scans, where the text layer is empty or is a stray page number. The
+fork therefore keeps the upstream attachment stack stubbed out (it also drags in
+DOCX/XLSX parsers the add-in never needs) and ships a tool that decides per page
+whether the text layer is usable, and rasterises the page for a vision model
+when it is not. Tool results already support `ImageContent`, so no change to the
+message pipeline was needed.
+
+The attachment-utils / AttachmentOverlay / extract-document stubs in
+`src/stubs/` and the Vite `stub-pi-web-ui-builtin-tools` plugin stay as they
+are.
+
+**Files:** `src/documents/pdf-policy.ts` (the decision rule),
+`src/documents/pdf-source.ts`, `src/documents/pdf-read.ts`,
+`src/documents/pdf-engine.ts` (pdf.js, lazy), `src/tools/read-pdf.ts`.
+Documented in [PDF antecedentes](../features/pdf-antecedentes.md).
+
+---
+
 ## Non-divergences worth noting
 
 ### Compaction call shape

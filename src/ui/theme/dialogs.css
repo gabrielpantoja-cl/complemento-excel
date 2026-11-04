@@ -6,7 +6,7 @@
 /* ── Shared backdrop + card ── */
 
 .pi-dialog-backdrop {
-  background: var(--alpha-25);
+  background: var(--dialog-scrim);
   backdrop-filter: var(--glass-blur-heavy);
   -webkit-backdrop-filter: var(--glass-blur-heavy);
 }
@@ -19,8 +19,8 @@
   width: min(340px, 92vw) !important;
   border-radius: var(--radius-xl);
   box-shadow: var(--glass-shadow-lg);
-  border: var(--glass-border);
-  background: var(--glass-bg-solid);
+  border: var(--dialog-border);
+  background: var(--dialog-surface);
 }
 
 .pi-dialog-close {
@@ -86,17 +86,35 @@ agent-model-selector .pi-model-selector-item--selected {
   background: var(--pi-green-lighter);
 }
 
-/* Model ID — our mono font */
+/* Model ID row — top-align so a wrapped id keeps the badge on line 1 */
+agent-model-selector .pi-model-selector-item-head {
+  align-items: flex-start;
+}
+
+/*
+ * Model ID — our mono font, and wrapped instead of truncated.
+ * Upstream ModelSelector marks the id `truncate`; at sidebar width that cuts
+ * off ids like `nvidia/nemotron-3.5-lightning-free`. Unlayered rules beat
+ * Tailwind's layered utilities, so this undoes `truncate` without !important.
+ * dialog-style-hooks.ts also sets title="<full id>" as a hover fallback.
+ */
 agent-model-selector .pi-model-selector-item-id {
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   font-weight: 500;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
 }
 
 /* Provider badge — subtle tinted pill instead of stark outline */
 agent-model-selector .pi-model-selector-item-provider {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
+  flex-shrink: 0;
+  white-space: nowrap;
   border-color: var(--alpha-6);
   background: var(--alpha-3);
   border-radius: var(--radius-xs);

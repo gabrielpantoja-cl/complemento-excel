@@ -39,6 +39,8 @@ Use this as the default expectation map when reviewing context-shape changes.
 | Extension add/remove tool (schema delta) | includes `"tools"` | Tool schema changed. |
 | Extension handler hot-reload with same schema | `[]` | #444 uses extension tool revision tracking so handler swaps still refresh runtime tools while schema-stable prefixes remain unchanged. |
 | Extension `llm.complete` side call | Main runtime session: `[]` | Side completions use an extension-scoped session key, so prefix churn is isolated from the primary runtime session. |
+| Build adds or removes a built-in tool (e.g. `read_pdf`) | First call after the deploy: `["systemPrompt", "tools"]`, then `[]` | One-off: both the documented tool list and the tool schemas move. Later turns must settle back to `[]` — the tool is registered unconditionally and its schema has no volatile fields. |
+| `read_pdf` call returning page images | `[]` | Page images ride in the message tail as tool-result content; the static prefix is untouched. |
 
 ## Investigation rules
 

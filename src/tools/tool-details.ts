@@ -400,6 +400,43 @@ export type FilesToolDetails =
   | FilesWriteDetails
   | FilesDeleteDetails;
 
+export type ReadPdfPageDecision = "text" | "image";
+
+export type ReadPdfPageOutcome =
+  | "text"
+  | "image"
+  | "text_budget_exhausted"
+  | "image_budget_exhausted";
+
+export interface ReadPdfPageDetails {
+  pageNumber: number;
+  /** Meaningful characters found in the page's text layer. */
+  charCount: number;
+  /** What the text-layer decision rule concluded. */
+  decision: ReadPdfPageDecision;
+  /** What was actually returned for the page. */
+  outcome: ReadPdfPageOutcome;
+  imageWidth?: number;
+  imageHeight?: number;
+}
+
+export interface ReadPdfDetails {
+  kind: "read_pdf";
+  path: string;
+  fileName: string;
+  fileSize: number;
+  pageCount: number;
+  mode: "auto" | "text" | "images";
+  classification: "text" | "scanned" | "mixed" | "empty";
+  /** Threshold, in meaningful characters per page, that was applied. */
+  minTextChars: number;
+  inspectedPages: number[];
+  textPageCount: number;
+  imagePageCount: number;
+  pages: ReadPdfPageDetails[];
+  notes: string[];
+}
+
 export type ExcelToolDetails =
   | WriteCellsDetails
   | FillFormulaDetails
@@ -421,6 +458,7 @@ export type ExcelToolDetails =
   | FetchPageDetails
   | McpGatewayDetails
   | FilesToolDetails
+  | ReadPdfDetails
   | ConnectionToolErrorDetails;
 
 export type BridgeGateErrorDetails =

@@ -26,6 +26,7 @@ of work: pick from it with [How to pick the next item](#how-to-pick-the-next-ite
 | P3 | **Refresh Pi deps** (`pi-ai` / `pi-agent-core` are on `0.79.1`; npm has `1.x`). Follow `docs/architecture/model-updates.md` — the major bump needs an API review. **The live `pi-ai` dependency is actively causing conflicts** (see C8): it is the hub of the transitive tree, pinned tree-wide by the `overrides` entry `"@earendil-works/pi-ai": "$@earendil-works/pi-ai"` and guarded by `check:pi-lockstep`, so its resolution decides the versions of `zod`, `@anthropic-ai/sdk`, `@google/genai` → `@modelcontextprotocol/sdk`, `openai` and `@mistralai/mistralai` all at once. **Being worked in a separate session — do not bump Pi deps from here without syncing first**, or the two sessions will fight over `package-lock.json`. | In progress elsewhere |
 | P4 | **Fix the 31 skipped tests** from `faf30ec` (Windows path bug, docs restructure, truncation format drift). | Open |
 | P5 | **Template map (F1).** Nothing in F–M can be built reliably until the add-in knows the sheets of the master workbook by name. Cheap, unblocks a whole track. | Open |
+| P6 | **Excel smoke for `read_pdf`** (H2/H7, shipped 2026-11-04): import a real scanned resolución, confirm pdf.js boots inside the WebView (worker loads from `/assets`, no CSP violation in F12), confirm page images reach a vision model and that a text-only model degrades with a readable message instead of a provider error. Until this runs, the scanned path is code-complete and unverified — the same category as P1/P2. | Open |
 
 ## Track A — Providers
 
@@ -58,8 +59,8 @@ of work: pick from it with [How to pick the next item](#how-to-pick-the-next-ite
 | C4 | Optional "confirm before mutating" for writes outside the active sheet or > 50 cells. |
 | C5 | Undo journal: a per-session list of every cell the add-in wrote, with previous value, and a `/revert` command. The master workbook is the signed legal deliverable; Excel's own undo stack does not survive a reload of the taskpane. |
 | C6 | Dry-run mode for the cascade tools (F4, G6): report the cell list it would touch, write nothing. |
-| C7 | **Dependency audit gate blocks every push that touches `package.json`.** `npm run audit:ci` fails with **72 advisories outside the `audit-ci.jsonc` allowlist**, ~8 of them critical: Handlebars JS injection ×3 (`GHSA-8r5x-fm3f-whwj`, `GHSA-p8wg-vrv2-v86f`, `GHSA-xw65-4hp5-5hc7`), `proxy-addr` IP spoofing (`GHSA-jqcg-44mw-7w3h`), `shell-quote` command injection (`GHSA-pqg4-j6r4-53mv`), `node-tar` DoS (`GHSA-23hp-3jrh-7fpw`), `node-forge` signature verification (`GHSA-86w9-cpqp-85rv`), `source-map-js` event-loop DoS (`GHSA-68fv-2mgg-jv7q`). The 31 existing allowlist entries expire 2026-12-31, so that wave needs re-triage in the same pass. Triage question per advisory: reachable from the Office WebView bundle, or dev-tooling only? Most of the volume is `office-addin-*` and `@modelcontextprotocol/sdk` transitives, i.e. the second. Until this is done `.githooks/pre-push` fires on any manifest change and the only way through is `git push --no-verify`. Overlaps P3: much of it should resolve with the Pi bump. Found 2026-11-04. |
-| C8 | **`npm run build` is red independently of any source change.** `node_modules/zod/v4/core` does not exist, so `node_modules/zod/v4/classic/external.js` cannot resolve `../core/index.js` — 5 `UNRESOLVED_IMPORT` errors, build exits 1. Confirmed pre-existing by stashing all local work and building at `3fcefe7`: identical failure. `npm install` does **not** repair it, and leaves `package-lock.json` untouched. The tree carries two `zod` majors: `4.3.6` deduped at the root (via `pi-ai` → `@anthropic-ai/sdk`, `@google/genai`, `openai`, `@mistralai/mistralai`) and `3.25.76` nested under `pi-web-ui@0.75.3` → `@lmstudio/sdk`. Try `rm -rf node_modules && npm ci` first; if the `v4/core` subpath is genuinely absent from the published `zod@4.3.6`, the fix belongs to P3 and not here. Note the consequence: the `npm run build` step AGENTS.md requires after an import change cannot pass right now, so a verification run that reports build as green is reporting wrongly. Found 2026-11-04. |
+| C7 | **Dependency audit gate blocks every push that touches `package.json`.** `npm run audit:ci` fails with **72 advisories outside the `audit-ci.jsonc` allowlist**, ~8 of them critical: Handlebars JS injection ×3 (`GHSA-8r5x-fm3f-whwj`, `GHSA-p8wg-vrv2-v86f`, `GHSA-xw65-4hp5-5hc7`), `proxy-addr` IP spoofing (`GHSA-jqcg-44mw-7w3h`), `shell-quote` command injection (`GHSA-pqg4-j6r4-53mv`), `node-tar` DoS (`GHSA-23hp-3jrh-7fpw`), `node-forge` signature verification (`GHSA-86w9-cpqp-85rv`), `source-map-js` event-loop DoS (`GHSA-68fv-2mgg-jv7q`). The 31 existing allowlist entries expire 2026-12-31, so that wave needs re-triage in the same pass. Triage question per advisory: reachable from the Office WebView bundle, or dev-tooling only? Most of the volume is `office-addin-*` and `@modelcontextprotocol/sdk` transitives, i.e. the second. Until this is done `.githooks/pre-push` fires on any manifest change and the only way through is `git push --no-verify`. Overlaps P3: much of it should resolve with the Pi bump. Found 2026-11-04. **2026-11-04:** the `read_pdf` work added `pdfjs-dist` to `dependencies`, so this gate now fires on that commit too; `git push --no-verify` is the only way through until the triage happens. |
+| ~~C8~~ | **`npm run build` was red independently of any source change — resolved 2026-11-04, no longer reproduces.** The failure was 5 `UNRESOLVED_IMPORT` errors because `node_modules/zod/v4/core` was absent, so `zod/v4/classic/external.js` could not resolve `../core/index.js`. It is present now at `zod@4.3.6` and the build is green at `8f56426` (4.9 MB `dist/`, only the pre-existing `INEFFECTIVE_DYNAMIC_IMPORT` and >500 kB chunk warnings). What repaired the tree was not captured. Keep the diagnosis: the tree carries two `zod` majors — `4.3.6` deduped at the root (via `pi-ai` → `@anthropic-ai/sdk`, `@google/genai`, `openai`, `@mistralai/mistralai`) and `3.25.76` nested under `pi-web-ui@0.75.3` → `@lmstudio/sdk` — so if it returns, run `rm -rf node_modules && npm ci`, attach `npm ls zod`, and re-open this item against P3. |
 
 ## Track D — Improvement loop
 
@@ -129,15 +130,22 @@ project. Extracting it is a skill (`extract-cbr`) and a command
 (`/tabla-referenciales`) on the operator's side, producing Markdown that is then
 retyped into Excel. The add-in is the natural place to land the extraction.
 
+**Since 2026-11-04 the add-in can read the PDFs** (H2/H7, `read_pdf`: text layer
+where it is usable, page images for scans). What is still missing is the part
+after reading — turning a page into typed rows in the right sheet. H1 and H3 are
+now the gating items for this track, and they are no longer blocked on intake.
+
 | ID | Item |
 |---|---|
 | H1 | CBR extraction: foja (keeping the `v` for *vuelta*), número, año, **fecha de escritura distinguished from fecha de inscripción**, ROL, monto UF and CLP, surface normalised to m², comprador, vendedor. Write directly to the `referenciales` sheet. |
-| H2 | OCR path for resoluciones and cuadros that arrive scanned with no text layer, including the decision rule for when native extraction is enough. |
+| ~~H2~~ | ~~OCR path for resoluciones and cuadros that arrive scanned with no text layer, including the decision rule for when native extraction is enough.~~ **Shipped 2026-11-04** — see Done. Smoke pending as P6. |
 | H3 | Parse the resolución exenta and pre-load the lote table (ROL, propietario, superficie, obra, expediente) so a new peritaje starts with the identity block filled. |
 | H4 | Coordinates by ROL from the SII Cartografía Digital, plus the destino predial code. Note the ROL splits into comuna / manzana / predio as three separate fields; the combined form is rejected. Feeds the KML for the field visit. |
 | H5 | Internet offers: apply the 12 % discount, and require a verifiable publication date. Real case: Lanco Ref. 4 was dated 03-ago-2026 in the workbook while the listing read "Fecha Publicación 11/08/2026" — a blocking finding that survived three revisions. |
 | H6 | SII assessment certificate: read the ROL status and surface *with its date*. A ROL in "Subdivisión Parcial" means historic surfaces describe the original fundo. Real case: Buin Res. 444 used a historic 234,75 ha against a certified 28,65 ha and understated the expropriation percentage eightfold. |
-| H7 | Attachment intake in the sidebar: drop a PDF on the taskpane and route it to the right extractor. Depends on the bridge story (python-bridge or a hosted endpoint); scope it before committing. |
+| ~~H7~~ | ~~Attachment intake in the sidebar: drop a PDF on the taskpane and route it to the right extractor.~~ **Shipped 2026-11-04.** Scoping answer: no bridge and no hosted endpoint. Drop → files workspace → auto-context names the file → `read_pdf`. The extraction runs in the WebView (pdf.js, lazy-loaded) and transcription runs in the model. |
+| H8 | Per-document-family extraction confidence. `read_pdf` hands the model a page image and trusts the transcription; nothing checks it. The cheapest guard is a round-trip: after transcribing a CBR copy, re-read the same page with a narrower `pages` and compare the fields. Decide whether that is worth a tool or belongs in the `extract-cbr` skill text. |
+| H9 | Resolve the JPEG 2000 (JPX) gap in `read_pdf`: pages with JPX images need pdf.js's OpenJPEG WASM decoder, which the taskpane CSP (no `wasm-unsafe-eval`) does not allow today. Rare in Chilean notarial scans, but it fails as a blank page rather than an error. Options: add `wasm-unsafe-eval` to the taskpane CSP and ship `pdfjs-dist/wasm/`, or detect the condition and say so. Check whether Pyodide already depends on the same CSP relaxation before deciding. |
 
 ## Track I — Calculation and methodology
 
@@ -227,7 +235,7 @@ In order, stop at the first that applies:
    missing feature. The retención SII fix is the worked example: the rate was
    right once and then silently wasn't, so prefer a dated table plus a lockstep
    test over a constant.
-2. **Something shipped but unverified.** P1 → P2. Code that has never run in
+2. **Something shipped but unverified.** P1 → P2, then P6. Code that has never run in
    Excel Desktop is not shipped.
 3. **A blocker for a track you want to open.** F1/F2 gate G, H and I. Doing
    them out of order means rewriting.
@@ -272,6 +280,23 @@ addresses. No RUT, owner name, amount or ROL belongs in this public repo.
 
 ## Done
 
+- **PDF antecedentes, scans included (`read_pdf`).** Closes H2 and H7. A PDF
+  dropped on the chat input lands in the files workspace, is named in
+  auto-context, and is read by a tool that decides **per page** whether the
+  pdf.js text layer is usable (≥ 120 meaningful characters) or the page has to
+  be rasterised and returned as an image content block for a vision model to
+  transcribe. That is the OCR path: no OCR engine in the bundle, the model does
+  the reading. `pdfjs-dist` is loaded with a dynamic `import()`, so the boot
+  chunk is unchanged and the ~400 kB library plus its ~1 MB worker only
+  download on the first call. Budgets are capped per call (40 pages, 4 page
+  images, 20 000 chars, ~4 MB of images, 40 MB per file) and every cap reports
+  the pages still missing. Decision rule in `src/documents/pdf-policy.ts`
+  (24 unit tests across `tests/pdf-policy.test.ts` and
+  `tests/read-pdf-tool.test.ts`, the latter driving the orchestrator against a
+  fake engine so it runs without a WebView). Documented in
+  [PDF antecedentes](./features/pdf-antecedentes.md) and as divergence 8 in
+  [upstream divergences](./architecture/upstream-divergences.md). **Excel smoke
+  is still pending — tracked as P6.**
 - **SII withholding as a dated table.** `src/domain/retencion-sii.ts` keys the
   rate to the boleta's commercial year (Ley 21.133: 10,75 % in 2020 → 15,25 %
   in 2026 → 17 % from 2028), verified against the SII. Replaces the 10,75 %

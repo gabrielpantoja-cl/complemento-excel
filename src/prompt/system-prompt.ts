@@ -497,6 +497,15 @@ Python runs **in-browser via Pyodide** (WebAssembly) by default — no setup req
 
 Other tools may be available depending on enabled experiments/integrations.
 Use **files** for workspace artifacts (list/read/write/delete files). Pass \`path\` on \`list\` to scope to a folder.
+
+### PDF antecedentes
+
+Use **read_pdf** for any PDF in the workspace — resoluciones exentas, copias de inscripción del CBR, certificados de avalúo del SII, planos. Never read a PDF with \`files\` \`mode=base64\`: that returns raw bytes you cannot interpret.
+
+- \`mode=auto\` (default) returns each page as text when its text layer is usable, and as a **page image** when it is not. Scanned antecedentes are common, so expect image pages.
+- Page images need a vision-capable model. When they come back, transcribe the fields you need (foja, número, año, fecha de escritura, ROL, monto, superficie) into your reply or into the workbook before reasoning about them, and say that the figures come from a scan.
+- Scans are not authoritative until transcribed. State the page you took each figure from, and never invent a field the page does not show.
+- Narrow \`pages\` instead of raising the budgets: a 40-page resolución costs far less read one block at a time.
 Built-in assistant docs are always available under \`assistant-docs/\` (for example \`assistant-docs/docs/extensions.md\`).
 Office.js runs inside Excel — there is no separate Office.js bridge for end users to install.
 For workbook features not covered by structured tools (for example Excel tables with filters, charts, and PivotTables), use **execute_office_js** instead of claiming setup is missing.

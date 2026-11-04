@@ -18,6 +18,7 @@ Brand colours, display name (`Tasaciones`), and add-in metadata live in `manifes
 - UI/CSS architecture: `src/ui/README.md` (Tailwind v4 `@layer` gotcha)
 - Upstream divergences: `docs/architecture/upstream-divergences.md`
 - Docs index: `docs/README.md`
+- PDF intake (`read_pdf`, text layer vs scan, pdf.js under the Office CSP): `docs/features/pdf-antecedentes.md`
 - Model registry freshness: `docs/architecture/model-updates.md` (if **Last verified** > 1 week, refresh Pi deps + re-verify model IDs before model UX changes)
 - OpenCode per-project agents/commands: `.opencode/README.md` (custom `@qa-excel`, `@perito`, `@release-manager` agents and `/audit-cuadro`, `/bump-version`, `/check-prompt-cache` commands -- read before adding new ones to avoid the deferred-list anti-patterns documented there)
 

@@ -876,6 +876,37 @@ function humanizeFiles(p: Record<string, unknown>): ParamItem[] {
   return items;
 }
 
+function humanizeReadPdf(p: Record<string, unknown>): ParamItem[] {
+  const items: ParamItem[] = [];
+
+  if (p.path) {
+    items.push({ label: "File", value: str(p.path) });
+  }
+
+  items.push({ label: "Pages", value: p.pages ? str(p.pages) : "All" });
+
+  if (p.mode) {
+    items.push({ label: "Mode", value: str(p.mode) });
+  }
+
+  const maxImagePages = num(p.max_image_pages);
+  if (maxImagePages !== undefined) {
+    items.push({ label: "Max page images", value: String(maxImagePages) });
+  }
+
+  const maxChars = num(p.max_chars);
+  if (maxChars !== undefined) {
+    items.push({ label: "Max chars", value: String(maxChars) });
+  }
+
+  const imageMaxEdge = num(p.image_max_edge);
+  if (imageMaxEdge !== undefined) {
+    items.push({ label: "Image max edge", value: `${imageMaxEdge} px` });
+  }
+
+  return items;
+}
+
 function humanizePythonTransformRange(p: Record<string, unknown>): ParamItem[] {
   const items: ParamItem[] = [];
 
@@ -1011,6 +1042,7 @@ const EXTRA_HUMANIZERS = {
   fetch_page: humanizeFetchPage,
   mcp: humanizeMcp,
   files: humanizeFiles,
+  read_pdf: humanizeReadPdf,
   python_transform_range: humanizePythonTransformRange,
   execute_office_js: humanizeExecuteOfficeJs,
 } satisfies Record<AuxiliaryUiToolName, HumanizerFn>;
