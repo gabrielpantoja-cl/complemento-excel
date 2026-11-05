@@ -18,6 +18,7 @@ import {
 } from "../auth/provider-presets.js";
 import {
   PROXY_HELPER_DOCS_URL,
+  PROXY_START_COMMAND,
   probeProxyReachability,
   resolveConfiguredProxyUrl,
 } from "../auth/proxy-validation.js";
@@ -68,8 +69,8 @@ function showProxyGateDialog(): Promise<boolean> {
     message.className = "pi-prompt-message";
     message.style.lineHeight = "1.5";
     message.textContent =
-      "This login method needs a small helper running on your Mac. " +
-      "Open the Terminal app and paste this command:";
+      "This login method needs a small helper running on your computer. " +
+      "Open a terminal in your clone of the repo and paste this command:";
 
     const codeRow = document.createElement("div");
     codeRow.style.cssText = "display:flex;align-items:center;gap:8px;margin:12px 0;";
@@ -79,14 +80,14 @@ function showProxyGateDialog(): Promise<boolean> {
       "flex:1;padding:8px 10px;border-radius:6px;" +
       "background:var(--pi-code-bg, #1e1e1e);color:var(--pi-code-fg, #d4d4d4);" +
       "font-size:13px;font-family:var(--pi-monospace, monospace);user-select:all;";
-    codeEl.textContent = "npx tasaciones-proxy";
+    codeEl.textContent = PROXY_START_COMMAND;
 
     const copyBtn = document.createElement("button");
     copyBtn.type = "button";
     copyBtn.textContent = "Copy";
     copyBtn.style.cssText = "padding:6px 12px;border-radius:6px;font-size:13px;cursor:pointer;";
     copyBtn.addEventListener("click", () => {
-      void navigator.clipboard.writeText("npx tasaciones-proxy").then(() => {
+      void navigator.clipboard.writeText(PROXY_START_COMMAND).then(() => {
         copyBtn.textContent = "Copied!";
         setTimeout(() => { copyBtn.textContent = "Copy"; }, 1500);
       });
@@ -98,7 +99,7 @@ function showProxyGateDialog(): Promise<boolean> {
     hint.className = "pi-prompt-helper";
     hint.style.lineHeight = "1.5";
     hint.innerHTML =
-      "Wait until you see <strong>&ldquo;Proxy listening&rdquo;</strong> in Terminal, then click <strong>Retry</strong>. " +
+      "Wait until you see <strong>&ldquo;CORS proxy listening&rdquo;</strong> in the terminal, then click <strong>Retry</strong>. " +
       `<a href="${PROXY_HELPER_DOCS_URL}" target="_blank" rel="noopener noreferrer">Step-by-step guide &rarr;</a>`;
 
     const actions = document.createElement("div");
@@ -786,10 +787,10 @@ export function buildProviderRow(
 
           if (isLikelyCors) {
             errorEl.innerHTML =
-              "Login couldn't connect — this provider needs a helper running on your Mac. " +
-              "Open Terminal and run: <code style=\"padding:2px 5px;border-radius:4px;" +
+              "Login couldn't connect — this provider needs a helper running on your computer. " +
+              "Open a terminal in your repo clone and run: <code style=\"padding:2px 5px;border-radius:4px;" +
               "background:var(--pi-code-bg, #1e1e1e);color:var(--pi-code-fg, #d4d4d4)\">" +
-              "npx tasaciones-proxy</code>, then try again. " +
+              `${PROXY_START_COMMAND}</code>, then try again. ` +
               `<a href="${PROXY_HELPER_DOCS_URL}" target="_blank" rel="noopener noreferrer">Step-by-step guide →</a>`;
           } else {
             errorEl.textContent = msg || "Login failed";

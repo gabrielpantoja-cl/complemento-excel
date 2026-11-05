@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { PROXY_START_COMMAND } from "../src/auth/proxy-validation.ts";
+
 import { createFetchPageTool } from "../src/tools/fetch-page.ts";
 
 void test("fetch_page returns readable content and metadata", async () => {
@@ -80,7 +82,7 @@ void test("fetch_page reports proxy-down error when proxy is unreachable", async
   const text = result.content[0]?.type === "text" ? result.content[0].text : "";
 
   assert.ok(text.includes("local CORS proxy is not running"));
-  assert.ok(text.includes("npx tasaciones-proxy"));
+  assert.ok(text.includes(PROXY_START_COMMAND));
   assert.ok(text.includes("Do not retry"));
 
   const details = result.details as { ok?: boolean; proxyDown?: boolean; error?: string };

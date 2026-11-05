@@ -5,10 +5,11 @@
  * unavailable. Expands inline with quick setup guidance.
  */
 
+import { PROXY_HELPER_DOCS_URL, PROXY_START_COMMAND } from "../auth/proxy-validation.js";
 import { AlertTriangle, Check, Copy, lucide } from "./lucide-icons.js";
 
-const PROXY_COMMAND = "npx tasaciones-proxy";
-const INSTALL_GUIDE_URL = "https://pi.dev/excel#connect";
+const PROXY_COMMAND = PROXY_START_COMMAND;
+const INSTALL_GUIDE_URL = PROXY_HELPER_DOCS_URL;
 
 export type ProxyBannerState = "detected" | "not-detected" | "unknown";
 
@@ -60,7 +61,8 @@ export function createProxyBanner(): ProxyBannerHandle {
 
   const detailsIntro = document.createElement("p");
   detailsIntro.className = "pi-proxy-banner__details-text";
-  detailsIntro.textContent = "Run this command in a terminal and keep that window open:";
+  detailsIntro.textContent =
+    "Run this command from your clone of the repo and keep that window open:";
 
   const codeRow = document.createElement("div");
   codeRow.className = "pi-proxy-banner__code";
@@ -115,14 +117,15 @@ export function createProxyBanner(): ProxyBannerHandle {
 
   const hint = document.createElement("p");
   hint.className = "pi-proxy-banner__hint";
-  hint.textContent = "Open Terminal · paste · press Enter · type y and Enter if prompted · leave open";
+  hint.textContent =
+    "Run it in the repo folder · leave the terminal open · needs key.pem and cert.pem at the repo root (mkcert localhost)";
 
   const guideLink = document.createElement("a");
   guideLink.className = "pi-proxy-banner__link";
   guideLink.href = INSTALL_GUIDE_URL;
   guideLink.target = "_blank";
   guideLink.rel = "noopener noreferrer";
-  guideLink.textContent = "No Node.js? See install guide →";
+  guideLink.textContent = "See proxy setup guide →";
 
   details.append(detailsIntro, codeRow, hint, guideLink);
 

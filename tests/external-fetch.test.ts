@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { PROXY_START_COMMAND } from "../src/auth/proxy-validation.ts";
+
 import {
   buildProxyDownErrorMessage,
   getEnabledProxyBaseUrl,
@@ -107,7 +109,7 @@ void test("isLikelyProxyConnectionError returns false for upstream messages that
 void test("buildProxyDownErrorMessage includes tool label, fix command, and original error", () => {
   const message = buildProxyDownErrorMessage("Web search", "Load failed");
   assert.ok(message.startsWith("Error: Web search failed"));
-  assert.ok(message.includes("npx tasaciones-proxy"));
+  assert.ok(message.includes(PROXY_START_COMMAND));
   assert.ok(message.includes("Do not retry"));
   assert.ok(message.includes("Load failed"));
 });

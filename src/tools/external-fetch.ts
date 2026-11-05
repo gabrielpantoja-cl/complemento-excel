@@ -5,6 +5,7 @@
 
 import {
   DEFAULT_LOCAL_PROXY_URL,
+  PROXY_START_COMMAND,
   validateOfficeProxyUrl,
 } from "../auth/proxy-validation.js";
 
@@ -71,8 +72,6 @@ export function resolveOutboundRequestUrl(args: {
 }
 
 /* ── Proxy-down error detection ─────────────────────────────── */
-
-const PROXY_START_COMMAND = "npx tasaciones-proxy";
 
 /**
  * Common transport-level errors emitted when the app cannot connect to the

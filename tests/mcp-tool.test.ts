@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { PROXY_START_COMMAND } from "../src/auth/proxy-validation.ts";
+
 import { createMcpTool } from "../src/tools/mcp.ts";
 
 const TEST_SERVER = {
@@ -194,7 +196,7 @@ void test("mcp reports proxy-down error when proxy transport is unreachable", as
   const text = result.content[0]?.type === "text" ? result.content[0].text : "";
 
   assert.match(text, /local CORS proxy is not running/i);
-  assert.match(text, /npx tasaciones-proxy/i);
+  assert.ok(text.includes(PROXY_START_COMMAND));
   assert.match(text, /Do not retry/i);
 
   const details = result.details as {

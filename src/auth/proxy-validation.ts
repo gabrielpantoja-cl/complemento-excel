@@ -16,6 +16,20 @@ export const DEFAULT_LOCAL_PROXY_URL = "https://localhost:3003";
  */
 export const PROXY_REACHABILITY_TARGET_URL = "https://github.com";
 
+/**
+ * Command shown to the user when the local proxy is not reachable.
+ *
+ * Single source of truth — the proxy banner, the OAuth login overlay and the
+ * external-fetch error path all surface this string, and they drifted out of
+ * sync before. Keep it in step with the `proxy:https` script in package.json.
+ *
+ * This fork has no published npm package, so there is no `npx` one-liner: the
+ * helper lives at scripts/cors-proxy-server.mjs and runs from a repo clone.
+ * HTTPS is required because the taskpane is served over HTTPS and Office
+ * webviews block mixed content (see the note at the top of this file).
+ */
+export const PROXY_START_COMMAND = "npm run proxy:https";
+
 export const PROXY_HELPER_DOCS_URL =
   "https://github.com/tmustier/pi-for-excel/blob/main/docs/install.md#oauth-logins-and-cors-proxy";
 

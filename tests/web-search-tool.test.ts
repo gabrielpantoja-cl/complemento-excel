@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { PROXY_START_COMMAND } from "../src/auth/proxy-validation.ts";
+
 import { createWebSearchTool } from "../src/tools/web-search.ts";
 
 void test("web_search falls back to Jina when key-required provider is missing an API key and Jina key exists", async () => {
@@ -325,7 +327,7 @@ void test("web_search reports proxy-down error when proxy is unreachable", async
   const text = result.content[0];
   assert.equal(text.type, "text");
   assert.ok((text as { text: string }).text.includes("local CORS proxy is not running"));
-  assert.ok((text as { text: string }).text.includes("npx tasaciones-proxy"));
+  assert.ok((text as { text: string }).text.includes(PROXY_START_COMMAND));
   assert.ok((text as { text: string }).text.includes("Do not retry"));
 
   const details = result.details as { ok?: boolean; proxyDown?: boolean; error?: string };
