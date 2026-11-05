@@ -36,8 +36,10 @@
 .PARAMETER CatalogPath
     Local folder to use as the Trusted Catalog. Defaults to
     <user>\Documents\TasacionesManifest\. The folder is created if it does not
-    exist. The folder is shared with Excel via the \\localhost\C$\... admin
-    share (no manual sharing needed).
+    exist. The folder is preferentially shared with Excel via the
+    \\localhost\C$\... admin share (no manual sharing needed). Windows Home
+    editions commonly disable that admin share; when it is unreachable the
+    script registers the plain local path instead, which Office 2016+ accepts.
 
 .PARAMETER Uninstall
     Removes the registry entry and the catalog folder.
@@ -158,19 +160,31 @@ function Remove-CatalogEntry([string]$guid) {
 
 if ($Uninstall) {
     Write-Info "Uninstalling sideloaded catalog..."
-    if (Test-Path -LiteralPath $CatalogPath) {
-        $marker = Read-SideloadMarker
-        if ($marker -and $marker.guid) {
-            Remove-CatalogEntry $marker.guid
-        } else {
-            $unc = Format-Unc $CatalogPath
-            $entry = Get-RegEntryForCatalog $unc
+
+    # Clean the registry first and independently of the folder: a deleted
+    # catalog folder leaves an orphan entry behind that Excel still reads,
+    # which is harder to diagnose than a missing add-in.
+    $marker = Read-SideloadMarker
+    if ($marker -and $marker.guid) {
+        Remove-CatalogEntry "{$($marker.guid.Trim('{}'))}"
+    } else {
+        # The entry may hold either the UNC form or the plain local path,
+        # depending on whether the admin share was reachable at install time.
+        $candidates = @((Format-Unc $CatalogPath), $CatalogPath) | Select-Object -Unique
+        $removed = $false
+        foreach ($candidate in $candidates) {
+            $entry = Get-RegEntryForCatalog $candidate
             if ($entry) {
                 Remove-CatalogEntry $entry.PSChildName
-            } else {
-                Write-Warn "No matching registry entry found for $unc."
+                $removed = $true
             }
         }
+        if (-not $removed) {
+            Write-Warn "No matching registry entry found for $($candidates -join ' or ')."
+        }
+    }
+
+    if (Test-Path -LiteralPath $CatalogPath) {
         Remove-Item -LiteralPath $CatalogPath -Recurse -Force
         Write-Info "Removed catalog folder: $CatalogPath"
     } else {
@@ -188,6 +202,16 @@ if (-not (Test-Path -LiteralPath $CatalogPath)) {
 }
 
 $catalogUnc = Format-Unc $CatalogPath
+
+# The \\localhost\C$ admin share is disabled on most Windows Home editions.
+# Registering a UNC path Excel cannot reach yields a catalog that silently
+# resolves to nothing, so probe it and fall back to the plain local path
+# (accepted by Office 2016+) rather than leaving a dead entry behind.
+if ($catalogUnc -ne $CatalogPath -and -not (Test-Path -LiteralPath $catalogUnc -ErrorAction SilentlyContinue)) {
+    Write-Warn "Admin share unreachable: $catalogUnc"
+    Write-Warn "Falling back to local catalog path: $CatalogPath"
+    $catalogUnc = $CatalogPath
+}
 
 # Reuse or mint GUID.
 $marker = Read-SideloadMarker

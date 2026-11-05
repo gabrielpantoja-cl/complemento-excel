@@ -28,3 +28,6 @@ coverage/
 # opencode CLI local config (provider keys, model overrides, etc.)
 opencode.json
 opencode.jsonc
+
+# Playwright MCP scratch output (console logs, page snapshots)
+.playwright-mcp/

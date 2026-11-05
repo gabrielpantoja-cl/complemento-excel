@@ -80,6 +80,8 @@ Brand colours, display name (`Tasaciones`), and add-in metadata live in `manifes
 
 - Avoid Node-only imports and side-effect barrel imports.
 - After import/dependency changes, run `npm run build` and check chunk sizes + Vite browser-compat warnings.
+- **A bundle that throws in module scope renders a blank taskpane** — no spinner, no error card, just white. Before blaming the manifest or the sideload catalog, load the deployed `src/taskpane.html` in a plain browser and read the console; a healthy boot logs `[pi] PiSidebar mounted`.
+- **`overrides` in `package.json` can break the bundle.** Forcing a major version on a transitive dep to satisfy `npm run audit:ci` may hand a package a library it was not written against. Real case: the repo-wide `zod: 4.6.7` override (added in `cbe0c6a` for GHSA-mrhx-c7xc-m3w5, which has no patched 3.x) reached `@lmstudio/sdk`, which targets zod 3. zod 4 made `z.record(z.enum([...]), …)` exhaustive, so the SDK's GPU env-var schema threw on import and killed startup. Fixed by stubbing the SDK for the browser build (`src/stubs/lmstudio-sdk.ts`, aliased in `buildBrowserAliasMap()`) rather than relaxing the override. After touching `overrides`, always `npm run build` **and** load the page.
 
 ### Prompt caching gotchas
 

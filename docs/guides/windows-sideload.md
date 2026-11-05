@@ -24,8 +24,15 @@ Evidencia: screenshot `/{E2C563C4-CC5B-42FF-B53B-3955BDD26778}.png` (en la raíz
 **Observaciones importantes para próximos runs:**
 
 - **Cerrar Excel del todo es obligatorio.** Tener Excel abierto al ejecutar el script hace que la pestaña **CARPETA COMPARTIDA** no aparezca. Task Manager → finalizar `EXCEL.EXE` por las dudas.
-- **La ruta UNC `\\localhost\C$\...` es la que Excel reconoce.** Una ruta literal `C:\Users\...\TasacionesManifest` no apareció en la pestaña **CARPETA COMPARTIDA** en este build de Excel — el script ya la convierte automáticamente, no requiere acción manual.
+- **La ruta UNC `\\localhost\C$\...` es la preferida.** Una ruta literal bajo `C:\Users\...\Documents\` no apareció en la pestaña **CARPETA COMPARTIDA** en el build probado el 2026-07-16 — el script la convierte automáticamente, no requiere acción manual.
+- **Pero la admin share `C$` no siempre existe.** En Windows 11 Home suele estar deshabilitada, y entonces la entrada UNC queda registrada apuntando a algo que Excel no puede leer: el catálogo existe en el registro pero la tile nunca aparece. Desde 2026-11-05 el script detecta ese caso (`Test-Path` sobre la UNC) y registra la ruta local tal cual, que Office 2016+ sí acepta. Verificado en esta máquina con el catálogo `C:\OfficeAddins\`, que carga el add-in correctamente con una ruta local plana.
 - **El script es idempotente.** Re-ejecuciones reusan el GUID (vía `.sideload.json`) y no crean entradas duplicadas.
+- **`-Uninstall` limpia el registro aunque la carpeta ya no exista.** Antes salía temprano si faltaba la carpeta del catálogo y dejaba la entrada huérfana en `HKCU\...\WEF\TrustedCatalogs`. Para auditar entradas a mano:
+
+  ```powershell
+  Get-ChildItem 'HKCU:\Software\Microsoft\Office\16.0\WEF\TrustedCatalogs' |
+    ForEach-Object { $p = Get-ItemProperty $_.PSPath; '{0} -> {1}' -f $p.Id, $p.Url }
+  ```
 
 ---
 

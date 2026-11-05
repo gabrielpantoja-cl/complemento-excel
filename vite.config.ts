@@ -243,6 +243,14 @@ function buildBrowserAliasMap(): Record<string, string> {
     ajv: resolveFromRoot("src/stubs/ajv.ts"),
     "ajv-formats": resolveFromRoot("src/stubs/ajv-formats.ts"),
 
+    // @lmstudio/sdk is written against zod 3, but our overrides pin zod 4
+    // repo-wide (GHSA-mrhx-c7xc-m3w5 has no patched 3.x). zod 4 made
+    // `z.record(z.enum([...]), ...)` exhaustive, and the SDK builds one at
+    // module scope, so importing it throws and the taskpane never mounts.
+    // pi-web-ui's model-discovery imports it statically; this fork never
+    // offers LM Studio, so stub it. See src/stubs/lmstudio-sdk.ts.
+    "@lmstudio/sdk": resolveFromRoot("src/stubs/lmstudio-sdk.ts"),
+
     // pi-web-ui only exports "." + "./app.css". We deep-import from its dist
     // modules to avoid pulling the entire barrel (ChatPanel, artifacts, etc.).
     // This alias bypasses package.json "exports" restrictions.
