@@ -29,6 +29,7 @@ This folder contains **current** docs that should match shipped behavior. Top-le
 - [Cache observability baselines](./architecture/cache-observability-baselines.md)
 - [Security threat model](./architecture/security-threat-model.md)
 - [Model / dependency update playbook](./architecture/model-updates.md)
+- [Benchmark de modelos para revisión de tasaciones](./architecture/model-benchmark-tasaciones.md)
 - [How updates flow (end-to-end)](./architecture/update-flow.md) — git push -> Vercel -> Excel, cache headers, end-user verification recipe
 - [OpenCode per-project config](../.opencode/README.md) — custom agents (`@qa-excel`, `@perito`, `@release-manager`) and slash commands
 - [UI architecture](../src/ui/README.md)
