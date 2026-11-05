@@ -36,10 +36,10 @@
 .PARAMETER CatalogPath
     Local folder to use as the Trusted Catalog. Defaults to
     <user>\Documents\TasacionesManifest\. The folder is created if it does not
-    exist. The folder is preferentially shared with Excel via the
-    \\localhost\C$\... admin share (no manual sharing needed). Windows Home
-    editions commonly disable that admin share; when it is unreachable the
-    script registers the plain local path instead, which Office 2016+ accepts.
+    exist. The folder is shared with Excel via the \\localhost\C$\... admin
+    share (no manual sharing needed). The script aborts if that UNC path is
+    not reachable: Excel only lists a catalog under SHARED FOLDER when the
+    registered URL is a working UNC path.
 
 .PARAMETER Uninstall
     Removes the registry entry and the catalog folder.
@@ -203,14 +203,15 @@ if (-not (Test-Path -LiteralPath $CatalogPath)) {
 
 $catalogUnc = Format-Unc $CatalogPath
 
-# The \\localhost\C$ admin share is disabled on most Windows Home editions.
-# Registering a UNC path Excel cannot reach yields a catalog that silently
-# resolves to nothing, so probe it and fall back to the plain local path
-# (accepted by Office 2016+) rather than leaving a dead entry behind.
+# Excel only surfaces a catalog under the SHARED FOLDER tab when the URL is
+# a reachable UNC path; a plain local path registers fine but never shows up.
+# Fail loudly rather than leaving a dead entry that looks installed.
 if ($catalogUnc -ne $CatalogPath -and -not (Test-Path -LiteralPath $catalogUnc -ErrorAction SilentlyContinue)) {
-    Write-Warn "Admin share unreachable: $catalogUnc"
-    Write-Warn "Falling back to local catalog path: $CatalogPath"
-    $catalogUnc = $CatalogPath
+    Write-Warn "Catalog UNC path is not reachable: $catalogUnc"
+    Write-Warn "Excel will not list the add-in under SHARED FOLDER."
+    Write-Warn "Check that the Server service (LanmanServer) is running and that"
+    Write-Warn "the administrative share C`$ exists: Get-SmbShare"
+    throw "Unreachable catalog path: $catalogUnc"
 }
 
 # Reuse or mint GUID.
