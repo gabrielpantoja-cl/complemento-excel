@@ -1,6 +1,15 @@
 #!/bin/sh
 set -e
 
+# Skip lint + typecheck when no staged file can affect them (e.g. docs-only
+# commits). Any TS/JS/JSON change -- including package.json, tsconfig*.json and
+# eslint config -- still runs the full checks.
+if ! git diff --cached --name-only --diff-filter=ACMRD \
+  | grep -Eq '\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|json)$'; then
+  printf "%s\n" "[pre-commit] No TS/JS/JSON changes staged; skipping lint + typecheck"
+  exit 0
+fi
+
 printf "%s\n" "[pre-commit] npm run lint"
 npm run -s lint
 
