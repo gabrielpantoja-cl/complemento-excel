@@ -16,10 +16,8 @@
     "declaration": false,
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@earendil-works/pi-web-ui/dist/*": ["node_modules/@earendil-works/pi-web-ui/dist/*"]
+      "@earendil-works/pi-web-ui/dist/*": ["./node_modules/@earendil-works/pi-web-ui/dist/*"]
     }
   },
   "include": ["src/**/*.ts"],
