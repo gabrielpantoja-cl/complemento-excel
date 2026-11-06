@@ -1,7 +1,7 @@
 # Benchmark de modelos para revisión de tasaciones
 
 **Estado:** en curso  
-**Última actualización:** 2026-11-05
+**Última actualización:** 2026-11-06
 
 ## Objetivo
 
@@ -65,6 +65,41 @@ contar con respuestas completas y comparables.
 
 No se registran datos del workbook ni extractos que puedan identificar a las
 personas involucradas.
+
+### 2026-11-06: Nemotron 3 Ultra vs. Nemotron 3.5 Super VL (construcción de fichas VR)
+
+**Resultado: gana Nemotron 3.5 Super VL, con reservas.** Tarea de edición, no
+de revisión: mismo prompt (construir tres fichas de referenciales en
+`Ficha VR` con datos dados, marcando faltantes como "Por confirmar"), mismo
+workbook. Ultra corrió con thinking `off`; Super VL con `high`. Se evaluó el
+`.xlsx` resultante, no solo el resumen del modelo.
+
+| Criterio | Nemotron 3 Ultra | Nemotron 3.5 Super VL |
+|---|---|---|
+| Respeto de plantilla | Sobrescribió bloques de 43 filas con un layout propio desalineado; borró fórmulas de encabezado; pisó la fila de firmas de la ficha 2 y rompió la cadena de fórmulas hacia la ficha 4. | Mantuvo la estructura; escribió celda a celda en los campos. |
+| Exactitud numérica | Seriales de fecha erróneos en las tres fichas (desfase de días o de año). `#DIV/0!` en las tres fichas. Montos "aprox." como texto. | Seriales correctos. Unitarios $/m2 correctos vía `monto/superficie`. UF de la ficha 1 queda mal (fórmula existente divide por la UF del referencial anterior). |
+| Datos residuales | Bloques antiguos completos quedan bajo los nuevos (montos, títulos, observaciones). | Quedan visibles del referencial anterior: fechas, UF de transacción, comprador, vendedor, CBR, foja y observaciones. |
+| No inventar | Bien: "Por confirmar" y "aprox." aplicados. Inventó la calle de referencia. | Inventó restricciones ("Ninguna") y calle de referencia; omitió "aprox."; mantuvo UF actual de otra fecha. |
+| Honestidad del cierre | Declara las fichas completas; no lo están. | Lista campos pendientes, pero atribuye la falla a "restricción de celda" y declara escritos valores que no persistieron. |
+
+**Fallas de herramienta (registrar aparte, afectaron a ambos):**
+
+- `write_cells` responde "Written to" al escribir en celdas no ancla de un
+  rango combinado; Excel descarta el valor sin error. Fue la causa de los
+  "no persiste" que ambos modelos persiguieron durante decenas de llamadas.
+- `read_range` con `sheet` distinto de la hoja activa devolvió la hoja activa
+  con su nombre en el encabezado (sesión Super VL), hasta activar la hoja.
+- `execute_office_js` devolvió `null` en todas las llamadas de ambas sesiones:
+  los modelos enviaron una función completa y el tool solo la declaraba.
+
+Corregido el 2026-11-06 (guard de celdas combinadas y aviso de valores no
+persistidos en `write_cells`, parámetro `sheet` en `read_range`, invocación de
+funciones completas en `execute_office_js`). Ensayos anteriores a ese cambio no
+son comparables con los posteriores en uso de herramientas.
+
+**Lectura:** Super VL dañó menos y calculó mejor, pero ningún resultado es
+utilizable sin revisión manual. El factor dominante fue el manejo de celdas
+combinadas, no el razonamiento del modelo.
 
 ## Próximo ensayo
 

@@ -40,6 +40,10 @@ export interface WriteCellsDetails {
   address?: string;
   existingCount?: number;
   formulaErrorCount?: number;
+  /** Non-empty values Excel read back as empty after the write. */
+  droppedCount?: number;
+  /** Values blocked because they targeted non-anchor cells of merged areas. */
+  mergedConflictCount?: number;
   changes?: WorkbookCellChangeSummary;
   recovery?: RecoveryCheckpointDetails;
 }
@@ -690,6 +694,8 @@ export function isWriteCellsDetails(value: unknown): value is WriteCellsDetails 
     isOptionalString(value.address) &&
     isOptionalNumber(value.existingCount) &&
     isOptionalNumber(value.formulaErrorCount) &&
+    isOptionalNumber(value.droppedCount) &&
+    isOptionalNumber(value.mergedConflictCount) &&
     isOptionalWorkbookCellChangeSummary(value.changes) &&
     isOptionalRecoveryCheckpointDetails(value.recovery)
   );

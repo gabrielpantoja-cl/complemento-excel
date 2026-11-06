@@ -25,7 +25,8 @@ const schema = Type.Object({
     description:
       "Async function body that receives context: Excel.RequestContext. "
       + "Use load() + await context.sync() before reading properties. "
-      + "Return JSON-serializable data.",
+      + "Write the body only (not a function declaration) and end with "
+      + "`return <JSON-serializable data>;`.",
   }),
   explanation: Type.String({
     minLength: 1,
@@ -71,6 +72,93 @@ function normalizeCode(code: string): string {
   }
 
   return trimmed;
+}
+
+/**
+ * Index of the bracket that closes the one at `openIndex`, skipping strings,
+ * template literals and comments. Returns -1 when unbalanced.
+ */
+function findClosingBracket(source: string, openIndex: number): number {
+  const open = source[openIndex];
+  const close = open === "(" ? ")" : "}";
+  let depth = 0;
+
+  for (let i = openIndex; i < source.length; i += 1) {
+    const ch = source[i];
+
+    if (ch === "\"" || ch === "'" || ch === "`") {
+      i += 1;
+      while (i < source.length && source[i] !== ch) {
+        if (source[i] === "\\") i += 1;
+        i += 1;
+      }
+      continue;
+    }
+
+    if (ch === "/" && source[i + 1] === "/") {
+      const newline = source.indexOf("\n", i);
+      if (newline === -1) return -1;
+      i = newline;
+      continue;
+    }
+
+    if (ch === "/" && source[i + 1] === "*") {
+      const end = source.indexOf("*/", i + 2);
+      if (end === -1) return -1;
+      i = end + 1;
+      continue;
+    }
+
+    if (ch === open) depth += 1;
+    if (ch === close) {
+      depth -= 1;
+      if (depth === 0) return i;
+    }
+  }
+
+  return -1;
+}
+
+/** True when nothing but whitespace/semicolons follows `index`. */
+function isTrailingOnly(source: string, index: number): boolean {
+  return /^[\s;]*$/u.test(source.slice(index + 1));
+}
+
+/**
+ * Models often send a whole function (`async function run(context) {...}` or
+ * `async (context) => {...}`) instead of a function body. Wrapped verbatim,
+ * that only declares the function and the tool returns `null`. When the code
+ * is exactly one such function, call it with the provided context.
+ */
+export function prepareOfficeJsBody(code: string): string {
+  const declaration = /^(?:async\s+)?function\s*([A-Za-z_$][\w$]*)\s*\(/u.exec(code);
+  const anonymous = /^(?:async\s+)?function\s*\(/u.exec(code);
+  const arrow = /^(?:async\s*)?(?:\([^()]*\)|[A-Za-z_$][\w$]*)\s*=>\s*\{/u.exec(code);
+
+  if (declaration || anonymous) {
+    const parenIndex = code.indexOf("(");
+    const paramsEnd = findClosingBracket(code, parenIndex);
+    if (paramsEnd === -1) return code;
+    const braceIndex = code.indexOf("{", paramsEnd);
+    if (braceIndex === -1) return code;
+    const bodyEnd = findClosingBracket(code, braceIndex);
+    if (bodyEnd === -1 || !isTrailingOnly(code, bodyEnd)) return code;
+
+    const fnSource = code.slice(0, bodyEnd + 1);
+    if (declaration) {
+      return `${fnSource}\nreturn await ${declaration[1]}(context);`;
+    }
+    return `return await (${fnSource})(context);`;
+  }
+
+  if (arrow) {
+    const braceIndex = arrow[0].length - 1;
+    const bodyEnd = findClosingBracket(code, braceIndex);
+    if (bodyEnd === -1 || !isTrailingOnly(code, bodyEnd)) return code;
+    return `return await (${code.slice(0, bodyEnd + 1)})(context);`;
+  }
+
+  return code;
 }
 
 type OfficeJsRunnerCandidate = (context: Excel.RequestContext) => unknown;
@@ -171,12 +259,16 @@ export function createExecuteOfficeJsTool(
     ): Promise<AgentToolResult<undefined>> => {
       try {
         const explanation = normalizeExplanation(params.explanation);
-        const code = normalizeCode(params.code);
+        const code = prepareOfficeJsBody(normalizeCode(params.code));
         const result = await resolvedDependencies.runCode(code);
         const serialized = serializeResult(result);
 
         const truncatedNote = serialized.truncated
           ? `\n\nℹ️ Result truncated to ${MAX_RESULT_CHARS.toLocaleString()} characters.`
+          : "";
+        const noReturnNote = result === undefined
+          ? "\n\nℹ️ The code returned no value. `code` is a function body: "
+            + "end it with `return <data>;` to get results back."
           : "";
 
         const fencedResult = [
@@ -191,7 +283,7 @@ export function createExecuteOfficeJsTool(
         return {
           content: [{
             type: "text",
-            text: `${fencedResult}${truncatedNote}`,
+            text: `${fencedResult}${truncatedNote}${noReturnNote}`,
           }],
           details: undefined,
         };

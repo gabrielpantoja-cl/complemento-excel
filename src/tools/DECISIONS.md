@@ -29,6 +29,11 @@ Concise record of recent tool behavior choices to avoid regressions. Update this
 - **Does NOT block** on formatting, conditional formats, or data validation rules.
 - **Rationale:** formatting-only cells are not meaningful "content" and shouldn't block writes.
 
+## Merged areas (`write_cells`)
+- **Pre-write guard:** non-empty values aimed at non-anchor cells of a merged area are blocked (even with `allow_overwrite`), listing the anchor to use. Excel would otherwise drop them silently.
+- **Post-write check:** any non-empty value that reads back empty is reported as "did not persist" (`details.droppedCount`). Covers hosts without ExcelApi 1.13 and other silent drops.
+- **Rationale:** in the 2026-11-06 benchmark both models wasted dozens of calls on "Written to" results that never reached the visible template field.
+
 ## Fill formulas (`fill_formula`)
 - **Purpose:** avoid large 2D formula arrays by using Excel AutoFill.
 - **Behavior:** sets formula in top-left cell, then `autoFill` across the range.
@@ -46,6 +51,7 @@ Concise record of recent tool behavior choices to avoid regressions. Update this
 - **Rationale:** one tool per distinct verb, modes over multiplied tools. Progressive disclosure for future tools (charts, tables, etc.)
 
 ## Range reading (`read_range`)
+- **`sheet` param:** optional; combined with an unqualified `range`. A conflicting sheet prefix is an error. Before this, a `sheet` argument was ignored and the active sheet was read.
 - **Compact/detailed tables:** render an Excel-style markdown grid with **column letters** and **row numbers** (instead of treating the first data row as a table header).
 - **Empty ranges:** if a range has **no values, formulas, or errors**, return `_All cells are empty._` (omit the table) to avoid confusing "blank header" visuals.
 - **Rationale:** improves readability in the sidebar UI and avoids ambiguous tables for 1-row or empty ranges.
@@ -210,6 +216,7 @@ Concise record of recent tool behavior choices to avoid regressions. Update this
 - **Contract:** accepts `code` (async function body receiving `context: Excel.RequestContext`) plus a short user-facing `explanation`.
 - **Safety guards:** blocks nested `Excel.run(...)` usage (host already provides context), enforces explanation/code length limits, requires explicit user confirmation on every execution, and fails closed if confirmation UI is unavailable.
 - **Result policy:** tool output must be JSON-serializable; non-serializable results are returned as deterministic errors.
+- **Whole-function input:** if `code` is exactly one function (declaration, anonymous, or arrow), it is invoked with `context`; otherwise it runs as a body. An `undefined` result adds a hint to `return` data.
 - **Execution policy:** treated as `mutate/structure` to force conservative workbook-context refresh after execution.
 - **Rationale:** unlock advanced Office.js scenarios when structured tools are insufficient while preserving explicit consent.
 

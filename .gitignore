@@ -31,3 +31,9 @@ opencode.jsonc
 
 # Playwright MCP scratch output (console logs, page snapshots)
 .playwright-mcp/
+
+# Workbooks de prueba/benchmark (pueden contener datos de tasaciones)
+*.xlsx
+*.xlsm
+*.xls
+~$*

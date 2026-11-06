@@ -107,3 +107,42 @@ void test("format_cells rejects invalid border values instead of falling back", 
     /Invalid borders/u,
   );
 });
+
+void test("execute_office_js invokes a whole function declaration instead of only declaring it", async () => {
+  const { prepareOfficeJsBody } = await import("../src/tools/execute-office-js.ts");
+
+  const declared = prepareOfficeJsBody(
+    "async function checkMerge(context) {\n  const s = \"}\"; // }\n  return { ok: s };\n}",
+  );
+  assert.match(declared, /return await checkMerge\(context\);$/u);
+
+  const arrow = prepareOfficeJsBody("async (context) => { return 1; };");
+  assert.equal(arrow, "return await (async (context) => { return 1; })(context);");
+
+  const anonymous = prepareOfficeJsBody("async function (context) { return 2; }");
+  assert.equal(anonymous, "return await (async function (context) { return 2; })(context);");
+
+  const body = "const r = context.workbook.getSelectedRange();\nreturn 1;";
+  assert.equal(prepareOfficeJsBody(body), body);
+
+  const helperThenBody = "function helper(x) { return x; }\nreturn helper(3);";
+  assert.equal(prepareOfficeJsBody(helperThenBody), helperThenBody);
+});
+
+void test("execute_office_js passes the invoking wrapper to runCode and flags missing return", async () => {
+  let received = "";
+  const tool = createExecuteOfficeJsTool({
+    runCode: (code) => {
+      received = code;
+      return Promise.resolve(undefined);
+    },
+  });
+
+  const result = await tool.execute("tool-call-4", {
+    explanation: "Check merge",
+    code: "async function run(context) { await context.sync(); }",
+  });
+
+  assert.match(received, /return await run\(context\);/u);
+  assert.match(firstText(result), /returned no value/u);
+});

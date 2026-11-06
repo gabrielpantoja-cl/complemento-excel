@@ -9,7 +9,7 @@
 
 import { Type, type Static } from "@sinclair/typebox";
 import type { AgentTool, AgentToolResult } from "@earendil-works/pi-agent-core";
-import { excelRun, getRange, qualifiedAddress, parseCell, colToLetter } from "../excel/helpers.js";
+import { excelRun, getRange, qualifiedAddress, parseCell, colToLetter, resolveSheetRef } from "../excel/helpers.js";
 import { formatAsMarkdownTable, extractFormulas, findErrors } from "../utils/format.js";
 import { getErrorMessage } from "../utils/errors.js";
 import { buildResolvedFormatLabels, getResolvedConventions, humanizeFormat } from "../conventions/index.js";
@@ -22,6 +22,13 @@ const schema = Type.Object({
       'Cell range in A1 notation, e.g. "A1:D10", "Sheet2!A1:B5". ' +
       "If no sheet is specified, uses the active sheet.",
   }),
+  sheet: Type.Optional(
+    Type.String({
+      description:
+        "Sheet to read from when `range` has no sheet prefix. " +
+        "Equivalent to writing \"'Sheet name'!A1:B5\" in `range`.",
+    }),
+  ),
   mode: Type.Optional(
     Type.Union([Type.Literal("compact"), Type.Literal("csv"), Type.Literal("detailed")], {
       description:
@@ -69,9 +76,10 @@ export function createReadRangeTool(): AgentTool<typeof schema> {
     ): Promise<AgentToolResult<ReadRangeCsvDetails | undefined>> => {
       try {
         const mode = params.mode || "compact";
+        const rangeRef = resolveSheetRef(params.range, params.sheet);
 
         const result = await excelRun<ReadRangeResult>(async (context) => {
-          const { sheet, range } = getRange(context, params.range);
+          const { sheet, range } = getRange(context, rangeRef);
           range.load("values,formulas,numberFormat,address,rowCount,columnCount");
           sheet.load("name");
 

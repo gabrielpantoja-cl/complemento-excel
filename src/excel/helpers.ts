@@ -54,6 +54,27 @@ export function getRange(context: Excel.RequestContext, ref: string): { sheet: E
   return { sheet, range: sheet.getRange(parsed.address) };
 }
 
+/**
+ * Combine `range` and the optional `sheet` param into one reference.
+ * Tools used to ignore a stray `sheet` argument and read the active sheet.
+ */
+export function resolveSheetRef(range: string, sheet?: string): string {
+  const sheetName = sheet?.trim();
+  if (!sheetName) return range;
+
+  const parsed = parseRangeRef(range);
+  if (parsed.sheet !== undefined) {
+    if (parsed.sheet !== sheetName) {
+      throw new Error(
+        `range references sheet "${parsed.sheet}" but sheet param is "${sheetName}"; use one of them.`,
+      );
+    }
+    return range;
+  }
+
+  return qualifiedAddress(sheetName, range);
+}
+
 /** Build a fully-qualified address like "Sheet1!A1:B5" */
 export function qualifiedAddress(sheetName: string, address: string): string {
   // Strip sheet prefix if already in the address

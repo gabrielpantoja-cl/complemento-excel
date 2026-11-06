@@ -61,6 +61,14 @@ interface InvalidFormula {
 type WriteCellsResult =
   | {
     blocked: true;
+    reason: "merged";
+    sheetName: string;
+    address: string;
+    conflicts: MergedWriteConflict[];
+  }
+  | {
+    blocked: true;
+    reason?: "occupied";
     sheetName: string;
     address: string;
     existingCount: number;
@@ -76,7 +84,8 @@ type WriteCellsResult =
     readBackFormulas: unknown[][];
   };
 
-type BlockedWriteCellsResult = Extract<WriteCellsResult, { blocked: true }>;
+type BlockedWriteCellsResult = Extract<WriteCellsResult, { blocked: true; reason?: "occupied" }>;
+type MergedBlockedWriteCellsResult = Extract<WriteCellsResult, { reason: "merged" }>;
 type SuccessWriteCellsResult = Extract<WriteCellsResult, { blocked: false }>;
 
 const mutationFinalizeDependencies: MutationFinalizeDependencies = {
@@ -155,6 +164,20 @@ export function createWriteCellsTool(): AgentTool<typeof schema, WriteCellsDetai
           const beforeValues = targetRange.values;
           const beforeFormulas = targetRange.formulas;
 
+          // Excel silently drops values written into non-anchor cells of a
+          // merged area. Detect that up front instead of reporting success.
+          const mergedAddresses = await loadMergedAreaAddresses(context, targetRange);
+          const conflicts = findMergedWriteConflicts(padded, startCellRef, mergedAddresses);
+          if (conflicts.length > 0) {
+            return {
+              blocked: true,
+              reason: "merged",
+              sheetName: sheet.name,
+              address: rangeAddr,
+              conflicts,
+            };
+          }
+
           // Overwrite protection: check if target has existing data (values or formulas)
           if (!params.allow_overwrite) {
             const occupiedCount = countOccupiedCells(beforeValues, beforeFormulas);
@@ -189,6 +212,10 @@ export function createWriteCellsTool(): AgentTool<typeof schema, WriteCellsDetai
           };
         });
 
+        if (result.blocked && result.reason === "merged") {
+          return formatMergedBlocked(result);
+        }
+
         if (result.blocked) {
           const blockedResult = formatBlocked(result);
 
@@ -206,7 +233,7 @@ export function createWriteCellsTool(): AgentTool<typeof schema, WriteCellsDetai
           return blockedResult;
         }
 
-        const successResult = formatSuccess(result, rows, cols);
+        const successResult = formatSuccess(result, rows, cols, padded);
 
         await finalizeMutationOperation(mutationFinalizeDependencies, {
           auditEntry: {
@@ -393,7 +420,12 @@ function formatBlocked(result: BlockedWriteCellsResult): AgentToolResult<WriteCe
   return { content: [{ type: "text", text: lines.join("\n") }], details };
 }
 
-function formatSuccess(result: SuccessWriteCellsResult, rows: number, cols: number): AgentToolResult<WriteCellsDetails> {
+function formatSuccess(
+  result: SuccessWriteCellsResult,
+  rows: number,
+  cols: number,
+  intended: unknown[][],
+): AgentToolResult<WriteCellsDetails> {
   const fullAddr = qualifiedAddress(result.sheetName, result.address);
   const cellPart = result.address.includes("!") ? result.address.split("!")[1] : result.address;
   const startCell = cellPart.split(":")[0];
@@ -453,6 +485,18 @@ function formatSuccess(result: SuccessWriteCellsResult, rows: number, cols: numb
     }
   }
 
+  const dropped = findDroppedWrites(intended, result.readBackValues, result.readBackFormulas, startCell);
+  if (dropped.length > 0) {
+    const shown = dropped.slice(0, 12).join(", ");
+    const more = dropped.length > 12 ? ` (+${dropped.length - 12} more)` : "";
+    lines.push("");
+    lines.push(
+      `⚠️ **${dropped.length} value(s) did not persist:** ${shown}${more}. ` +
+      "Excel kept these cells empty (often merged areas, data validation, or protection). " +
+      "Do not report them as written; inspect the layout with read_range before retrying.",
+    );
+  }
+
   const changes = buildWorkbookCellChangeSummary({
     sheetName: result.sheetName,
     startCell,
@@ -472,9 +516,136 @@ function formatSuccess(result: SuccessWriteCellsResult, rows: number, cols: numb
     blocked: false,
     address: fullAddr,
     formulaErrorCount: errors.length,
+    droppedCount: dropped.length,
     changes,
   };
 
   return { content: [{ type: "text", text: lines.join("\n") }], details };
 }
 
+
+// ============================================================================
+// Merged-area safety
+// ============================================================================
+
+export interface MergedWriteConflict {
+  /** Cell the caller tried to write (non-anchor cell of a merged area). */
+  cell: string;
+  /** Merged area containing that cell, e.g. "AT36:BB36". */
+  mergedArea: string;
+  /** Top-left cell of the merged area: the only cell Excel keeps a value in. */
+  anchor: string;
+}
+
+async function loadMergedAreaAddresses(
+  context: Excel.RequestContext,
+  range: Excel.Range,
+): Promise<string[]> {
+  try {
+    const merged = range.getMergedAreasOrNullObject();
+    merged.load("address");
+    await context.sync();
+    if (merged.isNullObject) return [];
+    return parseMergedAreaAddresses(merged.address);
+  } catch {
+    // ExcelApi 1.13 unavailable: rely on the post-write dropped-value check.
+    return [];
+  }
+}
+
+/** Parse a RangeAreas address ("'My Sheet'!A1:B2, 'My Sheet'!C3:D4") into ["A1:B2", "C3:D4"]. */
+export function parseMergedAreaAddresses(address: string): string[] {
+  const clean = address.replace(/\$/gu, "");
+  const matches = clean.match(/[A-Z]{1,3}\d+(?::[A-Z]{1,3}\d+)?(?=\s*(?:,|$))/giu) ?? [];
+  return matches.map((m) => m.toUpperCase());
+}
+
+function isMeaningfulValue(value: unknown): boolean {
+  return value !== null && value !== undefined && value !== "";
+}
+
+export function findMergedWriteConflicts(
+  values: unknown[][],
+  startCell: string,
+  mergedAreas: string[],
+): MergedWriteConflict[] {
+  if (mergedAreas.length === 0) return [];
+  const start = parseCell(startCell);
+  const conflicts: MergedWriteConflict[] = [];
+
+  for (const area of mergedAreas) {
+    const [first, last = first] = area.split(":");
+    const a = parseCell(first);
+    const b = parseCell(last);
+
+    for (let row = a.row; row <= b.row; row += 1) {
+      for (let col = a.col; col <= b.col; col += 1) {
+        if (row === a.row && col === a.col) continue;
+        const value = values[row - start.row]?.[col - start.col];
+        if (!isMeaningfulValue(value)) continue;
+        conflicts.push({
+          cell: `${colToLetter(col)}${row}`,
+          mergedArea: area,
+          anchor: first,
+        });
+      }
+    }
+  }
+
+  return conflicts;
+}
+
+/** Cells where a non-empty value was written but Excel reads back empty. */
+export function findDroppedWrites(
+  intended: unknown[][],
+  readBackValues: unknown[][],
+  readBackFormulas: unknown[][],
+  startCell: string,
+): string[] {
+  const start = parseCell(startCell);
+  const dropped: string[] = [];
+
+  for (let r = 0; r < intended.length; r += 1) {
+    for (let c = 0; c < intended[r].length; c += 1) {
+      if (!isMeaningfulValue(intended[r][c])) continue;
+      const value = readBackValues[r]?.[c];
+      const formula = readBackFormulas[r]?.[c];
+      if (isMeaningfulValue(value) || isMeaningfulValue(formula)) continue;
+      dropped.push(`${colToLetter(start.col + c)}${start.row + r}`);
+    }
+  }
+
+  return dropped;
+}
+
+function formatMergedBlocked(result: MergedBlockedWriteCellsResult): AgentToolResult<WriteCellsDetails> {
+  const fullAddr = qualifiedAddress(result.sheetName, result.address);
+  const lines: string[] = [];
+
+  lines.push(
+    `⛔ **Write blocked** — ${result.conflicts.length} value(s) target non-anchor cells of merged areas in ${fullAddr}. ` +
+    "Excel would silently discard them.",
+  );
+  lines.push("");
+  for (const conflict of result.conflicts.slice(0, 15)) {
+    lines.push(`- ${conflict.cell} is inside ${conflict.mergedArea}: write to **${conflict.anchor}** instead`);
+  }
+  if (result.conflicts.length > 15) {
+    lines.push(`- … ${result.conflicts.length - 15} more`);
+  }
+  lines.push("");
+  lines.push(
+    "Nothing was written. In templates, the visible value of a merged field lives in its top-left cell; " +
+    "write each field to its anchor.",
+  );
+
+  return {
+    content: [{ type: "text", text: lines.join("\n") }],
+    details: {
+      kind: "write_cells",
+      blocked: true,
+      address: fullAddr,
+      mergedConflictCount: result.conflicts.length,
+    },
+  };
+}
