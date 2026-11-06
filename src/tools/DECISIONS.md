@@ -30,7 +30,7 @@ Concise record of recent tool behavior choices to avoid regressions. Update this
 - **Rationale:** formatting-only cells are not meaningful "content" and shouldn't block writes.
 
 ## Merged areas (`write_cells`)
-- **Pre-write guard:** non-empty values aimed at non-anchor cells of a merged area are blocked (even with `allow_overwrite`), listing the anchor to use. Excel would otherwise drop them silently.
+- **Pre-write guard:** non-empty values aimed at non-anchor cells of a merged area are blocked (even with `allow_overwrite`), listing the anchor to use. Excel would otherwise drop them silently. Merges are read from the sheet's used range, because `getMergedAreasOrNullObject()` on the target only returns areas fully inside it.
 - **Post-write check:** any non-empty value that reads back empty is reported as "did not persist" (`details.droppedCount`). Covers hosts without ExcelApi 1.13 and other silent drops.
 - **Rationale:** in the 2026-11-06 benchmark both models wasted dozens of calls on "Written to" results that never reached the visible template field.
 

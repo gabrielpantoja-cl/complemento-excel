@@ -41,3 +41,9 @@ void test("read_range resolves the sheet param instead of silently reading the a
   assert.equal(resolveReadRangeRef("'Ficha VR'!A1", "Ficha VR"), "'Ficha VR'!A1");
   assert.throws(() => resolveReadRangeRef("Lote 1!A1", "Ficha VR"), /sheet param/u);
 });
+
+void test("findMergedWriteConflicts catches targets inside merges larger than the write range", () => {
+  // 2026-11-06 regression: writing A56:A57 into the A56:BB63 merge.
+  const conflicts = findMergedWriteConflicts([["Observaciones"], ["texto"]], "A56", ["A56:BB63", "AT36:BB36"]);
+  assert.deepEqual(conflicts, [{ cell: "A57", mergedArea: "A56:BB63", anchor: "A56" }]);
+});

@@ -101,6 +101,32 @@ son comparables con los posteriores en uso de herramientas.
 utilizable sin revisión manual. El factor dominante fue el manejo de celdas
 combinadas, no el razonamiento del modelo.
 
+### 2026-11-06 (2): Nemotron 3 Ultra vs. Nemotron 3.5 Super VL (observaciones de fichas VR)
+
+**Resultado: gana Nemotron 3 Ultra en contenido; Super VL en cautela. Ninguno
+es aceptable sin revisión.** Ambos con thinking `high`, mismo prompt (reescribir
+las observaciones de los referenciales 1 a 3, que seguían con texto del caso
+anterior) y misma copia del workbook, ya con los arreglos de herramientas.
+Se verificó el `.xlsx` resultante contra los datos de la propia ficha.
+
+| Criterio | Nemotron 3 Ultra | Nemotron 3.5 Super VL |
+|---|---|---|
+| Fuente usada | Los datos actuales de cada ficha (predio, $/m2, superficie). | Ignoró los datos de la ficha que sí leyó y reescribió el texto antiguo cambiando topónimos. |
+| Exactitud | Predio, valor unitario y superficie correctos en las tres. Inscripción correcta solo en la 1; en la 2 y la 3 escribió foja, número y año que no existen en el workbook (la 3 tomó el año de un campo residual). | Mantuvo lote, superficie y $/m2 del caso anterior en las tres; ubicó las tres en el mismo sector aunque la 3 es de otro; inventó distancias. |
+| No inventar | Inventó inscripciones y las presentó como "datos reales". | Inventó distancias y relocalizó transacciones ajenas, aunque dijo no inventar. |
+| Cautela | Ninguna advertencia. | Señaló que inscripción y montos deben verificarse y detectó la inconsistencia entre el $/m2 del texto y la celda calculada. |
+| Herramientas | Una escritura de 2 filas pisó la celda con el rótulo; la advertencia de "did not persist" le permitió corregir. | Usó `read_range` con `sheet` correctamente. |
+
+**Falla de herramienta detectada:** el bloqueo previo de `write_cells` no vio
+el rango combinado de observaciones, porque `getMergedAreasOrNullObject()` sobre
+el destino solo devuelve combinados contenidos por completo en él. Corregido el
+mismo día leyendo los combinados del rango usado de la hoja.
+
+**Lectura de la serie (1-1):** Super VL es más prudente; Ultra usa mejor los
+datos del workbook pero rellena huecos con datos inventados. Para fichas, el
+riesgo de Ultra (inscripciones falsas con apariencia de dato) es más grave y
+más difícil de detectar que el de Super VL (texto visiblemente desalineado).
+
 ## Próximo ensayo
 
 Repetir la pareja con una fuente PDF accesible para ambos modelos. Confirmar que

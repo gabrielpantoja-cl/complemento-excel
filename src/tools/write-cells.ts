@@ -166,7 +166,7 @@ export function createWriteCellsTool(): AgentTool<typeof schema, WriteCellsDetai
 
           // Excel silently drops values written into non-anchor cells of a
           // merged area. Detect that up front instead of reporting success.
-          const mergedAddresses = await loadMergedAreaAddresses(context, targetRange);
+          const mergedAddresses = await loadMergedAreaAddresses(context, sheet, targetRange);
           const conflicts = findMergedWriteConflicts(padded, startCellRef, mergedAddresses);
           if (conflicts.length > 0) {
             return {
@@ -537,16 +537,33 @@ export interface MergedWriteConflict {
   anchor: string;
 }
 
+/**
+ * Merged areas that intersect the write target.
+ *
+ * `Range.getMergedAreasOrNullObject()` only returns areas fully contained in
+ * the queried range, so querying the target alone misses e.g. A56:BB63 when
+ * writing A56:A57. Query the sheet's used range (which contains every merged
+ * area) and let `findMergedWriteConflicts` keep the ones that overlap.
+ */
 async function loadMergedAreaAddresses(
   context: Excel.RequestContext,
-  range: Excel.Range,
+  sheet: Excel.Worksheet,
+  target: Excel.Range,
 ): Promise<string[]> {
   try {
-    const merged = range.getMergedAreasOrNullObject();
-    merged.load("address");
+    const used = sheet.getUsedRangeOrNullObject();
+    const mergedInUsed = used.getMergedAreasOrNullObject();
+    const mergedInTarget = target.getMergedAreasOrNullObject();
+    mergedInUsed.load("address");
+    mergedInTarget.load("address");
     await context.sync();
-    if (merged.isNullObject) return [];
-    return parseMergedAreaAddresses(merged.address);
+
+    const addresses = new Set<string>();
+    for (const merged of [mergedInUsed, mergedInTarget]) {
+      if (merged.isNullObject) continue;
+      for (const area of parseMergedAreaAddresses(merged.address)) addresses.add(area);
+    }
+    return [...addresses];
   } catch {
     // ExcelApi 1.13 unavailable: rely on the post-write dropped-value check.
     return [];
